@@ -1,0 +1,93 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function POST(req: Request) {
+    try {
+        const body = await req.json();
+
+        const username = body.get("nip") as string;
+        const name = body.get("nama") as string;
+        const email = body.get("email") as string;
+        const password = body.get("password") as string;
+
+        if (!username || !name || !email || !password) {
+            return NextResponse.json(
+                { error: "Missing required fields" },
+                { status: 400 }
+            );
+        }
+
+        const { data: checkEmail, error: checkEmailError } =
+            await supabase.from("users").select("id", { count: "exact", head: true }).eq("email", email);
+
+        if (checkEmail && checkEmail.length > 0) {
+            return NextResponse.json({ error: "Email already exist" }, { status: 400 });
+        }
+
+        const { data: authData, error: authError } =
+            await supabase.auth.admin.createUser({
+                email,
+                password,
+                email_confirm: true,
+            });
+
+        if (authError) {
+            return NextResponse.json({ error: authError.message }, { status: 400 });
+        }
+
+        // let avatarUrl: string | null = null;
+
+        // if (avatar) {
+        //     const buffer = Buffer.from(await avatar.arrayBuffer());
+        //     const filename = `${authData.user.id}-${Date.now()}-${avatar.name}`;
+
+        //     const { error: uploadError } = await supabase.storage
+        //         .from("avatar")
+        //         .upload(filename, buffer, {
+        //             contentType: avatar.type,
+        //         });
+
+        //     if (uploadError) {
+        //         return NextResponse.json(
+        //             { error: uploadError.message },
+        //             { status: 400 }
+        //         );
+        //     }
+
+        //     const {
+        //         data: { publicUrl },
+        //     } = supabase.storage.from("avatar").getPublicUrl(filename);
+
+        //     avatarUrl = publicUrl;
+        // }
+
+        const { error: userError } = await supabase.from("users").insert([
+            {
+                username: username,
+                email: email,
+                name: name,
+                id_auth: authData.user.id
+            },
+        ]);
+
+        if (userError) {
+            return NextResponse.json(
+                { error: userError.message },
+                { status: 400 }
+            );
+        }
+
+        return NextResponse.json(
+            { message: "Register success", user: authData.user },
+            { status: 201 }
+        );
+    } catch (err) {
+        console.error("Register API error:", err);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}
