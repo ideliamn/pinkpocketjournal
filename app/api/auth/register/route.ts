@@ -10,10 +10,10 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const username = body.get("nip") as string;
-        const name = body.get("nama") as string;
-        const email = body.get("email") as string;
-        const password = body.get("password") as string;
+        const username = body.username;
+        const name = body.name;
+        const email = body.email;
+        const password = body.password;
 
         if (!username || !name || !email || !password) {
             return NextResponse.json(
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
         }
 
         const { data: checkEmail, error: checkEmailError } =
-            await supabase.from("users").select("id", { count: "exact", head: true }).eq("email", email);
+            await supabase.from("users").select("*").eq("email", email);
 
         if (checkEmail && checkEmail.length > 0) {
             return NextResponse.json({ error: "Email already exist" }, { status: 400 });
