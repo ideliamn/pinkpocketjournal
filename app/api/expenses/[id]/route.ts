@@ -12,7 +12,7 @@ export async function GET(
 ) {
     const { id } = await context.params;
     const { data, error } =
-        await supabase.from("categories").select("*").eq("id", id).single();
+        await supabase.from("expenses").select("*").eq("id", id).single();
     console.log("error, " + error)
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
@@ -25,7 +25,7 @@ export async function DELETE(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id } = await context.params;
-    const { data, error } = await supabase.from("categories").delete().eq("id", id).single();
+    const { data, error } = await supabase.from("expenses").delete().eq("id", id).single();
     console.log("error, " + error)
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
