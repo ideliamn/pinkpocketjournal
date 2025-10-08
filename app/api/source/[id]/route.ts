@@ -13,6 +13,9 @@ export async function GET(
     const { id } = await context.params;
     const { data, error } =
         await supabase.from("sources").select("*").eq("id", id).single();
+    if (!data) {
+        return NextResponse.json({ error: "Source not found" }, { status: 404 });
+    }
     console.log("error, " + error)
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });

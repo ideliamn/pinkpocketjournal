@@ -13,7 +13,9 @@ export async function GET(
     const { id } = await context.params;
     const { data, error } =
         await supabase.from("budgets").select("*").eq("id", id).single();
-    console.log("error, " + error)
+    if (!data) {
+        return NextResponse.json({ error: "Budget not found" }, { status: 404 });
+    }
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
