@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { dateTimeNow } from "../../../lib/helpers/dateTimeNow";
+import { checkExpense } from "../../../lib/helpers/expense";
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -64,6 +65,14 @@ export async function POST(req: Request) {
         if (!body.user_id || !body.budget_id || !body.category_id || !body.description || !body.amount || !body.source_id || !body.expense_date) {
             code = 0
             message = "Please input all required fields!"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
+
+        const checkExpenseBudget = await checkExpense(body.user_id, body.budget_id, body.amount, body.category_id)
+        if (checkExpenseBudget.isExceeding) {
+            code = 0
+            message = checkExpenseBudget.message
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
