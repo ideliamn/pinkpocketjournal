@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { dateTimeNow } from "../../../lib/helpers/dateTimeNow";
+import { checkExistingPeriod } from "../../../lib/helpers/period";
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,6 +63,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
+        const checkExisingPeriod = await checkExistingPeriod(body.user_id, body.start_date, body.end_date)
+        if (checkExisingPeriod) {
+            code = 0
+            message = "This period already exist!"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
+
         const insertPeriod = {
             user_id: body.user_id,
             name: body.name,
@@ -100,6 +109,14 @@ export async function PUT(req: Request) {
         if (!body.id || !body.user_id || !body.name || !body.start_date || !body.end_date) {
             code = 0
             message = "Please input all required fields!"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
+
+        const checkExisingPeriod = await checkExistingPeriod(body.user_id, body.start_date, body.end_date)
+        if (checkExisingPeriod) {
+            code = 0
+            message = "This period already exist!"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
