@@ -7,21 +7,66 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export async function GET() {
-    const { data, error } = await supabase
-        .from("expenses")
-        .select("*");
+export async function GET(request: Request) {
+    let code = 1
+    let message = "OK"
+    let httpStatus = 200
+    let data: any[] = []
 
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
+        const userId = searchParams.get("userId");
+        const budgetId = searchParams.get("budgetId");
+        const categoryId = searchParams.get("categoryId");
+        const sourceId = searchParams.get("sourceId");
+
+        let query = supabase.from("expenses").select("*");
+
+        if (budgetId) query = query.eq("budget_id", budgetId);
+        if (categoryId) query = query.eq("category_id", categoryId);
+        if (id) query = query.eq("id", id);
+        if (userId) query.eq("user_id", userId);
+        if (sourceId) query.eq("source_id", sourceId);
+
+        const { data: result, error } = await query;
+
+        if (error) {
+            throw new Error(error.message)
+        }
+
+        if (!result || result.length < 1) {
+            code = 0
+            message = "Expense not found"
+            httpStatus = 404
+        } else {
+            data = result
+        }
+
+        return NextResponse.json({ code, message, data }, { status: httpStatus })
     }
-
-    return NextResponse.json(data);
+    catch (err: any) {
+        code = 0
+        message = err.message
+        httpStatus = 500
+        return NextResponse.json({ code, message, data }, { status: httpStatus });
+    }
 }
 
 export async function POST(req: Request) {
+    let code = 1
+    let message = "OK"
+    let httpStatus = 201
+    let data: any[] = []
     try {
         const body = await req.json();
+
+        if (!body.user_id || !body.budget_id || !body.category_id || !body.description || !body.amount || !body.source_id || !body.expense_date) {
+            code = 0
+            message = "Please input all required fields!"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
 
         const insertExpense = {
             user_id: body.user_id,
@@ -33,24 +78,40 @@ export async function POST(req: Request) {
             expense_date: body.expense_date
         }
 
-        const { data, error } = await supabase
+        const { data: insertedData, error } = await supabase
             .from("expenses")
             .insert([insertExpense])
             .select();
 
         if (error) {
-            return NextResponse.json({ error: error.message }, { status: 500 });
+            throw new Error(error.message)
         }
 
-        return NextResponse.json(data, { status: 201 });
+        data = insertedData
+
+        return NextResponse.json({ code, message, data }, { status: httpStatus });
     } catch (err: any) {
-        return NextResponse.json({ error: err.message }, { status: 400 });
+        code = 0
+        message = err.message
+        httpStatus = 500
+        return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
 }
 
 export async function PUT(req: Request) {
+    let code = 1
+    let message = "OK"
+    let httpStatus = 200
+    let data: any[] = []
     try {
         const body = await req.json();
+
+        if (!body.id || !body.user_id || !body.budget_id || !body.category_id || !body.description || !body.amount || !body.source_id || !body.expense_date) {
+            code = 0
+            message = "Please input all required fields!"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
 
         const updateExpense = {
             user_id: body.user_id,
@@ -60,23 +121,70 @@ export async function PUT(req: Request) {
             amount: body.amount,
             source_id: body.source_id,
             expense_date: body.expense_date,
-            updated_at: dateTimeNow
+            updated_at: dateTimeNow()
         }
 
-        const { data, error } = await supabase
+        const { data: updatedData, error } = await supabase
             .from("expenses")
             .update(updateExpense)
             .eq("id", body.id)
             .select();
 
         if (error) {
-            return NextResponse.json({ error: error.message }, { status: 500 });
+            throw new Error(error.message)
         }
 
-        return NextResponse.json(data, { status: 200 });
+        data = updatedData
+
+        return NextResponse.json({ code, message, data }, { status: httpStatus });
     } catch (err: any) {
-        return NextResponse.json({ error: err.message }, { status: 400 });
+        code = 0
+        message = err.message
+        httpStatus = 500
+        return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
 }
 
+export async function DELETE(request: Request) {
+    let code = 1
+    let message = "OK"
+    let httpStatus = 200
+    let data: any[] = []
+
+    try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
+
+        if (!id) {
+            code = 0
+            message = "Please input ID!"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
+
+        const { data: checkData, error: checkDataError } = await supabase.from("expenses").select("*").eq("id", id);
+
+        if (!checkData || checkData.length < 1) {
+            code = 0
+            message = "Expense not found!"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
+
+        const { data: deletedData, error } = await supabase.from("expenses").delete().eq("id", id).single();
+
+        if (error) {
+            throw new Error(error.message)
+        }
+
+        data = deletedData
+
+        return NextResponse.json({ code, message, data }, { status: httpStatus });
+    } catch (err: any) {
+        code = 0
+        message = err.message
+        httpStatus = 500
+        return NextResponse.json({ code, message, data }, { status: httpStatus });
+    }
+}
 

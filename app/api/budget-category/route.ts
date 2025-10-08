@@ -111,7 +111,7 @@ export async function PUT(req: Request) {
             budget_id: body.budget_id,
             category_id: body.category_id,
             amount: body.amount,
-            updated_at: dateTimeNow
+            updated_at: dateTimeNow()
         }
 
         const { data: updatedData, error } = await supabase
@@ -148,6 +148,15 @@ export async function DELETE(request: Request) {
         if (!id) {
             code = 0
             message = "Please input ID!"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
+
+        const { data: checkData, error: checkDataError } = await supabase.from("budget_categories").select("*").eq("id", id);
+
+        if (!checkData || checkData.length < 1) {
+            code = 0
+            message = "Budget category not found!"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
