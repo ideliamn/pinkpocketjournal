@@ -19,10 +19,10 @@ export default function UserDropdown() {
     const [logoutLoading, setLogoutLoading] = useState(false);
 
     useEffect(() => {
-        console.log("user session: ", JSON.stringify(user))
-        if (!user && !profile && !loading) {
-            setOpenModalInfo(true);
-        }
+        // console.log("user session: ", JSON.stringify(user))
+        // if (!user && !profile && !loading) {
+        //     setOpenModalInfo(true);
+        // }
     }, [loading, user, profile])
 
     function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {

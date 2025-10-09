@@ -32,7 +32,6 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ProfileProvider>
-            <AppHeader />
             {children}
           </ProfileProvider>
         </AuthProvider>
