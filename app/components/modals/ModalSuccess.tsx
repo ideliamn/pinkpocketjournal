@@ -13,16 +13,16 @@ interface ModalSuccessProps {
 export default function ModalSuccess({
     isOpen,
     onClose,
-    title = "Gagal",
+    title = "Sukses",
     message,
     buttonText = "Tutup",
 }: ModalSuccessProps) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} className="max-w-[300px] p-2">
+        <Modal isOpen={isOpen} onClose={onClose} showCloseButton={false} className="max-w-[600px] p-5 lg:p-10">
             <div className="text-center">
-                <div className="relative flex items-center justify-center z-1">
+                <div className="relative flex items-center justify-center z-1 mb-7">
                     <svg
-                        className="fill-error-50 dark:fill-error-500/15"
+                        className="fill-success-50 dark:fill-success-500/15"
                         width="90"
                         height="90"
                         viewBox="0 0 90 90"
@@ -38,7 +38,7 @@ export default function ModalSuccess({
 
                     <span className="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2">
                         <svg
-                            className="fill-error-600 dark:fill-error-500"
+                            className="fill-success-600 dark:fill-success-500"
                             width="38"
                             height="38"
                             viewBox="0 0 38 38"
@@ -48,13 +48,12 @@ export default function ModalSuccess({
                             <path
                                 fillRule="evenodd"
                                 clipRule="evenodd"
-                                d="M9.62684 11.7496C9.04105 11.1638 9.04105 10.2141 9.62684 9.6283C10.2126 9.04252 11.1624 9.04252 11.7482 9.6283L18.9985 16.8786L26.2485 9.62851C26.8343 9.04273 27.7841 9.04273 28.3699 9.62851C28.9556 10.2143 28.9556 11.164 28.3699 11.7498L21.1198 18.9999L28.3699 26.25C28.9556 26.8358 28.9556 27.7855 28.3699 28.3713C27.7841 28.9571 26.8343 28.9571 26.2485 28.3713L18.9985 21.1212L11.7482 28.3715C11.1624 28.9573 10.2126 28.9573 9.62684 28.3715C9.04105 27.7857 9.04105 26.836 9.62684 26.2502L16.8771 18.9999L9.62684 11.7496Z"
+                                d="M5.9375 19.0004C5.9375 11.7854 11.7864 5.93652 19.0014 5.93652C26.2164 5.93652 32.0653 11.7854 32.0653 19.0004C32.0653 26.2154 26.2164 32.0643 19.0014 32.0643C11.7864 32.0643 5.9375 26.2154 5.9375 19.0004ZM19.0014 2.93652C10.1296 2.93652 2.9375 10.1286 2.9375 19.0004C2.9375 27.8723 10.1296 35.0643 19.0014 35.0643C27.8733 35.0643 35.0653 27.8723 35.0653 19.0004C35.0653 10.1286 27.8733 2.93652 19.0014 2.93652ZM24.7855 17.0575C25.3713 16.4717 25.3713 15.522 24.7855 14.9362C24.1997 14.3504 23.25 14.3504 22.6642 14.9362L17.7177 19.8827L15.3387 17.5037C14.7529 16.9179 13.8031 16.9179 13.2173 17.5037C12.6316 18.0894 12.6316 19.0392 13.2173 19.625L16.657 23.0647C16.9383 23.346 17.3199 23.504 17.7177 23.504C18.1155 23.504 18.4971 23.346 18.7784 23.0647L24.7855 17.0575Z"
                                 fill=""
                             />
                         </svg>
                     </span>
                 </div>
-
                 <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90 sm:text-title-sm">
                     {title}
                 </h4>
@@ -62,7 +61,7 @@ export default function ModalSuccess({
                 <div className="flex items-center justify-center w-full gap-3 mt-7">
                     <button
                         type="button"
-                        className="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-error-500 shadow-theme-xs hover:bg-error-600 sm:w-auto" onClick={onClose}
+                        className="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-success-500 shadow-theme-xs hover:bg-success-600 sm:w-auto" onClick={onClose}
                     >
                         {buttonText}
                     </button>
