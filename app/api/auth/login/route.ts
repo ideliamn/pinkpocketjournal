@@ -4,26 +4,33 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // pakai service role biar bisa akses profile
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(req: Request) {
+  let code = 1
+  let message = "OK"
+  let httpStatus = 200
+  let data: any = {}
   try {
     const { email, password } = await req.json();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data: dataAuth, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      code = 0;
+      message = error.message;
+      httpStatus = 400
+      return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
 
-    // data.session.profile = profile;
+    data = dataAuth.user
+    const res = NextResponse.json({ code, message, data }, { status: httpStatus });
+    const session = dataAuth.session;
 
-    const session = data.session;
-    const res = NextResponse.json({ user: data.user });
     if (session) {
       res.cookies.set("sb-access-token", session.access_token, {
         httpOnly: true,
@@ -43,6 +50,9 @@ export async function POST(req: Request) {
 
     return res;
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    code = 0;
+    message = err.message;
+    httpStatus = 500;
+    return NextResponse.json({ code, message, data }, { status: httpStatus });
   }
 }

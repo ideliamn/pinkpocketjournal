@@ -7,6 +7,10 @@ const supabase = createClient(
 );
 
 export async function POST(req: Request) {
+    let code = 1
+    let message = "OK"
+    let httpStatus = 201
+    let data: any = {}
     try {
         const body = await req.json();
 
@@ -16,17 +20,20 @@ export async function POST(req: Request) {
         const password = body.password;
 
         if (!username || !name || !email || !password) {
-            return NextResponse.json(
-                { error: "Missing required fields" },
-                { status: 400 }
-            );
+            code = 0;
+            message = "Missing required fields";
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
         const { data: checkEmail, error: checkEmailError } =
             await supabase.from("users").select("*").eq("email", email);
 
         if (checkEmail && checkEmail.length > 0) {
-            return NextResponse.json({ error: "Email already exist" }, { status: 400 });
+            code = 0;
+            message = "Email already exist";
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
         const { data: authData, error: authError } =
@@ -36,8 +43,13 @@ export async function POST(req: Request) {
                 email_confirm: true,
             });
 
+        data = authData
+
         if (authError) {
-            return NextResponse.json({ error: authError.message }, { status: 400 });
+            code = 0;
+            message = authError.message;
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
         // let avatarUrl: string | null = null;
@@ -76,18 +88,15 @@ export async function POST(req: Request) {
         ]);
 
         if (userError) {
-            return NextResponse.json(
-                { error: userError.message },
-                { status: 400 }
-            );
+            code = 0;
+            message = userError.message;
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        return NextResponse.json(
-            { message: "Register success", user: authData.user },
-            { status: 201 }
-        );
+        return NextResponse.json({ code, message, data }, { status: httpStatus });
     } catch (err) {
         console.error("Register API error:", err);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
 }
