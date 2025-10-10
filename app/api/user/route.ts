@@ -16,10 +16,12 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
+        const idAuth = searchParams.get("idAuth");
 
         let query = supabase.from("users").select("*");
 
         if (id) query = query.eq("id", id);
+        if (idAuth) query = query.eq("id_auth", idAuth);
 
         const { data: result, error } = await query;
 

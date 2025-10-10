@@ -6,15 +6,9 @@ import { useAuth } from "./AuthContext";
 
 type Profile = {
     id: string;
-    nip: string;
-    nama: string;
-    jabatan: string;
-    image_url: string;
+    name: string;
+    email: string;
     id_auth: string;
-    created_by: string;
-    created_at: Date;
-    updated_by: string;
-    updated_at: Date;
 };
 
 type ProfileContextType = {
@@ -32,9 +26,9 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
         if (!user?.id) return; // kalau belum login jangan fetch
 
         const fetchProfile = async () => {
-            const res = await fetch(`/api/profile?idAuth=${user.id}`);
+            const res = await fetch(`/api/user?idAuth=${user.id}`);
             const data = await res.json();
-            setProfile(data);
+            setProfile(data?.data[0]);
         };
         fetchProfile();
     }, [user?.id]); // depend ke user.id
