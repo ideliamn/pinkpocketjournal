@@ -1,4 +1,5 @@
 import { Pixelify_Sans } from "next/font/google";
+import Link from "next/link";
 
 const pixelify = Pixelify_Sans({
     subsets: ["latin"],
@@ -16,10 +17,10 @@ export default function Home() {
             </h1>
             <div className="flex gap-6">
                 <h1 className={`flex items-center justify-center ${pixelify.className} text-xl underline cursor-pointer hover:text-pink-600 transition`}>
-                    login
+                    <Link href="/login">login</Link>
                 </h1>
                 <h1 className={`flex items-center justify-center ${pixelify.className} text-xl underline cursor-pointer hover:text-pink-600 transition`}>
-                    register
+                    <Link href="/register">register</Link>
                 </h1>
             </div>
         </main >

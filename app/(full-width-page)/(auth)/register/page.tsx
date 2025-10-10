@@ -2,6 +2,7 @@
 import { Geist_Mono, Pixelify_Sans } from "next/font/google";
 import Input from "../../../components/form/input/InputField";
 import Button from "../../../components/ui/button/Button";
+import Link from "next/link";
 
 const pixelify = Pixelify_Sans({
     subsets: ["latin"],
@@ -59,10 +60,10 @@ export default function Register() {
                     </div>
                     <div className="flex gap-6 items-center justify-center">
                         <h1 className={`flex items-center justify-center ${pixelify.className} text-s underline cursor-pointer hover:text-pink-300 transition`}>
-                            login
+                            <Link href="/login">login</Link>
                         </h1>
                         <h1 className={`flex items-center justify-center ${pixelify.className} text-s underline cursor-pointer hover:text-pink-300 transition`}>
-                            back to home
+                            <Link href="/">back to home</Link>
                         </h1>
                     </div>
                 </div>
