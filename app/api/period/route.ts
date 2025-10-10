@@ -18,11 +18,13 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get("userId")
         const id = searchParams.get("id");
+        const search = searchParams.get("search");
 
         let query = supabase.from("periods").select("*");
 
         if (id) query = query.eq("id", id);
-        if (userId) query = query.eq("user_id", userId)
+        if (userId) query = query.eq("user_id", userId);
+        if (search) query = query.ilike("name", `${search}`);
 
         const { data: result, error } = await query;
 

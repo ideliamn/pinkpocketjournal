@@ -21,14 +21,16 @@ export async function GET(request: Request) {
         const budgetId = searchParams.get("budgetId");
         const categoryId = searchParams.get("categoryId");
         const sourceId = searchParams.get("sourceId");
+        const search = searchParams.get("search");
 
         let query = supabase.from("expenses").select("*");
 
         if (budgetId) query = query.eq("budget_id", budgetId);
         if (categoryId) query = query.eq("category_id", categoryId);
         if (id) query = query.eq("id", id);
-        if (userId) query.eq("user_id", userId);
-        if (sourceId) query.eq("source_id", sourceId);
+        if (userId) query = query.eq("user_id", userId);
+        if (sourceId) query = query.eq("source_id", sourceId);
+        if (search) query = query.ilike("description", `${search}`);
 
         const { data: result, error } = await query;
 
