@@ -1,5 +1,4 @@
 "use client";
-import { Geist_Mono, Pixelify_Sans } from "next/font/google";
 import React, { useRef, useEffect } from "react";
 
 interface ModalProps {
@@ -10,16 +9,6 @@ interface ModalProps {
     showCloseButton?: boolean; // New prop to control close button visibility
     isFullscreen?: boolean; // Default to false for backwards compatibility
 }
-
-const pixelify = Pixelify_Sans({
-    subsets: ["latin"],
-    weight: ["400"],
-});
-
-const geistMono = Geist_Mono({
-    variable: "--font-geist-sono",
-    subsets: ["latin"],
-});
 
 export const Modal: React.FC<ModalProps> = ({
     isOpen,
@@ -70,7 +59,7 @@ export const Modal: React.FC<ModalProps> = ({
             {!isFullscreen && (
                 <div
                     // className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
-                    className="absolute inset-0 backdrop-blur"
+                    className="absolute inset-0 backdrop-blur-[3px]"
                     onClick={onClose}
                 ></div>
             )}
@@ -79,13 +68,10 @@ export const Modal: React.FC<ModalProps> = ({
                 className={`${contentClasses}  ${className}`}
                 onClick={(e) => e.stopPropagation()}
             >
-                <span className={`justify-start items-center text-whites ${pixelify.className}`}>Warning!</span>
-                {/* {showCloseButton && ( */}
                 <div className="w-full bg-pink-400 flex justify-end items-center absolute top-0 left-0">
                     <button
                         onClick={onClose}
-                        // className="absolute right-2 top-2 z-999 flex h-9 w-9 items-center justify-center rounded-fullsm:right-6 cursor-pointer hover:bg-pink-100 hover:text-pink-600"
-                        className="z-999 flex h-9 w-9 items-center justify-center cursor-pointer hover:bg-pink-100 hover:text-pink-600"
+                        className="z-999 flex h-9 w-9 items-center justify-center cursor-pointer hover:bg-pink-600 hover:text-pink-600"
                     >
                         <svg
                             width="24"
@@ -98,7 +84,6 @@ export const Modal: React.FC<ModalProps> = ({
                         </svg>
                     </button>
                 </div>
-                {/* )} */}
                 <div>{children}</div>
             </div>
         </div >
