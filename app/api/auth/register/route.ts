@@ -14,12 +14,11 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const username = body.username;
         const name = body.name;
         const email = body.email;
         const password = body.password;
 
-        if (!username || !name || !email || !password) {
+        if (!name || !email || !password) {
             code = 0;
             message = "Missing required fields";
             httpStatus = 400
@@ -80,7 +79,6 @@ export async function POST(req: Request) {
 
         const { error: userError } = await supabase.from("users").insert([
             {
-                username: username,
                 email: email,
                 name: name,
                 id_auth: authData.user.id
