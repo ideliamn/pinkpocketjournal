@@ -2,12 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Loading from "../common/Loading";
-import ModalInfo from "../modals/ModalInfo";
 import { useAuth } from "../../context/AuthContext";
 import { useProfile } from "../../context/ProfileContext";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Pixelify_Sans } from "next/font/google";
 import Link from "next/link";
+import SimpleModal from "../modals/SimpleModal";
 
 const pixelify = Pixelify_Sans({
     subsets: ["latin"],
@@ -57,13 +57,14 @@ export default function UserDropdown() {
             {logoutLoading && <Loading />}
             {/* Modal Info */}
             {openModalInfo && (
-                <ModalInfo
+                <SimpleModal
+                    type="info"
                     isOpen={openModalInfo}
                     onClose={() => goToLogin()}
                     title="Silakan login"
                     message="Session habis, silakan login terlebih dahulu"
-                    yesButtonText="Ya"
-                    handleYes={() => goToLogin()}
+                // yesButtonText="Ya"
+                // handleYes={() => goToLogin()}
                 />
             )}
             <button onClick={toggleDropdown} className="px-2 py-2 flex items-center dropdown-toggle cursor-pointer hover:bg-white/70 hover:text-pink-600 hover:underline">

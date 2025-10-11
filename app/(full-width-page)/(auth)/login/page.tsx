@@ -7,7 +7,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Loading from "../../../components/common/Loading";
-import ModalFailed from "../../../components/modals/ModalFailed";
+import SimpleModal from "../../../components/modals/SimpleModal";
 
 const pixelify = Pixelify_Sans({
     subsets: ["latin"],
@@ -112,7 +112,8 @@ export default function Login() {
             </div >
             {
                 openModalFailed && (
-                    <ModalFailed
+                    <SimpleModal
+                        type={"failed"}
                         isOpen={openModalFailed}
                         onClose={closeModalFailed}
                         message={failedMessage}

@@ -6,8 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Loading from "../../../components/common/Loading";
-import ModalSuccess from "../../../components/modals/ModalSuccess";
-import ModalFailed from "../../../components/modals/ModalFailed";
+import SimpleModal from "../../../components/modals/SimpleModal";
 
 const pixelify = Pixelify_Sans({
     subsets: ["latin"],
@@ -38,7 +37,7 @@ export default function Register() {
         e.preventDefault();
 
         if (!name || !email || !password) {
-            setFailedMessage("Semua field wajib diisi!");
+            setFailedMessage("fill all the required fields!");
             setOpenModalFailed(true);
             setLoading(false);
             return;
@@ -151,7 +150,8 @@ export default function Register() {
             </div>
             {/* Modal Success */}
             {openModalSuccess && (
-                <ModalSuccess
+                <SimpleModal
+                    type={"success"}
                     isOpen={openModalSuccess}
                     onClose={closeModalSuccess}
                     message={successMessage}
@@ -159,7 +159,8 @@ export default function Register() {
             )}
             {/* Modal Failed */}
             {openModalFailed && (
-                <ModalFailed
+                <SimpleModal
+                    type={"failed"}
                     isOpen={openModalFailed}
                     onClose={closeModalFailed}
                     message={failedMessage}
