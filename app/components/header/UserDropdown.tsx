@@ -24,9 +24,8 @@ export default function UserDropdown() {
 
     useEffect(() => {
         if (loading || loadingProfile) return;
-
-        if (!user || !profile) {
-            setOpenModalInfo(true);
+        if (!user) {
+            setOpenModalInfo(true); return;
         }
     }, [loading, loadingProfile, user, profile])
 
