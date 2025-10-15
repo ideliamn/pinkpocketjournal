@@ -39,7 +39,7 @@ export default function Periods() {
     }
 
     const { profile } = useProfile()
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [openModalAdd, setOpenModalAdd] = useState(false);
     const [openModalSuccess, setOpenModalSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");

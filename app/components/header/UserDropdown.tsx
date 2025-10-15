@@ -23,7 +23,9 @@ export default function UserDropdown() {
     const [logoutLoading, setLogoutLoading] = useState(false);
 
     useEffect(() => {
-        if (!user && !profile && !loading) {
+        if (loading) return;
+
+        if (!user || !profile) {
             setOpenModalInfo(true);
         }
     }, [loading, user, profile])
@@ -58,13 +60,14 @@ export default function UserDropdown() {
             {/* Modal Info */}
             {openModalInfo && (
                 <SimpleModal
-                    type="info"
+                    type="warning"
                     isOpen={openModalInfo}
                     onClose={() => goToLogin()}
-                    title="Silakan login"
-                    message="Session habis, silakan login terlebih dahulu"
-                // yesButtonText="Ya"
-                // handleYes={() => goToLogin()}
+                    title="please login"
+                    message="session expired"
+                    yesButton
+                    yesButtonText="OK"
+                    handleYes={goToLogin}
                 />
             )}
             <button onClick={toggleDropdown} className="flex items-center dropdown-toggle cursor-pointer hover:bg-white/70 hover:text-pink-600 hover:underline">
