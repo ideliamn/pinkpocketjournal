@@ -126,9 +126,9 @@ export async function PUT(req: Request) {
         }
 
         const checkExisingPeriod = await checkExistingPeriod(body.user_id, body.start_date, body.end_date)
-        if (checkExisingPeriod) {
+        if (checkExisingPeriod.status == 0) {
             code = 0
-            message = "This period already exist!"
+            message = checkExisingPeriod.message
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }

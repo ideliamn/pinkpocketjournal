@@ -72,6 +72,7 @@ export default function Periods() {
     }
 
     useEffect(() => {
+        setLoading(true)
         if (profile?.id) {
             getMenu()
             setFormPeriod((prev) => ({ ...prev, user_id: Number(profile?.id) }))
@@ -114,6 +115,7 @@ export default function Periods() {
 
             if (res.ok) {
                 setSuccessMessage("success add new period!");
+                closeModalAdd()
                 setLoading(false);
                 setOpenModalSuccess(true);
             } else {
