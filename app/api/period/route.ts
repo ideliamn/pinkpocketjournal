@@ -65,6 +65,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
+        const start = new Date(body.start_date);
+        const end = new Date(body.end_date);
+
+        if (start > end) {
+            code = 0
+            message = "end date should greater than start date!"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
+
         const checkExisingPeriod = await checkExistingPeriod(body.user_id, body.start_date, body.end_date)
         if (checkExisingPeriod) {
             code = 0
