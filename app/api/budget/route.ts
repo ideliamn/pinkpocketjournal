@@ -19,7 +19,7 @@ export async function GET(request: Request) {
         const userId = searchParams.get("userId");
         const periodId = searchParams.get("periodId");
 
-        let query = supabase.from("budgets").select("*");
+        let query = supabase.from("budgets").select("*, periods(name, start_date, end_date), budget_categories(amount, categories(name))");
 
         if (userId) query = query.eq("user_id", userId);
         if (periodId) query = query.eq("period_id", periodId);
