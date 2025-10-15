@@ -140,26 +140,37 @@ export default function Periods() {
             </h1>
             <div className="mt-2 items-center justify-center">
                 <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => setOpenModalAdd(true)}>
-                    add
+                    <div className="flex flex-col">
+                        <div className="flex flex-row items-center justify-center mb-1">
+                            <svg id="plus-solid" width="20" height="20" fill="#FF6F91" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="23 11 23 13 22 13 22 14 14 14 14 22 13 22 13 23 11 23 11 22 10 22 10 14 2 14 2 13 1 13 1 11 2 11 2 10 10 10 10 2 11 2 11 1 13 1 13 2 14 2 14 10 22 10 22 11 23 11" /></svg>
+                        </div>
+                        add
+                    </div>
                 </Button>
-                {period.map((p) => {
-                    const today = new Date();
-                    const start = new Date(p.start_date);
-                    const end = new Date(p.end_date);
-                    const isActive = today >= start && today <= end;
-                    return (
-                        <Card
-                            key={p.name}
-                            title={p.name}
-                            desc={isActive ? "active" : "inactive"}
-                            className="min-w-[400px] outline-gray-400 hover:bg-pink-400 cursor-pointer mt-6"
-                        >
-                            <span>
-                                {moment(new Date(p.start_date)).format("DD MMMM YYYY")} - {moment(new Date(p.end_date)).format("DD MMMM YYYY")}
-                            </span>
-                        </Card>
-                    );
-                })}
+                {period.length > 0 ? (
+                    period.map((p) => {
+                        const today = new Date();
+                        const start = new Date(p.start_date);
+                        const end = new Date(p.end_date);
+                        const isActive = today >= start && today <= end;
+                        return (
+                            <Card
+                                key={p.name}
+                                title={p.name}
+                                desc={isActive ? "active" : "inactive"}
+                                className="min-w-[400px] outline-gray-400 hover:bg-pink-400 cursor-pointer mt-6"
+                            >
+                                <span>
+                                    {moment(new Date(p.start_date)).format("DD MMMM YYYY")} - {moment(new Date(p.end_date)).format("DD MMMM YYYY")}
+                                </span>
+                            </Card>
+                        );
+                    })
+                ) : (
+                    <div className={`flex flex-col items-center justify-center min-h-[100px] text-gray-500 ${geistMono.className}`}>
+                        no periods found!
+                    </div>
+                )}
             </div>
             {openModalAdd &&
                 <FormModal
