@@ -150,7 +150,7 @@ export default function Periods() {
                             key={p.name}
                             title={p.name}
                             desc={isActive ? "active" : "inactive"}
-                            className="min-w-[400px] hover:bg-pink-300 cursor-pointer mt-6"
+                            className="min-w-[400px] outline-gray-400 hover:bg-pink-400 cursor-pointer mt-6"
                         >
                             <span>
                                 {moment(new Date(p.start_date)).format("DD MMMM YYYY")} - {moment(new Date(p.end_date)).format("DD MMMM YYYY")}
