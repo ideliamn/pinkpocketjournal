@@ -21,7 +21,7 @@ const Card: React.FC<CardProps> = ({
 }) => {
     return (
         <div
-            className={`border-gray-200 bg-pink-100 ${geistMono.className} ${className}`}
+            className={`border-gray-400 border-1 bg-pink-100 ${geistMono.className} ${className}`}
         >
             {/* Card Header */}
             <div className="px-6 py-2">

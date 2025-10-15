@@ -14,6 +14,7 @@ type Profile = {
 type ProfileContextType = {
     profile: Profile | null;
     setProfile: (p: Profile) => void;
+    loadingProfile: boolean;
 };
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -21,20 +22,36 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 export const ProfileProvider = ({ children }: { children: React.ReactNode }) => {
     const { user } = useAuth(); // ⬅️ taruh DI DALAM component
     const [profile, setProfile] = useState<Profile | null>(null);
+    const [loadingProfile, setLoadingProfile] = useState(true);
 
     useEffect(() => {
-        if (!user?.id) return; // kalau belum login jangan fetch
-
         const fetchProfile = async () => {
-            const res = await fetch(`/api/user?idAuth=${user.id}`);
-            const data = await res.json();
-            setProfile(data?.data[0]);
+            if (!user?.id) {
+                setProfile(null)
+                setLoadingProfile(false)
+                return
+            }
+            try {
+                setLoadingProfile(true)
+                const res = await fetch(`/api/user?idAuth=${user.id}`);
+                const data = await res.json();
+                if (data?.data?.length > 0) {
+                    setProfile(data.data[0]);
+                } else {
+                    setProfile(null);
+                }
+            } catch (err) {
+                console.error("Error fetching profile:", err);
+                setProfile(null);
+            } finally {
+                setLoadingProfile(false)
+            }
         };
         fetchProfile();
     }, [user?.id]); // depend ke user.id
 
     return (
-        <ProfileContext.Provider value={{ profile, setProfile }}>
+        <ProfileContext.Provider value={{ profile, setProfile, loadingProfile }}>
             {children}
         </ProfileContext.Provider>
     );

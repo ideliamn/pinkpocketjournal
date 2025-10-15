@@ -19,16 +19,16 @@ export default function UserDropdown() {
     const { signOut, user, loading } = useAuth()
     const router = useRouter()
     const [openModalInfo, setOpenModalInfo] = useState(false);
-    const { profile } = useProfile();
+    const { profile, loadingProfile } = useProfile();
     const [logoutLoading, setLogoutLoading] = useState(false);
 
     useEffect(() => {
-        if (loading) return;
+        if (loading || loadingProfile) return;
 
         if (!user || !profile) {
             setOpenModalInfo(true);
         }
-    }, [loading, user, profile])
+    }, [loading, loadingProfile, user, profile])
 
     function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         e.stopPropagation();
