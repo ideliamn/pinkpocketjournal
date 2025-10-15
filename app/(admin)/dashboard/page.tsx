@@ -8,7 +8,7 @@ const pixelify = Pixelify_Sans({
 
 export default function Dashboard() {
     return (
-        <main className="flex flex-col h-screen items-center justify-center bg-pink-100">
+        <main className="flex flex-col h-screen items-center justify-center">
             <h1 className={`flex items-center justify-center ${pixelify.className} text-xl`}>
                 dashboard
             </h1>

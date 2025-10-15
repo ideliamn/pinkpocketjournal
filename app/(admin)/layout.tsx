@@ -8,13 +8,13 @@ export default function AdminLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="relative">
-            <div className="absolute w-full">
+        <div className="relative bg-pink-100">
+            < div className="absolute w-full" >
                 <AppHeader />
-            </div>
+            </div >
             <div className="h-screen">
                 {children}
             </div>
-        </div>
+        </div >
     );
 }

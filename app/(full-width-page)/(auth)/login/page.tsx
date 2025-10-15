@@ -47,7 +47,7 @@ export default function Login() {
     };
 
     return (
-        <main className="flex flex-col h-screen items-center justify-center bg-pink-100 space-y-6">
+        <main className="flex flex-col h-screen items-center justify-center space-y-6">
             {loading && <Loading />}
             <div>
                 <h1 className={`flex items-center justify-center ${pixelify.className} text-xl`}>
