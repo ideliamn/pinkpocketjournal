@@ -10,6 +10,7 @@ import FormModal from "../../components/modals/FormModal";
 import Input from "../../components/form/input/InputField";
 import SimpleModal from "../../components/modals/SimpleModal";
 import { formatRupiah } from "../../../lib/helpers/format";
+import ModalDetail from "./(components)/ModalDetail";
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-sono",
@@ -56,6 +57,8 @@ export default function Budgets() {
     const [openModalFailed, setOpenModalFailed] = useState(false);
     const closeModalFailed = () => { setOpenModalFailed(false) };
     const [failedMessage, setFailedMessage] = useState("");
+    const [openModalDetail, setOpenModalDetail] = useState(false);
+    const [selectedId, setSelectedId] = useState<number | null>(null);
     const [Budget, setBudget] = useState<Budget[]>([])
     const [formBudget, setFormBudget] = useState<FormBudgetType>({
         period_id: 0,
@@ -96,6 +99,19 @@ export default function Budgets() {
     const closeModalSuccess = () => {
         setOpenModalSuccess(false);
         getMenu();
+    }
+
+    const closeModalDetail = () => {
+        setOpenModalDetail(false);
+        setSelectedId(null)
+    }
+
+    const handleClickDetail = async (id: number) => {
+        console.log("id: ", id)
+        setLoading(true)
+        setOpenModalDetail(true)
+        setLoading(false)
+        setSelectedId(id);
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,6 +184,7 @@ export default function Budgets() {
                                 title={b.periods.name}
                                 desc={moment(new Date(b.periods.start_date)).format("DD MMMM YYYY") + " - " + moment(new Date(b.periods.end_date)).format("DD MMMM YYYY")}
                                 className="min-w-[400px] outline-gray-400 hover:bg-pink-400 cursor-pointer mt-6"
+                                onClick={() => handleClickDetail(b.id)}
                             >
                                 <div className="flex flex-col gap-1">
                                     <span className="text-xs">
@@ -226,6 +243,13 @@ export default function Budgets() {
                     isOpen={openModalFailed}
                     onClose={closeModalFailed}
                     message={failedMessage}
+                />
+            )}
+            {openModalDetail && selectedId !== null && (
+                <ModalDetail
+                    isOpen={openModalDetail}
+                    onClose={closeModalDetail}
+                    id={selectedId}
                 />
             )}
         </main>

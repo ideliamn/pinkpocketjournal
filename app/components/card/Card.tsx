@@ -11,6 +11,7 @@ interface CardProps {
     children: React.ReactNode;
     className?: string; // Additional custom classes for styling
     desc?: string; // Description text
+    onClick?: () => void;
 }
 
 const Card: React.FC<CardProps> = ({
@@ -18,9 +19,11 @@ const Card: React.FC<CardProps> = ({
     children,
     className = "",
     desc = "",
+    onClick
 }) => {
     return (
         <div
+            onClick={onClick}
             className={`border-gray-400 border-1 bg-pink-100 ${geistMono.className} ${className}`}
         >
             {/* Card Header */}
