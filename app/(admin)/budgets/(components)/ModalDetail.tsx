@@ -3,8 +3,10 @@
 import { Geist_Mono, Pixelify_Sans } from "next/font/google";
 import Button from "../../../components/ui/button/Button";
 import { Modal } from "../../../components/modals";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Loading from "../../../components/common/Loading";
+import moment from "moment";
+import { formatRupiah } from "../../../../lib/helpers/format";
 
 interface ModalDetailProps {
     id: number;
@@ -48,43 +50,64 @@ export default function ModalDetail({
     }
 
     const [loading, setLoading] = useState(false);
-    const [Budget, setBudget] = useState<Budget[]>([])
+    const [budget, setBudget] = useState<Budget | null>(null)
 
-    const getMenuDetail = async () => {
+    const getBudgetDetail = async () => {
         try {
             if (!id) return;
+            setLoading(true)
             const getBudget = await fetch(`/api/budget?id=${id}`, {
                 method: "GET"
             });
             const res = await getBudget.json();
             if (res.data) {
-                setBudget(res.data)
+                setBudget(res.data[0])
             }
-            // setLoading(false)
         } catch (err) {
             console.error(err);
         } finally {
+            setLoading(false)
         }
     }
 
+    useEffect(() => {
+        if (id) getBudgetDetail()
+    }, [id])
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} className="max-w-[800px] p-10">
-            {loading && <Loading />}
-            <div className="text-center">
-                <h4 className={`mb-2 text-2xl font-semibold ${pixelify.className} py-2`} >
-                    detail
-                </h4>
-                <div className="relative flex items-center justify-center z-1 mb-3">
+            {loading ? (<Loading />) : budget ? (
+                <div className={`${geistMono.className} text-left space-y-2 pt-3`}>
+                    <h2 className="text-sm">
+                        {budget?.periods?.name}
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                        {moment(budget?.periods.start_date).format("DD MMMM YYYY")} - {moment(budget?.periods.end_date).format("DD MMMM YYYY")}
+                    </p>
+
+                    <div className="flex flex-col border-t border-gray-300 pt-4 gap-1">
+                        <p className="text-sm">income: <span className="">{formatRupiah(budget?.income ?? 0)}</span></p>
+                        <p className="text-sm">max Expense: <span className="">{formatRupiah(budget?.max_expense ?? 0)}</span></p>
+                    </div>
+
+                    <div className="mt-4">
+                        <p className=" mb-2 text-gray-600">categories:</p>
+                        {budget?.budget_categories.map((cat, i) => (
+                            <div key={i} className="flex justify-between text-sm py-1">
+                                <span>{cat.categories.name}</span>
+                                {/* <span>{formatRupiah(cat.amount)}</span> */}
+                                <div className="flex flex-row gap-2 items-center justify-center">
+                                    <span>{formatRupiah(cat.amount)}</span>
+                                    <Button size="xs" variant="primary" className={`${geistMono.className} text-xs cursor-pointer hover:underline hover:text-pink-600`}>adjust</Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <p className={`text-gray-600 dark:text-gray-400 ${geistMono.className}`}>
-                    message
-                </p>
-                <div className={`${pixelify.className} mt-4 flex gap-6 items-center justify-center`}>
-                    <Button size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
-                        ok
-                    </Button>
-                </div>
-            </div>
+            ) : (
+                <div>nga ada budget</div>
+            )
+            }
         </Modal >
     )
 }
