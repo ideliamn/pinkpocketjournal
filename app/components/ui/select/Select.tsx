@@ -1,5 +1,5 @@
 import { Geist_Mono } from "next/font/google";
-import React from "react";
+import React, { useState } from "react";
 
 interface Option {
     value: string;
@@ -11,7 +11,7 @@ interface SelectProps {
     placeholder?: string;
     onChange: (value: string) => void;
     className?: string;
-    // defaultValue?: string;
+    defaultValue?: string;
     value?: string;
 }
 
@@ -26,17 +26,17 @@ const Select: React.FC<SelectProps> = ({
     placeholder = "Select an option",
     onChange,
     className = "",
-    // defaultValue = "",
+    defaultValue = "",
     value = "",
 }) => {
     // Manage the selected value
-    // const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
+    const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
 
     const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        // const value = e.target.value;
-        // setSelectedValue(value);
-        // onChange(value); // Trigger parent handler
-        onChange(e.target.value);
+        const value = e.target.value;
+        setSelectedValue(value);
+        onChange(value); // Trigger parent handler
+        // onChange(e.target.value);
     };
 
     return (
@@ -45,7 +45,7 @@ const Select: React.FC<SelectProps> = ({
                 ? "text-gray-800"
                 : "text-gray-600"
                 } ${className}`}
-            value={value}
+            value={selectedValue}
             onChange={handleChange}
         >
             {/* Placeholder option */}
