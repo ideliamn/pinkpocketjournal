@@ -100,18 +100,21 @@ export async function PUT(req: Request) {
     try {
         const body = await req.json();
 
-        if (!body.id || !body.budget_id || !body.category_id || !body.amount) {
+        if (!body.id || !body.category_id || !body.amount) {
             code = 0
             message = "Please input all required fields!"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const updateBudgetCategory = {
-            budget_id: body.budget_id,
+        const updateBudgetCategory: any = {
             category_id: body.category_id,
             amount: body.amount,
             updated_at: dateTimeNow()
+        };
+
+        if (body.budget_id) {
+            updateBudgetCategory.budget_id = body.budget_id;
         }
 
         const { data: updatedData, error } = await supabase

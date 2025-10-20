@@ -104,6 +104,7 @@ export default function Budgets() {
     const closeModalDetail = () => {
         setOpenModalDetail(false);
         setSelectedId(null)
+        getMenu();
     }
 
     const handleClickDetail = async (id: number) => {
