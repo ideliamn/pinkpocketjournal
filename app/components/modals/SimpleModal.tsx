@@ -5,7 +5,7 @@ import { Modal } from ".";
 import Button from "../ui/button/Button";
 
 interface ModalSuccessProps {
-    type: "success" | "failed" | "info" | "warning"; // success / failed / info / warning
+    type: "success" | "failed" | "info" | "warning" | "confirm"; // success / failed / info / warning
     isOpen: boolean;
     onClose: () => void;
     title?: string;
@@ -16,6 +16,7 @@ interface ModalSuccessProps {
     noButton?: boolean;
     noButtonText?: string;
     handleNo?: () => void;
+    onConfirm?: () => void;
 }
 
 const pixelify = Pixelify_Sans({
@@ -33,14 +34,16 @@ const polygon = {
     success: "",
     failed: "",
     info: "",
-    warning: "14 11 14 14 13 14 13 17 11 17 11 14 10 14 10 11 14 11"
+    warning: "14 11 14 14 13 14 13 17 11 17 11 14 10 14 10 11 14 11",
+    confirm: "17 5 17 11 16 11 16 12 15 12 15 13 13 13 13 15 10 15 10 12 11 12 11 11 13 11 13 10 14 10 14 6 10 6 10 7 9 7 9 8 7 8 7 5 8 5 8 4 9 4 9 3 15 3 15 4 16 4 16 5 17 5"
 }
 
 const path = {
     success: "m22,9v-2h-1v-2h-1v-1h-1v-1h-2v-1h-2v-1h-6v1h-2v1h-2v1h-1v1h-1v2h-1v2h-1v6h1v2h1v2h1v1h1v1h2v1h2v1h6v-1h2v-1h2v-1h1v-1h1v-2h1v-2h1v-6h-1Zm-4,3h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-2v-1h-1v-1h-1v-1h-1v-1h-1v-2h1v-1h2v1h1v1h2v-1h1v-1h1v-1h1v-1h1v-1h2v1h1v2h-1v1Z",
     failed: "m22,9v-2h-1v-2h-1v-1h-1v-1h-2v-1h-2v-1h-6v1h-2v1h-2v1h-1v1h-1v2h-1v2h-1v6h1v2h1v2h1v1h1v1h2v1h2v1h6v-1h2v-1h2v-1h1v-1h1v-2h1v-2h1v-6h-1Zm-8,7v-1h-1v-1h-2v1h-1v1h-1v1h-1v-1h-1v-1h1v-1h1v-1h1v-2h-1v-1h-1v-1h-1v-1h1v-1h1v1h1v1h1v1h2v-1h1v-1h1v-1h1v1h1v1h-1v1h-1v1h-1v2h1v1h1v1h1v1h-1v1h-1v-1h-1Z",
     info: "m22,9v-2h-1v-2h-1v-1h-1v-1h-2v-1h-2v-1h-6v1h-2v1h-2v1h-1v1h-1v2h-1v2h-1v6h1v2h1v2h1v1h1v1h2v1h2v1h6v-1h2v-1h2v-1h1v-1h1v-2h1v-2h1v-6h-1Zm-11-3h2v2h-2v-2Zm-1,9h1v-5h-1v-1h3v6h1v2h-4v-2Z",
-    warning: "m22,20v-2h-1v-2h-1v-2h-1v-2h-1v-2h-1v-2h-1v-2h-1v-2h-1v-2h-1v-1h-2v1h-1v2h-1v2h-1v2h-1v2h-1v2h-1v2h-1v2h-1v2h-1v2h-1v2h1v1h20v-1h1v-2h-1Zm-19,1v-1h1v-2h1v-2h1v-2h1v-2h1v-2h1v-2h1v-2h1v-2h2v2h1v2h1v2h1v2h1v2h1v2h1v2h1v2h1v1H3Z"
+    warning: "m22,20v-2h-1v-2h-1v-2h-1v-2h-1v-2h-1v-2h-1v-2h-1v-2h-1v-2h-1v-1h-2v1h-1v2h-1v2h-1v2h-1v2h-1v2h-1v2h-1v2h-1v2h-1v2h-1v2h1v1h20v-1h1v-2h-1Zm-19,1v-1h1v-2h1v-2h1v-2h1v-2h1v-2h1v-2h1v-2h1v-2h2v2h1v2h1v2h1v2h1v2h1v2h1v2h1v2h1v1H3Z",
+    confirm: ""
 }
 
 export default function SimpleModal({
