@@ -50,7 +50,7 @@ export default function SimpleModal({
     type,
     isOpen,
     onClose,
-    title = type == "info" ? type : type + "!",
+    title = type == "info" || type == "confirm" ? type : type + "!",
     message,
     yesButton = false,
     yesButtonText = "",

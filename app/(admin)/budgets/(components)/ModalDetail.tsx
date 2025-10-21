@@ -112,6 +112,10 @@ export default function ModalDetail({
     const [openModalFailed, setOpenModalFailed] = useState(false);
     const closeModalFailed = () => { setOpenModalFailed(false) };
     const [failedMessage, setFailedMessage] = useState("");
+    const [openModalConfirm, setOpenModalConfirm] = useState(false);
+    const [confirmMessage, setConfirmMessage] = useState("");
+    const [pendingAction, setPendingAction] = useState<"edit" | "delete" | null>(null);
+
 
     const handleClickEditBC = async (idBC: number) => {
         console.log("id: ", idBC)
@@ -144,15 +148,38 @@ export default function ModalDetail({
         setSelectedIdEditBC(idBC);
     }
 
+    const handleOpenConfirmEdit = () => {
+        setConfirmMessage("are you sure you want to update this category?");
+        setPendingAction("edit");
+        setOpenModalConfirm(true);
+    };
+
+    const handleOpenConfirmDelete = () => {
+        setConfirmMessage("are you sure you want to delete this category?");
+        setPendingAction("delete");
+        setOpenModalConfirm(true);
+    };
+
+    const handleConfirmAction = async () => {
+        if (pendingAction === "edit") {
+            await handleSubmitEditBC();
+        } else if (pendingAction === "delete") {
+            await handleDeleteBC(selectedBC?.id ?? 0);
+        }
+        setOpenModalConfirm(false);
+        setPendingAction(null);
+    };
+
+
     const closeModalEditBC = () => {
         getBudgetDetail()
         setOpenModalEditBC(false);
         setSelectedIdEditBC(null)
     }
 
-    const handleSubmitEditBC = async (e: React.FormEvent) => {
+    const handleSubmitEditBC = async (e?: React.FormEvent) => {
         setLoading(true);
-        e.preventDefault();
+        e?.preventDefault();
         console.log("selectedBC: " + JSON.stringify(selectedBC))
         try {
             if (!selectedBC?.id || !selectedBC.categories.id || !selectedBC.amount) {
@@ -268,7 +295,7 @@ export default function ModalDetail({
                     <h2 className={`${geistMono.className} font-semibold text-md text-left space-y-2 pt-3 py-3`}>
                         edit budget for category
                     </h2>
-                    <form onSubmit={handleSubmitEditBC}>
+                    <form>
                         <div className="flex gap-4 items-center space-y-4">
                             <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
                                 category
@@ -300,10 +327,10 @@ export default function ModalDetail({
                             </div>
                         </div>
                         <div className="flex items-center justify-center py-6 gap-3">
-                            <Button type="submit" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                            <Button onClick={() => handleOpenConfirmEdit()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
                                 update
                             </Button>
-                            <Button type="button" onClick={() => { handleDeleteBC(selectedBC?.id ?? 0) }} size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                            <Button type="button" onClick={() => { handleOpenConfirmDelete() }} size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
                                 delete
                             </Button>
                         </div>
@@ -316,6 +343,9 @@ export default function ModalDetail({
                     isOpen={openModalSuccess}
                     onClose={closeModalSuccess}
                     message={successMessage}
+                    yesButton
+                    yesButtonText="ok"
+                    handleYes={closeModalSuccess}
                 />
             )}
             {openModalFailed && (
@@ -324,6 +354,23 @@ export default function ModalDetail({
                     isOpen={openModalFailed}
                     onClose={closeModalFailed}
                     message={failedMessage}
+                    yesButton
+                    yesButtonText="ok"
+                    handleYes={closeModalFailed}
+                />
+            )}
+            {openModalConfirm && (
+                <SimpleModal
+                    type="confirm"
+                    isOpen={openModalConfirm}
+                    onClose={() => setOpenModalConfirm(false)}
+                    message={confirmMessage}
+                    yesButton
+                    yesButtonText="yes"
+                    handleYes={handleConfirmAction}
+                    noButton
+                    noButtonText="cancel"
+                    handleNo={() => setOpenModalConfirm(false)}
                 />
             )}
         </Modal >
