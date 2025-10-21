@@ -77,6 +77,23 @@ export default function ModalDetail({
     }
 
     useEffect(() => {
+        const fetchCategory = async () => {
+            const getCategory = await fetch(`/api/category?userId=${id}`);
+            console.log("getCategory: ", JSON.stringify(getCategory))
+            const res = await getCategory.json();
+            if (res.data) {
+                const dataCategory: Categories[] = res.data
+                const formattedOptions = dataCategory.map((k) => ({
+                    value: String(k.id),
+                    label: k.name,
+                })).sort((a, b) => a.label.localeCompare(b.label));
+                setCategoryOptions(formattedOptions);
+            }
+        }
+        fetchCategory();
+    }, [])
+
+    useEffect(() => {
         if (id) getBudgetDetail()
     }, [id])
 
@@ -114,7 +131,8 @@ export default function ModalDetail({
     const [failedMessage, setFailedMessage] = useState("");
     const [openModalConfirm, setOpenModalConfirm] = useState(false);
     const [confirmMessage, setConfirmMessage] = useState("");
-    const [pendingAction, setPendingAction] = useState<"edit" | "delete" | null>(null);
+    const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
+    const [isCreateMode, setIsCreateMode] = useState(false);
 
 
     const handleClickEditBC = async (idBC: number) => {
@@ -131,17 +149,6 @@ export default function ModalDetail({
                     name: foundBC.categories.name
                 }
             });
-        }
-        const getCategory = await fetch(`/api/category?userId=${id}`);
-        console.log("getCategory: ", JSON.stringify(getCategory))
-        const res = await getCategory.json();
-        if (res.data) {
-            const dataCategory: Categories[] = res.data
-            const formattedOptions = dataCategory.map((k) => ({
-                value: String(k.id),
-                label: k.name,
-            })).sort((a, b) => a.label.localeCompare(b.label));
-            setCategoryOptions(formattedOptions);
         }
         setOpenModalEditBC(true)
         setLoading(false)
@@ -165,6 +172,8 @@ export default function ModalDetail({
             await handleSubmitEditBC();
         } else if (pendingAction === "delete") {
             await handleDeleteBC(selectedBC?.id ?? 0);
+        } else if (pendingAction === "create") {
+            await handleSubmitCreateBC();
         }
         setOpenModalConfirm(false);
         setPendingAction(null);
@@ -175,6 +184,7 @@ export default function ModalDetail({
         getBudgetDetail()
         setOpenModalEditBC(false);
         setSelectedIdEditBC(null)
+        setIsCreateMode(false);
     }
 
     const handleSubmitEditBC = async (e?: React.FormEvent) => {
@@ -188,7 +198,6 @@ export default function ModalDetail({
                 setLoading(false);
                 return;
             }
-
             const res = await fetch("/api/budget-category", {
                 method: "PUT",
                 body: JSON.stringify({
@@ -197,9 +206,7 @@ export default function ModalDetail({
                     amount: selectedBC.amount
                 }),
             });
-
             const data = await res.json();
-
             if (res.ok) {
                 setSuccessMessage("success update budget for this category!");
                 setLoading(false);
@@ -248,6 +255,46 @@ export default function ModalDetail({
         }
     };
 
+    const handleOpenConfirmCreate = () => {
+        setConfirmMessage("are you sure you want to create this category?");
+        setPendingAction("create");
+        setOpenModalConfirm(true);
+    };
+
+    const handleSubmitCreateBC = async () => {
+        setLoading(true);
+        try {
+            if (!selectedBC?.categories.id || !selectedBC.amount) {
+                setFailedMessage("fill all the required fields!");
+                setOpenModalFailed(true);
+                setLoading(false);
+                return;
+            }
+            const res = await fetch("/api/budget-category", {
+                method: "POST",
+                body: JSON.stringify({
+                    budget_id: id,
+                    category_id: selectedBC.categories.id,
+                    amount: selectedBC.amount,
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSuccessMessage("success");
+                setOpenModalSuccess(true);
+            } else {
+                setFailedMessage(data.message);
+                setOpenModalFailed(true);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            closeModalEditBC();
+            setLoading(false);
+            setIsCreateMode(false);
+        }
+    };
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} className="max-w-[600px] p-10">
             {loading ? (<Loading />) : budget ? (
@@ -281,7 +328,11 @@ export default function ModalDetail({
                                 </div>
                             </div>
                         ))}
-                        <Button size="sm" variant="primary" className={`${geistMono.className} text-sm text-gray-500 cursor-pointer hover:underline hover:text-pink-600`}>add new category for this period...</Button>
+                        <Button size="sm" variant="primary" className={`${geistMono.className} text-sm text-gray-500 cursor-pointer hover:underline hover:text-pink-600`} onClick={() => {
+                            setSelectedBC({ id: 0, amount: 0, categories: { id: 0, name: "" } });
+                            setIsCreateMode(true);
+                            setOpenModalEditBC(true);
+                        }}>add new category for this period...</Button>
                     </div>
                 </div>
             ) : (
@@ -327,12 +378,21 @@ export default function ModalDetail({
                             </div>
                         </div>
                         <div className="flex items-center justify-center py-6 gap-3">
-                            <Button onClick={() => handleOpenConfirmEdit()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
-                                update
-                            </Button>
-                            <Button type="button" onClick={() => { handleOpenConfirmDelete() }} size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
-                                delete
-                            </Button>
+                            {isCreateMode ? (<>
+                                <Button onClick={() => handleOpenConfirmCreate()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                                    create
+                                </Button>
+                                <Button onClick={() => closeModalEditBC()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                                    cancel
+                                </Button>
+                            </>) : (<>
+                                <Button onClick={() => handleOpenConfirmEdit()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                                    update
+                                </Button>
+                                <Button type="button" onClick={() => handleOpenConfirmDelete()} size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                                    delete
+                                </Button>
+                            </>)}
                         </div>
                     </form>
                 </FormModal>
