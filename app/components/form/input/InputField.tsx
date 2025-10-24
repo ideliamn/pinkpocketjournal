@@ -1,3 +1,4 @@
+import { Geist_Mono } from "next/font/google";
 import React, { FC } from "react";
 
 interface InputProps {
@@ -15,7 +16,14 @@ interface InputProps {
   success?: boolean;
   error?: boolean;
   hint?: string; // Optional hint text
+  formatNumber?: boolean;
 }
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-sono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"]
+});
 
 const Input: FC<InputProps> = ({
   type = "text",
@@ -32,9 +40,10 @@ const Input: FC<InputProps> = ({
   success = false,
   error = false,
   hint,
+  formatNumber = false,
 }) => {
   // Determine input styles based on state (disabled, success, error)
-  let inputClasses = `h-8 w-full border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 ${className}`;
+  let inputClasses = `h-8 w-full border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 ${geistMono.className} ${className}`;
 
   // Add styles for the different states
   if (disabled) {
@@ -47,15 +56,30 @@ const Input: FC<InputProps> = ({
     inputClasses += ` bg-transparent text-gray-800`;
   }
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (formatNumber) {
+      const rawValue = e.target.value.replace(/\D/g, "");
+      const formatted = new Intl.NumberFormat("id-ID").format(Number(rawValue));
+      e.target.value = formatted;
+      const fakeEvent = {
+        ...e,
+        target: { ...e.target, value: rawValue },
+      };
+      onChange && onChange(fakeEvent as React.ChangeEvent<HTMLInputElement>);
+    } else {
+      onChange && onChange(e);
+    }
+  };
+
   return (
     <div className="relative">
       <input
-        type={type}
+        type={formatNumber ? "text" : type}
         id={id}
         name={name}
         placeholder={placeholder}
         defaultValue={defaultValue}
-        onChange={onChange}
+        onChange={handleChange}
         min={min}
         max={max}
         step={step}
