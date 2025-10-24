@@ -95,7 +95,7 @@ export default function Login() {
                             </div>
                         </div>
                         <div className="flex items-center justify-center">
-                            <Button size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                            <Button type="submit" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
                                 login
                             </Button>
                         </div>
