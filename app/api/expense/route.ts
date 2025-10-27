@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         if (sourceId) query = query.eq("source_id", sourceId);
         if (search) query = query.ilike("description", `${search}`);
 
-        const { data: result, error } = await query;
+        const { data: result, error } = await query.order("expense_date", { ascending: false });
 
         if (error) {
             throw new Error(error.message)

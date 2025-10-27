@@ -73,6 +73,11 @@ const Input: FC<InputProps> = ({
 
   return (
     <div className="relative">
+      {formatNumber && (
+        <span className={`${geistMono.className} absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm select-none`}>
+          Rp
+        </span>
+      )}
       <input
         type={formatNumber ? "text" : type}
         id={id}
@@ -84,7 +89,7 @@ const Input: FC<InputProps> = ({
         max={max}
         step={step}
         disabled={disabled}
-        className={inputClasses}
+        className={`${inputClasses} ${formatNumber ? "pl-8" : ""}`}
       />
 
       {/* Optional Hint Text */}

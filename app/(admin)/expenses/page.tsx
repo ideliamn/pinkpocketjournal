@@ -10,6 +10,7 @@ import { formatRupiah } from "../../../lib/helpers/format";
 import FormModal from "../../components/modals/FormModal";
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/ui/select/Select";
+import SimpleModal from "../../components/modals/SimpleModal";
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-sono",
@@ -23,6 +24,8 @@ const pixelify = Pixelify_Sans({
 });
 
 export default function Expenses() {
+    const now = new Date();
+    const today = now.toISOString().split("T")[0];
     interface Expense {
         id: number;
         description: string;
@@ -47,6 +50,13 @@ export default function Expenses() {
     interface Select {
         id: number,
         name: string;
+    }
+
+    interface Budget {
+        id: number,
+        periods: {
+            name: string;
+        }
     }
 
     const { profile } = useProfile()
@@ -86,7 +96,6 @@ export default function Expenses() {
 
     const fetchCategory = async () => {
         const getCategory = await fetch(`/api/category?userId=${profile?.id}`);
-        console.log("getCategory: ", JSON.stringify(getCategory))
         const res = await getCategory.json();
         if (res.data) {
             const dataCategory: Select[] = res.data
@@ -99,20 +108,18 @@ export default function Expenses() {
     }
     const fetchBudget = async () => {
         const getBudget = await fetch(`/api/budget?userId=${profile?.id}`);
-        console.log("getBudget: ", JSON.stringify(getBudget))
         const res = await getBudget.json();
         if (res.data) {
-            const dataBudget: Select[] = res.data
+            const dataBudget: Budget[] = res.data
             const formattedOptions = dataBudget.map((k) => ({
                 value: String(k.id),
-                label: k.name,
+                label: k?.periods?.name,
             })).sort((a, b) => a.label.localeCompare(b.label));
             setBudgetOptions(formattedOptions);
         }
     }
     const fetchSource = async () => {
         const getSource = await fetch(`/api/source?userId=${profile?.id}`);
-        console.log("getSource: ", JSON.stringify(getSource))
         const res = await getSource.json();
         if (res.data) {
             const dataSource: Select[] = res.data
@@ -124,23 +131,97 @@ export default function Expenses() {
         }
     }
 
+    const handleClickCreateExpense = () => {
+        setSelectedExpense({
+            id: 0,
+            description: "",
+            amount: 0,
+            expense_date: today,
+            budget_id: -1,
+            budgets: { periods: { name: "" } },
+            category_id: -1,
+            categories: { name: "" },
+            source_id: -1,
+            sources: { name: "" }
+        });
+        setOpenModalAdd(true)
+    }
+
     const closeModalAdd = () => {
         setOpenModalAdd(false);
         getExpenses();
     }
 
-    const handleSubmit = () => {
+    const handleSubmitCreateExpense = async () => {
         console.log("submit!")
+        setLoading(true);
+        try {
+            if (!selectedExpense?.description
+                || selectedExpense?.amount < 0
+                || !selectedExpense?.expense_date
+                || selectedExpense?.budget_id <= 0
+                || selectedExpense?.category_id <= 0
+                || selectedExpense?.source_id <= 0
+            ) {
+                setFailedMessage("fill all the required fields!");
+                setOpenModalFailed(true);
+                setLoading(false);
+                return;
+            }
+            const res = await fetch("/api/expenses", {
+                method: "POST",
+                body: JSON.stringify({
+                    user_id: profile?.id,
+                    budget_id: selectedExpense?.budget_id,
+                    category_id: selectedExpense?.category_id,
+                    description: selectedExpense?.description,
+                    amount: selectedExpense?.amount,
+                    expense_date: selectedExpense?.expense_date,
+                    source_id: selectedExpense?.source_id
+                })
+            })
+            const data = await res.json();
+            if (res.ok) {
+                setSuccessMessage("success");
+                setOpenModalSuccess(true);
+            } else {
+                setFailedMessage(data.message);
+                setOpenModalFailed(true);
+            }
+        } catch (err) {
+            console.error(err)
+        } finally {
+            closeModalAdd();
+            setLoading(false);
+        }
     }
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        console.log("name: " + name + ", value: " + value)
+    const handleOpenConfirmCreate = () => {
+        console.log("selectedExpense?.description: ", selectedExpense?.description)
+        console.log("selectedExpense?.amount: ", selectedExpense?.amount)
+        console.log("selectedExpense?.expense_date: ", selectedExpense?.expense_date)
+        console.log("selectedExpense?.budget_id: ", selectedExpense?.budget_id)
+        console.log("selectedExpense?.category_id: ", selectedExpense?.category_id)
+        console.log("selectedExpense?.source_id: ", selectedExpense?.source_id)
+        if (!selectedExpense?.description
+            || !selectedExpense?.amount
+            || !selectedExpense?.expense_date
+            || !selectedExpense?.budget_id
+            || !selectedExpense?.category_id
+            || !selectedExpense?.source_id
+        ) {
+            setFailedMessage("fill all the required fields!");
+            setOpenModalFailed(true);
+            setLoading(false);
+            return;
+        }
+        setConfirmMessage("are you sure you want to create this expense?");
+        setOpenModalConfirm(true);
     };
 
-    const handleOpenConfirmCreate = () => {
-        setConfirmMessage("are you sure you want to create this category?");
-        setOpenModalConfirm(true);
+    const handleConfirmAction = async () => {
+        await handleSubmitCreateExpense();
+        setOpenModalConfirm(false);
     };
 
     useEffect(() => {
@@ -160,7 +241,7 @@ export default function Expenses() {
                 expenses
             </h1>
             <div className="mt-2 items-center justify-center">
-                <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => setOpenModalAdd(true)}>
+                <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => handleClickCreateExpense()}>
                     <div className="flex flex-col">
                         <div className="flex flex-row items-center justify-center mb-1">
                             <svg id="plus-solid" width="20" height="20" fill="#FF6F91" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="23 11 23 13 22 13 22 14 14 14 14 22 13 22 13 23 11 23 11 22 10 22 10 14 2 14 2 13 1 13 1 11 2 11 2 10 10 10 10 2 11 2 11 1 13 1 13 2 14 2 14 10 22 10 22 11 23 11" /></svg>
@@ -222,6 +303,7 @@ export default function Expenses() {
                                 <div className="flex-1">
                                     <Input
                                         type="text"
+                                        placeholder="enter your description..."
                                         defaultValue={selectedExpense?.description}
                                         onChange={(e) => setSelectedExpense((prev) =>
                                             prev ? { ...prev, description: e.target.value } : prev
@@ -236,11 +318,14 @@ export default function Expenses() {
                                 <div className="flex-1">
                                     <Input
                                         type="number"
-                                        defaultValue={selectedExpense?.amount}
+                                        placeholder="enter your amount..."
+                                        defaultValue={selectedExpense && selectedExpense?.amount >= 0 ? selectedExpense?.amount : ""}
                                         onChange={(e) => setSelectedExpense((prev) =>
                                             prev ? { ...prev, amount: Number(e.target.value) } : prev
-                                        )}>
-                                    </Input>
+                                        )}
+                                        formatNumber={true}
+                                        prefix="Rp"
+                                    ></Input>
                                 </div>
                             </div>
                             <div className="flex gap-4 items-center space-y-4">
@@ -250,7 +335,8 @@ export default function Expenses() {
                                 <div className="flex-1">
                                     <Input
                                         type="date"
-                                        defaultValue={selectedExpense?.expense_date}
+                                        placeholder="enter your date of expense..."
+                                        defaultValue={selectedExpense?.expense_date ?? today}
                                         onChange={(e) => setSelectedExpense((prev) =>
                                             prev ? { ...prev, expense_date: e.target.value } : prev
                                         )}>
@@ -264,8 +350,8 @@ export default function Expenses() {
                                 <div className="flex-1">
                                     <Select
                                         options={budgetOptions}
-                                        placeholder="select budget"
-                                        defaultValue={selectedExpense ? String(selectedExpense?.budget_id) : ""}
+                                        placeholder="select budget..."
+                                        defaultValue={selectedExpense && selectedExpense?.budget_id >= 0 ? String(selectedExpense?.budget_id) : ""}
                                         onChange={(val: string) => {
                                             const selectedLabel = budgetOptions.find((opt) => opt.value === val)?.label || "";
                                             setSelectedExpense((prev) =>
@@ -291,8 +377,8 @@ export default function Expenses() {
                                 <div className="flex-1">
                                     <Select
                                         options={categoryOptions}
-                                        placeholder="select category"
-                                        defaultValue={selectedExpense ? String(selectedExpense.category_id) : ""}
+                                        placeholder="select category..."
+                                        defaultValue={selectedExpense && selectedExpense?.category_id >= 0 ? String(selectedExpense.category_id) : ""}
                                         onChange={(val: string) =>
                                             setSelectedExpense((prev) =>
                                                 prev
@@ -310,6 +396,32 @@ export default function Expenses() {
                                     />
                                 </div>
                             </div>
+                            <div className="flex gap-4 items-center space-y-4">
+                                <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
+                                    source
+                                </div>
+                                <div className="flex-1">
+                                    <Select
+                                        options={sourceOptions}
+                                        placeholder="select source..."
+                                        defaultValue={selectedExpense && selectedExpense?.source_id >= 0 ? String(selectedExpense.source_id) : ""}
+                                        onChange={(val: string) =>
+                                            setSelectedExpense((prev) =>
+                                                prev
+                                                    ? {
+                                                        ...prev,
+                                                        source_id: Number(val),
+                                                        sources: {
+                                                            ...prev.sources,
+                                                            name: sourceOptions.find((opt) => opt.value === val)?.label || "",
+                                                        },
+                                                    }
+                                                    : prev
+                                            )
+                                        }
+                                    />
+                                </div>
+                            </div>
                             <div className="flex items-center justify-center py-6 gap-3">
                                 <Button onClick={() => handleOpenConfirmCreate()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
                                     create
@@ -319,6 +431,42 @@ export default function Expenses() {
                     </FormModal>
                 }
             </div>
+            {openModalSuccess && (
+                <SimpleModal
+                    type={"success"}
+                    isOpen={openModalSuccess}
+                    onClose={closeModalSuccess}
+                    message={successMessage}
+                    yesButton
+                    yesButtonText="ok"
+                    handleYes={closeModalSuccess}
+                />
+            )}
+            {openModalFailed && (
+                <SimpleModal
+                    type={"failed"}
+                    isOpen={openModalFailed}
+                    onClose={closeModalFailed}
+                    message={failedMessage}
+                    yesButton
+                    yesButtonText="ok"
+                    handleYes={closeModalFailed}
+                />
+            )}
+            {openModalConfirm && (
+                <SimpleModal
+                    type="confirm"
+                    isOpen={openModalConfirm}
+                    onClose={() => setOpenModalConfirm(false)}
+                    message={confirmMessage}
+                    yesButton
+                    yesButtonText="yes"
+                    handleYes={handleConfirmAction}
+                    noButton
+                    noButtonText="cancel"
+                    handleNo={() => setOpenModalConfirm(false)}
+                />
+            )}
         </main>
     );
 }
