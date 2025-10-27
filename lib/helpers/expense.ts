@@ -75,3 +75,32 @@ export async function checkExpense(userId: number, budgetId: number, amount: num
 
     return response;
 }
+
+export async function checkCurrentPeriod(userId: number) {
+    type CurrentPeriod = {
+        budget_id: number;
+        period_id: number;
+        user_id: number;
+        start_date: string;
+        end_date: string;
+    };
+
+    let response = {
+        isExist: false,
+        data: {
+            budget_id: 0,
+            period_id: 0,
+            user_id: 0
+        }
+    }
+    const { data: checkPeriod, error: errorCheckPeriod } = await supabase
+        .rpc("get_current_period", { p_user_id: userId })
+        .single() as { data: CurrentPeriod | null, error: any }
+
+    if (checkPeriod) {
+        response.isExist = true;
+        response.data.budget_id = checkPeriod.budget_id
+    }
+
+    return response;
+}

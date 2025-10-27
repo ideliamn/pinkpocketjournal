@@ -11,11 +11,15 @@ import FormModal from "../../components/modals/FormModal";
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/ui/select/Select";
 import SimpleModal from "../../components/modals/SimpleModal";
+import { checkExistingPeriod } from "../../../lib/helpers/period";
+import { checkCurrentPeriod } from "../../../lib/helpers/expense";
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie } from "recharts";
+import ExpensePieChart from "./(components)/ExpensePieChart";
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-sono",
     subsets: ["latin"],
-    weight: ["400"]
+    weight: ["200", "400"]
 })
 
 const pixelify = Pixelify_Sans({
@@ -59,6 +63,15 @@ export default function Expenses() {
         }
     }
 
+    interface Summary {
+        sum_amount: number,
+        category_name: string,
+        bc_limit: number,
+        max_expense: number,
+        percentage_bc_limit: number,
+        percentage_max_expense: number
+    }
+
     const { profile } = useProfile()
     const [loading, setLoading] = useState(false);
     const [expense, setExpense] = useState<Expense[]>([])
@@ -75,6 +88,8 @@ export default function Expenses() {
     const [failedMessage, setFailedMessage] = useState("");
     const [openModalConfirm, setOpenModalConfirm] = useState(false);
     const [confirmMessage, setConfirmMessage] = useState("");
+    const [currentBudgetId, setCurrentBudgetId] = useState(0);
+    const [summary, setSummary] = useState<Summary[]>([])
 
     const getExpenses = async () => {
         try {
@@ -106,6 +121,7 @@ export default function Expenses() {
             setCategoryOptions(formattedOptions);
         }
     }
+
     const fetchBudget = async () => {
         const getBudget = await fetch(`/api/budget?userId=${profile?.id}`);
         const res = await getBudget.json();
@@ -118,6 +134,7 @@ export default function Expenses() {
             setBudgetOptions(formattedOptions);
         }
     }
+
     const fetchSource = async () => {
         const getSource = await fetch(`/api/source?userId=${profile?.id}`);
         const res = await getSource.json();
@@ -129,6 +146,20 @@ export default function Expenses() {
             })).sort((a, b) => a.label.localeCompare(b.label));
             setSourceOptions(formattedOptions);
         }
+    }
+
+    const fetchSummary = async () => {
+        const getSummary = await fetch(`/api/expense/summary?budgetId=${currentBudgetId}`);
+        const res = await getSummary.json();
+        if (res.data) {
+            const dataSummary: Summary[] = res.data
+            setSummary(dataSummary)
+        }
+    }
+
+    const getCurrentPeriod = async () => {
+        const cp = await checkCurrentPeriod(Number(profile?.id))
+        if (cp) { setCurrentBudgetId(cp.data.budget_id) }
     }
 
     const handleClickCreateExpense = () => {
@@ -168,7 +199,7 @@ export default function Expenses() {
                 setLoading(false);
                 return;
             }
-            const res = await fetch("/api/expenses", {
+            const res = await fetch("/api/expense", {
                 method: "POST",
                 body: JSON.stringify({
                     user_id: profile?.id,
@@ -231,8 +262,13 @@ export default function Expenses() {
             fetchCategory();
             fetchBudget();
             fetchSource();
+            getCurrentPeriod();
         }
     }, [profile])
+
+    useEffect(() => {
+        if (currentBudgetId > 0) { fetchSummary() }
+    }, [currentBudgetId > 0])
 
     return (
         <main className="flex flex-col items-center min-h-screen pt-20 gap-10">
@@ -240,6 +276,16 @@ export default function Expenses() {
             <h1 className={`${pixelify.className} text-xl`}>
                 expenses
             </h1>
+            <div className="flex flex-wrap justify-center gap-x-3 text-center px-6">
+                {summary.map((s) => (
+                    <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} py-2 border shadow-xs max-w-[200px] sm:w-auto`}>
+                        <h3 className="text-sm font-semibold py-1">{s.category_name}</h3>
+                        <p className="text-xs py-2">Rp {s.sum_amount.toLocaleString("id-ID")}</p>
+                        <p className="text-xs">{s.percentage_max_expense}% of budget's max expense</p>
+                        {s.bc_limit && (<p className="text-xs">{s.percentage_bc_limit}% of category's budget</p>)}
+                    </div>
+                ))}
+            </div>
             <div className="mt-2 items-center justify-center">
                 <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => handleClickCreateExpense()}>
                     <div className="flex flex-col">
@@ -264,19 +310,19 @@ export default function Expenses() {
                                 <div className="flex flex-row justify-between text-xs mt-2">
                                     <div className="w-1/2">
                                         <div className="flex flex-col">
-                                            <span>category:</span>
+                                            <span className="text-gray-500">category:</span>
                                             <span>{e.categories?.name}</span>
                                         </div>
                                     </div>
                                     <div className="w-1/2">
                                         <div className="flex flex-col">
-                                            <span>source:</span>
+                                            <span className="text-gray-500">source:</span>
                                             <span>{e.sources?.name}</span>
                                         </div>
                                     </div>
                                     <div className="w-1/3">
                                         <div className="flex flex-col">
-                                            <span>budget:</span>
+                                            <span className="text-gray-500">budget:</span>
                                             <span>{e.budgets?.periods?.name}</span>
                                         </div>
                                     </div>
@@ -324,7 +370,6 @@ export default function Expenses() {
                                             prev ? { ...prev, amount: Number(e.target.value) } : prev
                                         )}
                                         formatNumber={true}
-                                        prefix="Rp"
                                     ></Input>
                                 </div>
                             </div>
