@@ -78,6 +78,18 @@ export default function Sources() {
         setOpenModalConfirm(true);
     };
 
+    const handleOpenConfirmEdit = () => {
+        setConfirmMessage("are you sure you want to update this category?");
+        setPendingAction("edit");
+        setOpenModalConfirm(true);
+    };
+
+    const handleOpenConfirmDelete = () => {
+        setConfirmMessage("are you sure you want to delete this category?");
+        setPendingAction("delete");
+        setOpenModalConfirm(true);
+    };
+
     const handleClickEditSource = async (id: number) => {
         console.log("id: ", id)
         setLoading(true)
@@ -95,6 +107,15 @@ export default function Sources() {
         setSelectedIdEditSource(id);
     }
 
+    const openModalCreate = () => {
+        setSelectedSource({
+            id: 0,
+            name: ""
+        });
+        setIsCreateMode(true);
+        setOpenModalForm(true);
+    }
+
     const closeModalForm = () => {
         getSource();
         setOpenModalForm(false);
@@ -106,11 +127,6 @@ export default function Sources() {
         setOpenModalSuccess(false);
         getSource();
     }
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormSource((prev) => ({ ...prev, [name]: value }));
-    };
 
     const handleConfirmAction = async () => {
         if (pendingAction === "edit") {
@@ -128,7 +144,7 @@ export default function Sources() {
         setLoading(true);
         e?.preventDefault();
         try {
-            if (!formSource.name) {
+            if (!selectedSource?.name) {
                 setFailedMessage("fill all the required fields!");
                 setOpenModalFailed(true);
                 setLoading(false);
@@ -136,17 +152,18 @@ export default function Sources() {
             }
             const res = await fetch("/api/source", {
                 method: "POST",
-                body: JSON.stringify(formSource),
+                body: JSON.stringify({
+                    user_id: profile?.id,
+                    name: selectedSource?.name
+                }),
             });
             const data = await res.json();
             if (res.ok) {
                 setSuccessMessage("success add new source!");
                 closeModalForm()
-                setLoading(false);
                 setOpenModalSuccess(true);
             } else {
                 setFailedMessage(data.message);
-                setLoading(false);
                 setOpenModalFailed(true);
             }
         } catch (err: any) {
@@ -177,6 +194,7 @@ export default function Sources() {
                 method: "PUT",
                 body: JSON.stringify({
                     id: selectedSource.id,
+                    user_id: profile?.id,
                     name: selectedSource.name
                 }),
             });
@@ -243,7 +261,12 @@ export default function Sources() {
                 sources
             </h1>
             <div className="mt-2 items-center justify-center">
-                <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => setOpenModalForm(true)}>
+                <Button
+                    size="md"
+                    variant="outline"
+                    className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`}
+                    onClick={() => openModalCreate()}
+                >
                     <div className="flex flex-col">
                         <div className="flex flex-row items-center justify-center mb-1">
                             <svg id="plus-solid" width="20" height="20" fill="#FF6F91" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="23 11 23 13 22 13 22 14 14 14 14 22 13 22 13 23 11 23 11 22 10 22 10 14 2 14 2 13 1 13 1 11 2 11 2 10 10 10 10 2 11 2 11 1 13 1 13 2 14 2 14 10 22 10 22 11 23 11" /></svg>
@@ -282,13 +305,19 @@ export default function Sources() {
                                 name
                             </div>
                             <div className="flex-1">
-                                <Input name="name" type="text" placeholder="enter source name..." className={`flex ${geistMono.className} text-s w-full`} onChange={handleChange} />
+                                <Input
+                                    name="name"
+                                    type="text"
+                                    placeholder="enter source name..."
+                                    className={`flex ${geistMono.className} text-s w-full`}
+                                    defaultValue={selectedSource?.name}
+                                    onChange={(e) => setSelectedSource((prev) =>
+                                        prev ? { ...prev, name: e.target.value } : prev
+                                    )}>
+                                </Input>
                             </div>
                         </div>
                         <div className="flex items-center justify-center py-6">
-                            <Button size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
-                                add
-                            </Button>
                             {isCreateMode ? (<>
                                 <Button onClick={() => handleOpenConfirmCreate()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600 mx-2`}>
                                     create
