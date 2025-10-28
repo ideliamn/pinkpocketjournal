@@ -18,25 +18,29 @@ export async function GET(request: Request) {
         const id = searchParams.get("id");
         const budgetId = searchParams.get("budgetId");
         const categoryId = searchParams.get("categoryId");
+        const userId = searchParams.get("userId");
 
-        let query = supabase.from("budget_categories").select("*");
+        let query = supabase.from("budget_categories").select("*, categories(user_id, name), budgets(periods(name, start_date, end_date))");
 
         if (budgetId) query = query.eq("budget_id", budgetId);
         if (categoryId) query = query.eq("category_id", categoryId);
         if (id) query = query.eq("id", id);
 
-        const { data: result, error } = await query;
+        const { data: result, error } = await query.order("created_at", { ascending: false });
+
+        let resultFiltered = []
+        if (userId && result && result.length > 0) resultFiltered = result.filter(r => r.categories?.user_id == userId);
 
         if (error) {
             throw new Error(error.message)
         }
 
-        if (!result || result.length < 1) {
+        if (!result || result.length < 1 || (userId && (!resultFiltered || resultFiltered.length < 1))) {
             code = 0
             message = budgetId && categoryId ? "No budget is set for this category" : "Budget category not found"
             httpStatus = 404
         } else {
-            data = result
+            data = userId ? resultFiltered : result
         }
 
         return NextResponse.json({ code, message, data }, { status: httpStatus })
