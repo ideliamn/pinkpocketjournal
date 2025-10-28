@@ -106,8 +106,7 @@ export async function PUT(req: Request) {
 
         const updateSource = {
             user_id: body.user_id,
-            name: body.name,
-            updated_at: dateTimeNow()
+            name: body.name
         }
 
         const { data: updatedData, error } = await supabase
