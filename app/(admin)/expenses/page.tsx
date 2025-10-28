@@ -13,7 +13,6 @@ import Select from "../../components/ui/select/Select";
 import SimpleModal from "../../components/modals/SimpleModal";
 import { checkExistingPeriod } from "../../../lib/helpers/period";
 import { checkCurrentPeriod } from "../../../lib/helpers/expense";
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie } from "recharts";
 import ExpensePieChart from "./(components)/ExpensePieChart";
 
 const geistMono = Geist_Mono({

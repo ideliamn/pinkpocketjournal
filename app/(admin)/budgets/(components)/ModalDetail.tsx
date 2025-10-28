@@ -179,6 +179,11 @@ export default function ModalDetail({
         setPendingAction(null);
     };
 
+    const openModalCreateBC = () => {
+        setSelectedBC({ id: 0, amount: 0, categories: { id: 0, name: "" } });
+        setIsCreateMode(true);
+        setOpenModalEditBC(true);
+    }
 
     const closeModalEditBC = () => {
         getBudgetDetail()
@@ -328,11 +333,7 @@ export default function ModalDetail({
                                 </div>
                             </div>
                         ))}
-                        <Button size="sm" variant="primary" className={`${geistMono.className} text-sm text-gray-500 cursor-pointer hover:underline hover:text-pink-600`} onClick={() => {
-                            setSelectedBC({ id: 0, amount: 0, categories: { id: 0, name: "" } });
-                            setIsCreateMode(true);
-                            setOpenModalEditBC(true);
-                        }}>add new category for this period...</Button>
+                        <Button size="sm" variant="primary" className={`${geistMono.className} text-sm text-gray-500 cursor-pointer hover:underline hover:text-pink-600`} onClick={() => openModalCreateBC()}>add new category for this period...</Button>
                     </div>
                 </div>
             ) : (
