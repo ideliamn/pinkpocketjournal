@@ -18,6 +18,7 @@ export async function GET(request: Request) {
         const id = searchParams.get("id");
         const userId = searchParams.get("userId");
         const periodId = searchParams.get("periodId");
+        const status = searchParams.get("status");
 
         let query = supabase.from("budgets").select("*, periods(name, start_date, end_date), budget_categories(id, amount, categories(id, name))");
 
@@ -25,10 +26,20 @@ export async function GET(request: Request) {
         if (periodId) query = query.eq("period_id", periodId);
         if (id) query = query.eq("id", id);
 
-        const { data: result, error } = await query;
+        let { data: result, error } = await query;
 
         if (error) {
             throw new Error(error.message)
+        }
+
+        if (status === "active" && result) {
+            const today = new Date().toISOString().split("T")[0];
+            result = result.filter(
+                (r) =>
+                    r.periods &&
+                    r.periods.start_date <= today &&
+                    r.periods.end_date >= today
+            );
         }
 
         if (!result || result.length < 1) {

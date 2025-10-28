@@ -19,12 +19,15 @@ export async function GET(request: Request) {
         const userId = searchParams.get("userId")
         const id = searchParams.get("id");
         const search = searchParams.get("search");
+        const status = searchParams.get("status");
 
         let query = supabase.from("periods").select("*");
 
         if (id) query = query.eq("id", id);
         if (userId) query = query.eq("user_id", userId);
         if (search) query = query.ilike("name", `${search}`);
+        const today = new Date().toISOString().split("T")[0];
+        if (status === "active") query = query.gte("end_date", today).lte("start_date", today)
 
         const { data: result, error } = await query;
 
