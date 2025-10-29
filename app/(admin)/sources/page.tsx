@@ -30,11 +30,6 @@ export default function Sources() {
         name: string;
     }
 
-    interface FormSourceType {
-        user_id?: number;
-        name?: string;
-    }
-
     const { profile } = useProfile()
     const [loading, setLoading] = useState(false);
     const [openModalForm, setOpenModalForm] = useState(false);
@@ -50,10 +45,6 @@ export default function Sources() {
     const [selectedIdEditSource, setSelectedIdEditSource] = useState<number | null>(null);
     const [source, setSource] = useState<Source[]>([])
     const [selectedSource, setSelectedSource] = useState<Source | null>(null);
-    const [formSource, setFormSource] = useState<FormSourceType>({
-        user_id: 0,
-        name: "",
-    });
 
     const getSource = async () => {
         try {
@@ -73,19 +64,19 @@ export default function Sources() {
     }
 
     const handleOpenConfirmCreate = () => {
-        setConfirmMessage("are you sure you want to create this category?");
+        setConfirmMessage("are you sure you want to create this source?");
         setPendingAction("create");
         setOpenModalConfirm(true);
     };
 
     const handleOpenConfirmEdit = () => {
-        setConfirmMessage("are you sure you want to update this category?");
+        setConfirmMessage("are you sure you want to update this source?");
         setPendingAction("edit");
         setOpenModalConfirm(true);
     };
 
     const handleOpenConfirmDelete = () => {
-        setConfirmMessage("are you sure you want to delete this category?");
+        setConfirmMessage("are you sure you want to delete this source?");
         setPendingAction("delete");
         setOpenModalConfirm(true);
     };
@@ -250,7 +241,6 @@ export default function Sources() {
         setLoading(true)
         if (profile?.id) {
             getSource()
-            setFormSource((prev) => ({ ...prev, user_id: Number(profile?.id) }))
         }
     }, [profile])
 
@@ -275,13 +265,13 @@ export default function Sources() {
                     </div>
                 </Button>
                 {source.length > 0 ? (
-                    source.map((p) => {
+                    source.map((s) => {
                         return (
                             <Card
-                                key={p.name}
-                                title={p.name}
+                                key={s.name}
+                                title={s.name}
                                 className="min-w-[400px] outline-gray-400 hover:bg-pink-400 cursor-pointer mt-6"
-                                onClick={() => { handleClickEditSource(p.id) }}
+                                onClick={() => { handleClickEditSource(s.id) }}
                             >
                                 <span></span>
                             </Card>

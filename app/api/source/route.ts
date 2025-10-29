@@ -64,6 +64,20 @@ export async function POST(req: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
+        const { data: searchExisting, error: errorSearchExisting } = await supabase
+            .from("sources")
+            .select("*")
+            .match({ user_id: body.user_id })
+            .ilike("name", body.name)
+            .single();
+
+        if (searchExisting) {
+            code = 0
+            message = `Source ${body.name} already exists!`
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
+
         const insertSource = {
             user_id: body.user_id,
             name: body.name
@@ -100,6 +114,20 @@ export async function PUT(req: Request) {
         if (!body.id || !body.user_id || !body.name) {
             code = 0
             message = "Please input all required fields!"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
+
+        const { data: searchExisting, error: errorSearchExisting } = await supabase
+            .from("sources")
+            .select("*")
+            .match({ user_id: body.user_id })
+            .ilike("name", body.name)
+            .single();
+
+        if (searchExisting) {
+            code = 0
+            message = `Source ${body.name} already exists!`
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
