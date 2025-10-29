@@ -26,29 +26,27 @@ const pixelify = Pixelify_Sans({
 
 export default function Categories() {
     interface Category {
+        id: number;
         name: string;
-    }
-
-    interface FormCategoryType {
-        user_id?: number;
-        name?: string;
     }
 
     const { profile } = useProfile()
     const [loading, setLoading] = useState(false);
-    const [openModalAdd, setOpenModalAdd] = useState(false);
+    const [openModalForm, setOpenModalForm] = useState(false);
     const [openModalSuccess, setOpenModalSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
     const [openModalFailed, setOpenModalFailed] = useState(false);
     const closeModalFailed = () => { setOpenModalFailed(false) };
     const [failedMessage, setFailedMessage] = useState("");
-    const [Category, setCategory] = useState<Category[]>([])
-    const [formCategory, setFormCategory] = useState<FormCategoryType>({
-        user_id: 0,
-        name: "",
-    });
+    const [openModalConfirm, setOpenModalConfirm] = useState(false);
+    const [confirmMessage, setConfirmMessage] = useState("");
+    const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
+    const [isCreateMode, setIsCreateMode] = useState(false);
+    const [selectedIdEditCategory, setSelectedIdEditCategory] = useState<number | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+    const [category, setCategory] = useState<Category[]>([]);
 
-    const getMenu = async () => {
+    const getCategories = async () => {
         try {
             if (!profile?.id) return;
             const getCategory = await fetch(`/api/category?userId=${profile?.id}`, {
@@ -65,56 +63,98 @@ export default function Categories() {
         }
     }
 
-    useEffect(() => {
-        setLoading(true)
-        if (profile?.id) {
-            getMenu()
-            setFormCategory((prev) => ({ ...prev, user_id: Number(profile?.id) }))
-        }
-    }, [profile])
+    const handleOpenConfirmCreate = () => {
+        setConfirmMessage("are you sure you want to create this category?");
+        setPendingAction("create");
+        setOpenModalConfirm(true);
+    };
 
-    const closeModalAdd = () => {
-        setOpenModalAdd(false);
-        getMenu();
+    const handleOpenConfirmEdit = () => {
+        setConfirmMessage("are you sure you want to update this category?");
+        setPendingAction("edit");
+        setOpenModalConfirm(true);
+    };
+
+    const handleOpenConfirmDelete = () => {
+        setConfirmMessage("are you sure you want to delete this category?");
+        setPendingAction("delete");
+        setOpenModalConfirm(true);
+    };
+
+    const handleClickEdit = async (id: number) => {
+        console.log("id: ", id)
+        setLoading(true)
+        setSelectedIdEditCategory(id)
+        const found = category.find((c) => c.id === id);
+        console.log("found: ", JSON.stringify(found))
+        if (found) {
+            setSelectedCategory({
+                id: found.id,
+                name: found.name
+            });
+        }
+        setOpenModalForm(true)
+        setLoading(false)
+        setSelectedIdEditCategory(id);
+    }
+
+    const openModalCreate = () => {
+        setSelectedCategory({
+            id: 0,
+            name: ""
+        });
+        setIsCreateMode(true);
+        setOpenModalForm(true);
+    }
+
+    const closeModalForm = () => {
+        getCategories();
+        setOpenModalForm(false);
+        setSelectedIdEditCategory(null)
+        setIsCreateMode(false);
     }
 
     const closeModalSuccess = () => {
         setOpenModalSuccess(false);
-        getMenu();
+        getCategories();
     }
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormCategory((prev) => ({ ...prev, [name]: value }));
+    const handleConfirmAction = async () => {
+        if (pendingAction === "edit") {
+            await handleSubmitEdit();
+        } else if (pendingAction === "delete") {
+            await handleDelete(selectedCategory?.id ?? 0);
+        } else if (pendingAction === "create") {
+            await handleSubmitCreate();
+        }
+        setOpenModalConfirm(false);
+        setPendingAction(null);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmitCreate = async (e?: React.FormEvent) => {
         setLoading(true);
-        e.preventDefault();
-
+        e?.preventDefault();
         try {
-            if (!formCategory.name) {
+            if (!selectedCategory?.name) {
                 setFailedMessage("fill all the required fields!");
                 setOpenModalFailed(true);
                 setLoading(false);
                 return;
             }
-
             const res = await fetch("/api/category", {
                 method: "POST",
-                body: JSON.stringify(formCategory),
+                body: JSON.stringify({
+                    user_id: profile?.id,
+                    name: selectedCategory?.name
+                }),
             });
-
             const data = await res.json();
-
             if (res.ok) {
                 setSuccessMessage("success add new category!");
-                closeModalAdd()
-                setLoading(false);
+                closeModalForm()
                 setOpenModalSuccess(true);
             } else {
                 setFailedMessage(data.message);
-                setLoading(false);
                 setOpenModalFailed(true);
             }
         } catch (err: any) {
@@ -126,6 +166,84 @@ export default function Categories() {
         }
     };
 
+    const handleSubmitEdit = async (e?: React.FormEvent) => {
+        setLoading(true);
+        e?.preventDefault();
+        console.log("selectedCategory: " + JSON.stringify(selectedCategory))
+        try {
+            if (!selectedCategory || selectedCategory?.id < 1 || !selectedCategory.name) {
+                setFailedMessage("fill all the required fields!");
+                setOpenModalFailed(true);
+                setLoading(false);
+                return;
+            }
+            console.log(JSON.stringify({
+                id: selectedCategory.id,
+                name: selectedCategory.name,
+            }))
+            const res = await fetch("/api/category", {
+                method: "PUT",
+                body: JSON.stringify({
+                    id: selectedCategory.id,
+                    user_id: profile?.id,
+                    name: selectedCategory.name
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSuccessMessage("success update category!");
+                setLoading(false);
+                setOpenModalSuccess(true);
+            } else {
+                setFailedMessage(data.message);
+                setLoading(false);
+                setOpenModalFailed(true);
+            }
+        } catch (err: any) {
+            console.error(err)
+        } finally {
+            closeModalForm();
+            setLoading(false)
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        setLoading(true);
+        try {
+            if (!id || id === 0) {
+                setFailedMessage("fill all the required fields!");
+                setOpenModalFailed(true);
+                setLoading(false);
+                return;
+            }
+            const res = await fetch(`/api/category?id=${id}`, {
+                method: "DELETE"
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSuccessMessage("success delete category!");
+                setLoading(false);
+                setOpenModalSuccess(true);
+            } else {
+                setFailedMessage(data.message);
+                setLoading(false);
+                setOpenModalFailed(true);
+            }
+        } catch (err: any) {
+            console.error(err)
+        } finally {
+            closeModalForm();
+            setLoading(false)
+        }
+    };
+
+    useEffect(() => {
+        setLoading(true)
+        if (profile?.id) {
+            getCategories()
+        }
+    }, [profile])
+
     return (
         <main className="flex flex-col items-center min-h-screen pt-20 gap-10">
             {loading && <Loading />}
@@ -133,7 +251,7 @@ export default function Categories() {
                 categories
             </h1>
             <div className="mt-2 items-center justify-center">
-                <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => setOpenModalAdd(true)}>
+                <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => openModalCreate()}>
                     <div className="flex flex-col">
                         <div className="flex flex-row items-center justify-center mb-1">
                             <svg id="plus-solid" width="20" height="20" fill="#FF6F91" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="23 11 23 13 22 13 22 14 14 14 14 22 13 22 13 23 11 23 11 22 10 22 10 14 2 14 2 13 1 13 1 11 2 11 2 10 10 10 10 2 11 2 11 1 13 1 13 2 14 2 14 10 22 10 22 11 23 11" /></svg>
@@ -141,13 +259,14 @@ export default function Categories() {
                         add
                     </div>
                 </Button>
-                {Category.length > 0 ? (
-                    Category.map((p) => {
+                {category.length > 0 ? (
+                    category.map((c) => {
                         return (
                             <Card
-                                key={p.name}
-                                title={p.name}
+                                key={c.name}
+                                title={c.name}
                                 className="min-w-[400px] outline-gray-400 hover:bg-pink-400 cursor-pointer mt-6"
+                                onClick={() => { handleClickEdit(c.id) }}
                             >
                                 <span></span>
                             </Card>
@@ -159,25 +278,38 @@ export default function Categories() {
                     </div>
                 )}
             </div>
-            {openModalAdd &&
+            {openModalForm &&
                 <FormModal
-                    isOpen={openModalAdd}
-                    onClose={closeModalAdd}
+                    isOpen={openModalForm}
+                    onClose={closeModalForm}
                     title="add new category"
                 >
-                    <form onSubmit={handleSubmit}>
+                    <form>
                         <div className="flex gap-4 items-center space-y-4">
                             <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
                                 name
                             </div>
                             <div className="flex-1">
-                                <Input name="name" type="text" placeholder="enter Category name..." className={`flex ${geistMono.className} text-s w-full`} onChange={handleChange} />
+                                <Input name="name" type="text" placeholder="enter category name..." className={`flex ${geistMono.className} text-s w-full`}
+                                    onChange={(e) => setSelectedCategory((prev) => prev ? { ...prev, name: e.target.value } : prev)} />
                             </div>
                         </div>
                         <div className="flex items-center justify-center py-6">
-                            <Button size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
-                                add
-                            </Button>
+                            {isCreateMode ? (<>
+                                <Button onClick={() => handleOpenConfirmCreate()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600 mx-2`}>
+                                    create
+                                </Button>
+                                <Button onClick={() => closeModalForm()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                                    cancel
+                                </Button>
+                            </>) : (<>
+                                <Button onClick={() => handleOpenConfirmEdit()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600 mx-2`}>
+                                    update
+                                </Button>
+                                <Button type="button" onClick={() => handleOpenConfirmDelete()} size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                                    delete
+                                </Button>
+                            </>)}
                         </div>
                     </form>
                 </FormModal>
@@ -196,6 +328,20 @@ export default function Categories() {
                     isOpen={openModalFailed}
                     onClose={closeModalFailed}
                     message={failedMessage}
+                />
+            )}
+            {openModalConfirm && (
+                <SimpleModal
+                    type="confirm"
+                    isOpen={openModalConfirm}
+                    onClose={() => setOpenModalConfirm(false)}
+                    message={confirmMessage}
+                    yesButton
+                    yesButtonText="yes"
+                    handleYes={handleConfirmAction}
+                    noButton
+                    noButtonText="cancel"
+                    handleNo={() => setOpenModalConfirm(false)}
                 />
             )}
         </main>
