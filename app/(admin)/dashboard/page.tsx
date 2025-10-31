@@ -9,6 +9,7 @@ import { checkCurrentPeriod } from "../../../lib/helpers/expense";
 import moment from "moment";
 import { Area, AreaChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatRupiah } from "../../../lib/helpers/format";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/tables";
 
 const pixelify = Pixelify_Sans({
     subsets: ["latin"],
@@ -48,6 +49,16 @@ export default function Dashboard() {
         total_amount: number;
         percentage: number;
     }
+    interface SummaryExpense {
+        total_expense: number;
+        income: number;
+        remaining: number;
+    }
+    interface RecentExpense {
+        expense_date: string;
+        category_name: string;
+        amount: number;
+    }
 
     // IMPORTS //
     const { profile } = useProfile()
@@ -56,6 +67,8 @@ export default function Dashboard() {
     const [currentPeriod, setCurrentPeriod] = useState<CurrentPeriod | null>(null);
     const [dailyExpenseChart, setDailyExpenseChart] = useState<DailyExpenseChart[] | []>([])
     const [spendingByCategoryChart, setSpendingByCategoryChart] = useState<SpendingByCategoryChart[] | []>([])
+    const [summaryExpense, setSummaryExpense] = useState<SummaryExpense | null>(null)
+    const [recentExpense, setRecentExpense] = useState<RecentExpense[] | []>([])
 
     // FUNCTIONS //
     const getCurrentPeriod = async () => {
@@ -80,17 +93,35 @@ export default function Dashboard() {
             setSpendingByCategoryChart(dataBudget);
         }
     }
+    const fetchSummaryExpense = async () => {
+        const getDataChart = await fetch(`/api/dashboard/summary-expense?budgetId=${currentPeriod?.data?.budget_id}`)
+        const res = await getDataChart.json();
+        if (res.data) {
+            const dataBudget = res.data
+            console.log("summary expense: ", dataBudget[0])
+            setSummaryExpense(dataBudget[0]);
+        }
+    }
+    const fetchRecentExpense = async () => {
+        const getDataChart = await fetch(`/api/dashboard/recent-expense?budgetId=${currentPeriod?.data?.budget_id}`)
+        const res = await getDataChart.json();
+        if (res.data) {
+            const dataHistory = res.data
+            console.log("summary expense: ", dataHistory)
+            setRecentExpense(dataHistory);
+        }
+    }
 
     // USE EFFECTS //
     useEffect(() => {
-        if (profile?.id) {
-            getCurrentPeriod()
-        }
+        if (profile?.id) { getCurrentPeriod() }
     }, [profile])
     useEffect(() => {
         if (currentPeriod?.data?.budget_id) {
             fetchDailyExpenseChart();
             fetchSpendingByCategoryChart();
+            fetchSummaryExpense();
+            fetchRecentExpense();
         }
     }, [currentPeriod?.data?.budget_id])
 
@@ -108,7 +139,8 @@ export default function Dashboard() {
                 )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2">
-                <div className="w-full h-[400px] rounded-2xl shadow p-4">
+                {/* chart daily expense */}
+                <div className="w-full h-[400px] p-4 justify-center items-center text-center">
                     <h2 className={`text-lg font-semibold mb-4 ${geistMono.className}`}>daily expense</h2>
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={dailyExpenseChart}>
@@ -135,8 +167,9 @@ export default function Dashboard() {
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
-                <div className={`flex justify-center items-start pt-10 ${geistMono.className}`}>
-                    <h2 className={`text-lg font-semibold mb-4 ${geistMono.className}`}>spending by category</h2>
+                {/* chart spending by category */}
+                <div className={`justify-center items-center ${geistMono.className} text-center items-center`}>
+                    <h2 className={`text-lg font-semibold ${geistMono.className} text-center items-center`}>spending by category</h2>
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
@@ -145,7 +178,7 @@ export default function Dashboard() {
                                 nameKey="name"
                                 cx="50%"
                                 cy="50%"
-                                outerRadius={120}
+                                // outerRadius={120}
                                 fill="#8884d8"
                                 label
                             >
@@ -166,6 +199,48 @@ export default function Dashboard() {
                     </ResponsiveContainer>
                 </div>
             </div>
-        </main>
+            {/* summary expenses */}
+            <div className="">
+                <h2 className={`text-lg font-semibold ${geistMono.className} text-start`}>summary cards</h2>
+                <div className="grid grid-cols-3">
+                    <div className={`w-full h-[400px] p-4 justify-center items-center text-center ${geistMono.className}`}>
+                        <div>income</div>
+                        <div className="font-semibold text-lg">{formatRupiah(summaryExpense?.income ?? 0)}</div>
+                    </div>
+                    <div className={`w-full h-[400px] p-4 justify-center items-center text-center ${geistMono.className}`}>
+                        <div>total expense</div>
+                        <div className="font-semibold text-lg">{formatRupiah(summaryExpense?.total_expense ?? 0)}</div>
+                    </div>
+                    <div className={`w-full h-[400px] p-4 justify-center items-center text-center ${geistMono.className}`}>
+                        <div>remaining budget</div>
+                        <div className="font-semibold text-lg">{formatRupiah(summaryExpense?.remaining ?? 0)}</div>
+                    </div>
+                </div >
+            </div>
+            {/* recent expenses */}
+            <div className="">
+                <h2 className={`text-lg font-semibold ${geistMono.className} text-start`}>recent expenses</h2>
+                <div className={`${geistMono.className}`}>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableCell>date</TableCell>
+                                <TableCell>category</TableCell>
+                                <TableCell>amount</TableCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {recentExpense.map((r) => (
+                                <TableRow>
+                                    <TableCell>{r.expense_date}</TableCell>
+                                    <TableCell>{r.category_name}</TableCell>
+                                    <TableCell>{r.amount}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div >
+            </div>
+        </main >
     );
 }
