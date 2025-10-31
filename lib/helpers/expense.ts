@@ -80,6 +80,7 @@ export async function checkCurrentPeriod(userId: number) {
     type CurrentPeriod = {
         budget_id: number;
         period_id: number;
+        period_name: string;
         user_id: number;
         start_date: string;
         end_date: string;
@@ -97,9 +98,11 @@ export async function checkCurrentPeriod(userId: number) {
         .rpc("get_current_period", { p_user_id: userId })
         .single() as { data: CurrentPeriod | null, error: any }
 
+    console.log("checkPeriod", JSON.stringify(checkPeriod))
+
     if (checkPeriod) {
         response.isExist = true;
-        response.data.budget_id = checkPeriod.budget_id
+        response.data = checkPeriod
     }
 
     return response;

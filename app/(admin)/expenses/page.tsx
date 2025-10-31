@@ -277,7 +277,7 @@ export default function Expenses() {
             </h1>
             <div className="flex flex-wrap justify-center gap-x-3 text-center px-6">
                 {summary.map((s) => (
-                    <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} py-2 border shadow-xs max-w-[200px] sm:w-auto`}>
+                    <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} py-2 my-2 border shadow-xs max-w-[200px] sm:w-auto`}>
                         <h3 className="text-sm font-semibold py-1">{s.category_name}</h3>
                         <p className="text-xs py-2">Rp {s.sum_amount.toLocaleString("id-ID")}</p>
                         <p className="text-xs">{s.percentage_max_expense}% of budget's max expense</p>
