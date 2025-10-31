@@ -18,13 +18,13 @@ export async function GET(request: Request) {
         const budgetId = searchParams.get("budgetId")
 
         const { data: dataChart, error: errorChart } = await supabase
-            .rpc("daily_expense_chart", { p_budget_id: Number(budgetId) })
+            .rpc("spending_by_category_chart", { p_budget_id: Number(budgetId) })
 
         console.log("dataChart: " + JSON.stringify(dataChart))
 
         if (!dataChart && dataChart.length < 1) {
             code = 0
-            message = "Expense not found"
+            message = "Data not found"
             httpStatus = 404
         } else {
             data = dataChart

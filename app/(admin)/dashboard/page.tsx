@@ -7,7 +7,8 @@ import { useProfile } from "../../context/ProfileContext";
 import { checkExistingPeriod } from "../../../lib/helpers/period";
 import { checkCurrentPeriod } from "../../../lib/helpers/expense";
 import moment from "moment";
-import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { formatRupiah } from "../../../lib/helpers/format";
 
 const pixelify = Pixelify_Sans({
     subsets: ["latin"],
@@ -20,6 +21,9 @@ const geistMono = Geist_Mono({
 });
 
 export default function Dashboard() {
+    // VARIABLES //
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', "#FF99C8", "#FFC9DE", "#FFD6A5", "#B9FBC0", "#A0C4FF"];
+
     //  INTERFACES //
     interface CurrentPeriod {
         isExist: boolean;
@@ -39,6 +43,11 @@ export default function Dashboard() {
             max_expense: number;
         }
     }
+    interface SpendingByCategoryChart {
+        name: string;
+        total_amount: number;
+        percentage: number;
+    }
 
     // IMPORTS //
     const { profile } = useProfile()
@@ -46,6 +55,7 @@ export default function Dashboard() {
     // STATES //
     const [currentPeriod, setCurrentPeriod] = useState<CurrentPeriod | null>(null);
     const [dailyExpenseChart, setDailyExpenseChart] = useState<DailyExpenseChart[] | []>([])
+    const [spendingByCategoryChart, setSpendingByCategoryChart] = useState<SpendingByCategoryChart[] | []>([])
 
     // FUNCTIONS //
     const getCurrentPeriod = async () => {
@@ -61,6 +71,15 @@ export default function Dashboard() {
             setDailyExpenseChart(dataBudget);
         }
     }
+    const fetchSpendingByCategoryChart = async () => {
+        const getDataChart = await fetch(`/api/dashboard/spending-by-category-chart?budgetId=${currentPeriod?.data?.budget_id}`)
+        const res = await getDataChart.json();
+        if (res.data) {
+            const dataBudget: SpendingByCategoryChart[] = res.data
+            console.log("dataBudget: ", dataBudget)
+            setSpendingByCategoryChart(dataBudget);
+        }
+    }
 
     // USE EFFECTS //
     useEffect(() => {
@@ -71,6 +90,7 @@ export default function Dashboard() {
     useEffect(() => {
         if (currentPeriod?.data?.budget_id) {
             fetchDailyExpenseChart();
+            fetchSpendingByCategoryChart();
         }
     }, [currentPeriod?.data?.budget_id])
 
@@ -116,7 +136,34 @@ export default function Dashboard() {
                     </ResponsiveContainer>
                 </div>
                 <div className={`flex justify-center items-start pt-10 ${geistMono.className}`}>
-                    <div className={`text-s`}>b</div>
+                    <h2 className={`text-lg font-semibold mb-4 ${geistMono.className}`}>spending by category</h2>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={spendingByCategoryChart}
+                                dataKey="total_amount"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={120}
+                                fill="#8884d8"
+                                label
+                            >
+                                {spendingByCategoryChart.map((entry, index) => (
+                                    <Cell
+                                        key={`cell-${index}`}
+                                        fill={COLORS[index % COLORS.length]}
+                                        stroke="#fff"
+                                        strokeWidth={1}
+                                    />
+                                ))}
+                            </Pie>
+                            <Tooltip
+                                formatter={(value: number) => `${formatRupiah(value)}`}
+                            />
+                            <Legend />
+                        </PieChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
         </main>
