@@ -10,6 +10,7 @@ import moment from "moment";
 import { Area, AreaChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatRupiah } from "../../../lib/helpers/format";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/tables";
+import { AlertTriangle, Clock, CreditCard, TrendingUp, Wallet } from "lucide-react";
 
 const pixelify = Pixelify_Sans({
     subsets: ["latin"],
@@ -51,12 +52,15 @@ export default function Dashboard() {
     }
     interface SummaryExpense {
         total_expense: number;
+        max_expense: number;
         income: number;
         remaining: number;
     }
     interface RecentExpense {
         expense_date: string;
-        category_name: string;
+        categories: {
+            name: string;
+        }
         amount: number;
     }
 
@@ -126,121 +130,166 @@ export default function Dashboard() {
     }, [currentPeriod?.data?.budget_id])
 
     return (
-        <main className="px-4 py-4">
-            {/* title (active period) */}
-            <div className={`py-4 text-lg ${geistMono.className}`}>
-                {currentPeriod?.isExist ? (
-                    <div>
-                        <div>current period:</div>
-                        <div>{currentPeriod.data.period_name} ({moment(new Date(currentPeriod?.data?.start_date)).format("DD MMMM YYYY")} - {moment(new Date(currentPeriod?.data?.end_date)).format("DD MMMM YYYY")})</div>
-                    </div>
-                ) : (
-                    <div>there is no period active currently</div>
-                )}
+        <main className="min-h-screen w-full bg-pink-50 p-6 space-y-8">
+            {/* Header */}
+            <div className={`${geistMono.className}`}>
+                <h1 className="text-2xl font-semibold text-pink-600">welcome, {profile?.name}!</h1>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2">
-                {/* chart daily expense */}
-                <div className="w-full h-[400px] p-4 justify-center items-center text-center">
-                    <h2 className={`text-lg font-semibold mb-4 ${geistMono.className}`}>daily expense</h2>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={dailyExpenseChart}>
-                            <defs>
-                                <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#FF6384" stopOpacity={0.4} />
-                                    <stop offset="95%" stopColor="#FF6384" stopOpacity={0.05} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="expense_date" />
+
+            {/* Summary Cards */}
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${geistMono.className}`}>
+                <SummaryCard icon={<Wallet className="text-green-500 w-6 h-6 mr-3" />} label="Total Budget" value={summaryExpense?.max_expense} color="green" />
+                <SummaryCard icon={<CreditCard className="text-red-500 w-6 h-6 mr-3" />} label="Total Expense" value={summaryExpense?.total_expense} color="red" />
+                <SummaryCard icon={<TrendingUp className="text-blue-500 w-6 h-6 mr-3" />} label="Remaining" value={summaryExpense?.remaining} color="blue" />
+            </div>
+
+            {/* Charts */}
+            <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${geistMono.className}`}>
+                {/* Line Chart */}
+                <ChartCard title="Expense vs Budget">
+                    <ResponsiveContainer width="100%" height={250}>
+                        <LineChart data={dailyExpenseChart}>
+                            <XAxis dataKey="date" />
                             <YAxis />
                             <Tooltip />
-                            <Legend />
-                            <Area
+                            <Line
                                 type="monotone"
-                                dataKey="total_amount"
-                                stroke="#FF6384"
+                                dataKey="expense"
+                                stroke="#f472b6"
+                                strokeWidth={3}
                                 fill="url(#colorExpense)"
-                                name="Expense"
+                                dot={{ r: 5 }}
+                            />
+                            <Line
+                                type="monotone"
+                                dataKey="budget"
+                                stroke="#a78bfa"
+                                strokeDasharray="4 4"
                                 strokeWidth={2}
                                 dot={false}
                             />
-                        </AreaChart>
+                            <defs>
+                                <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#f472b6" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#f472b6" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                        </LineChart>
                     </ResponsiveContainer>
-                </div>
-                {/* chart spending by category */}
-                <div className={`justify-center items-center ${geistMono.className} text-center items-center`}>
-                    <h2 className={`text-lg font-semibold ${geistMono.className} text-center items-center`}>spending by category</h2>
-                    <ResponsiveContainer width="100%" height="100%">
+                </ChartCard>
+
+                {/* Pie Chart */}
+                <ChartCard title="Spending by Category">
+                    <ResponsiveContainer width="100%" height={250}>
                         <PieChart>
                             <Pie
                                 data={spendingByCategoryChart}
-                                dataKey="total_amount"
-                                nameKey="name"
                                 cx="50%"
                                 cy="50%"
-                                // outerRadius={120}
+                                outerRadius={80}
                                 fill="#8884d8"
-                                label
+                                dataKey="total_amount"
+                                label={(entry) => entry.name}
                             >
                                 {spendingByCategoryChart.map((entry, index) => (
-                                    <Cell
-                                        key={`cell-${index}`}
-                                        fill={COLORS[index % COLORS.length]}
-                                        stroke="#fff"
-                                        strokeWidth={1}
-                                    />
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
-                            <Tooltip
-                                formatter={(value: number) => `${formatRupiah(value)}`}
-                            />
+                            <Tooltip />
                             <Legend />
                         </PieChart>
                     </ResponsiveContainer>
+                </ChartCard>
+            </div>
+
+            {/* Progress Bar per Category */}
+            <div className={`bg-white rounded-2xl p-6 shadow ${geistMono.className}`}>
+                <h2 className="text-pink-600 font-semibold mb-4">Category Budget Progress</h2>
+                <div className="space-y-4">
+                    {spendingByCategoryChart.map((cat) => {
+                        const used = Math.min(cat.percentage, 100);
+                        return (
+                            <div key={cat.name}>
+                                <div className="flex justify-between mb-1">
+                                    <p className="text-sm font-medium">{cat.name}</p>
+                                    <p className="text-sm text-gray-500">{used.toFixed(0)}%</p>
+                                </div>
+                                <div className="w-full bg-pink-100 rounded-full h-2">
+                                    <div
+                                        className={`h-2 rounded-full ${used > 90 ? "bg-red-400" : "bg-pink-500"
+                                            }`}
+                                        style={{ width: `${used}%` }}
+                                    />
+                                </div>
+                                {used > 90 && (
+                                    <div className="flex items-center gap-1 mt-1 text-xs text-red-500">
+                                        <AlertTriangle className="w-4 h-4" /> Almost exceeded your limit!
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
-            {/* summary expenses */}
-            <div className="">
-                <h2 className={`text-lg font-semibold ${geistMono.className} text-start`}>summary cards</h2>
-                <div className="grid grid-cols-3">
-                    <div className={`w-full h-[400px] p-4 justify-center items-center text-center ${geistMono.className}`}>
-                        <div>income</div>
-                        <div className="font-semibold text-lg">{formatRupiah(summaryExpense?.income ?? 0)}</div>
-                    </div>
-                    <div className={`w-full h-[400px] p-4 justify-center items-center text-center ${geistMono.className}`}>
-                        <div>total expense</div>
-                        <div className="font-semibold text-lg">{formatRupiah(summaryExpense?.total_expense ?? 0)}</div>
-                    </div>
-                    <div className={`w-full h-[400px] p-4 justify-center items-center text-center ${geistMono.className}`}>
-                        <div>remaining budget</div>
-                        <div className="font-semibold text-lg">{formatRupiah(summaryExpense?.remaining ?? 0)}</div>
-                    </div>
-                </div >
-            </div>
-            {/* recent expenses */}
-            <div className="">
-                <h2 className={`text-lg font-semibold ${geistMono.className} text-start`}>recent expenses</h2>
-                <div className={`${geistMono.className}`}>
-                    <Table>
+
+            {/* Recent Expenses Table */}
+            <div className={`bg-white rounded-2xl p-6 shadow ${geistMono.className}`}>
+                <h2 className="text-pink-600 font-semibold mb-4 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-pink-500" /> Recent Expenses
+                </h2>
+                <div className="overflow-x-auto">
+                    <Table className="min-w-full text-left">
                         <TableHeader>
                             <TableRow>
-                                <TableCell>date</TableCell>
-                                <TableCell>category</TableCell>
-                                <TableCell>amount</TableCell>
+                                <TableCell className="py-2 px-4 rounded-tl-lg">Date</TableCell>
+                                <TableCell className="py-2 px-4">Category</TableCell>
+                                <TableCell className="py-2 px-4 rounded-tr-lg">Amount</TableCell>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {recentExpense.map((r) => (
-                                <TableRow>
-                                    <TableCell>{r.expense_date}</TableCell>
-                                    <TableCell>{r.category_name}</TableCell>
-                                    <TableCell>{r.amount}</TableCell>
+                            {recentExpense.map((item, index) => (
+                                <TableRow
+                                    key={index}
+                                    className={`border-spacing-2.5 text-sm ${index % 2 === 0 ? "bg-white" : "bg-pink-50"
+                                        }`}
+                                >
+                                    <TableCell className="py-2 px-4">{item.expense_date}</TableCell>
+                                    <TableCell className="py-2 px-4">{item.categories?.name}</TableCell>
+                                    <TableCell className="py-2 px-4 text-pink-600 font-medium">
+                                        {formatRupiah(item.amount)}
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
-                </div >
+                </div>
             </div>
-        </main >
+        </main>
     );
+
+    function SummaryCard({ icon, label, value, color }) {
+        const colorMap = {
+            green: "text-green-600",
+            red: "text-red-600",
+            blue: "text-blue-600",
+        };
+        return (
+            <div className={`bg-white p-5 rounded-2xl shadow flex items-center gap ${geistMono.className}`}>
+                {icon}
+                <div>
+                    <p className="text-gray-500 text-sm">{label}</p>
+                    <p className={`text-xl font-bold ${colorMap[color]}`}>{formatRupiah(value)}</p>
+                </div>
+            </div>
+        );
+    }
+
+    function ChartCard({ title, children }) {
+        return (
+            <div className={`bg-white rounded-2xl p-5 shadow ${geistMono.className}`}>
+                <h2 className="text-pink-600 font-semibold mb-4">{title}</h2>
+                {children}
+            </div>
+        );
+    }
 }
