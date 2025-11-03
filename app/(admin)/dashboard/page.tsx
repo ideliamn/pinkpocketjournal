@@ -50,6 +50,11 @@ export default function Dashboard() {
         total_amount: number;
         percentage: number;
     }
+    interface SpendingBySourceChart {
+        source_name: string;
+        amount: number;
+        percentage: number;
+    }
     interface SummaryExpense {
         total_expense: number;
         max_expense: number;
@@ -71,6 +76,7 @@ export default function Dashboard() {
     const [currentPeriod, setCurrentPeriod] = useState<CurrentPeriod | null>(null);
     const [dailyExpenseChart, setDailyExpenseChart] = useState<DailyExpenseChart[] | []>([])
     const [spendingByCategoryChart, setSpendingByCategoryChart] = useState<SpendingByCategoryChart[] | []>([])
+    const [spendingBySourceChart, setSpendingBySourceChart] = useState<SpendingBySourceChart[] | []>([])
     const [summaryExpense, setSummaryExpense] = useState<SummaryExpense | null>(null)
     const [recentExpense, setRecentExpense] = useState<RecentExpense[] | []>([])
 
@@ -95,6 +101,15 @@ export default function Dashboard() {
             const dataBudget: SpendingByCategoryChart[] = res.data
             console.log("dataBudget: ", dataBudget)
             setSpendingByCategoryChart(dataBudget);
+        }
+    }
+    const fetchSpendingBySourceChart = async () => {
+        const getDataChart = await fetch(`/api/dashboard/spending-by-source-chart?budgetId=${currentPeriod?.data?.budget_id}`)
+        const res = await getDataChart.json();
+        if (res.data) {
+            const dataBudget: SpendingBySourceChart[] = res.data
+            console.log("dataBudget: ", dataBudget)
+            setSpendingBySourceChart(dataBudget);
         }
     }
     const fetchSummaryExpense = async () => {
@@ -123,7 +138,8 @@ export default function Dashboard() {
     useEffect(() => {
         if (currentPeriod?.data?.budget_id) {
             fetchDailyExpenseChart();
-            fetchSpendingByCategoryChart();
+            // fetchSpendingByCategoryChart();
+            fetchSpendingBySourceChart();
             fetchSummaryExpense();
             fetchRecentExpense();
         }
@@ -133,7 +149,7 @@ export default function Dashboard() {
         <main className="min-h-screen w-full bg-pink-50 p-6 space-y-8">
             {/* Header */}
             <div className={`${geistMono.className}`}>
-                <h1 className="text-2xl font-semibold text-pink-600">welcome, {profile?.name}!</h1>
+                <h1 className="text-2xl font-semibold text-pink-600">welcome, {profile?.name?.split(" ")[0]}!</h1>
             </div>
 
             {/* Summary Cards */}
@@ -178,25 +194,27 @@ export default function Dashboard() {
                     </ResponsiveContainer>
                 </ChartCard>
 
-                {/* Pie Chart */}
-                <ChartCard title="Spending by Category">
+                {/* spending by category chart */}
+                <ChartCard title="spending by source">
                     <ResponsiveContainer width="100%" height={250}>
                         <PieChart>
                             <Pie
-                                data={spendingByCategoryChart}
+                                data={spendingBySourceChart}
+                                dataKey="total_amount"
+                                nameKey="source_name"
                                 cx="50%"
                                 cy="50%"
                                 outerRadius={80}
                                 fill="#8884d8"
-                                dataKey="total_amount"
+                                dataKey="percentage"
                                 label={(entry) => entry.name}
                             >
-                                {spendingByCategoryChart.map((entry, index) => (
+                                {spendingBySourceChart.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
                             <Tooltip />
-                            <Legend />
+                            {/* <Legend /> */}
                         </PieChart>
                     </ResponsiveContainer>
                 </ChartCard>
