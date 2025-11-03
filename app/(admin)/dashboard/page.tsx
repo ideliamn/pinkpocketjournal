@@ -138,7 +138,7 @@ export default function Dashboard() {
     useEffect(() => {
         if (currentPeriod?.data?.budget_id) {
             fetchDailyExpenseChart();
-            // fetchSpendingByCategoryChart();
+            fetchSpendingByCategoryChart();
             fetchSpendingBySourceChart();
             fetchSummaryExpense();
             fetchRecentExpense();
@@ -159,38 +159,32 @@ export default function Dashboard() {
                 <SummaryCard icon={<TrendingUp className="text-blue-500 w-6 h-6 mr-3" />} label="Remaining" value={summaryExpense?.remaining} color="blue" />
             </div>
 
-            {/* Charts */}
+            {/* daily expense chart */}
             <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${geistMono.className}`}>
-                {/* Line Chart */}
-                <ChartCard title="Expense vs Budget">
+                <ChartCard title="daily expense chart">
                     <ResponsiveContainer width="100%" height={250}>
-                        <LineChart data={dailyExpenseChart}>
-                            <XAxis dataKey="date" />
+                        <AreaChart data={dailyExpenseChart}>
+                            <defs>
+                                <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#f472b6" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#f472b6" stopOpacity={0.05} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="expense_date" />
                             <YAxis />
                             <Tooltip />
-                            <Line
+                            <Legend />
+                            <Area
                                 type="monotone"
-                                dataKey="expense"
-                                stroke="#f472b6"
-                                strokeWidth={3}
+                                dataKey="total_amount"
+                                stroke="#FF6384"
                                 fill="url(#colorExpense)"
-                                dot={{ r: 5 }}
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey="budget"
-                                stroke="#a78bfa"
-                                strokeDasharray="4 4"
+                                name="Expense"
                                 strokeWidth={2}
                                 dot={false}
                             />
-                            <defs>
-                                <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#f472b6" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#f472b6" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                        </LineChart>
+                        </AreaChart>
                     </ResponsiveContainer>
                 </ChartCard>
 
@@ -200,13 +194,12 @@ export default function Dashboard() {
                         <PieChart>
                             <Pie
                                 data={spendingBySourceChart}
-                                dataKey="total_amount"
+                                dataKey="percentage"
                                 nameKey="source_name"
                                 cx="50%"
                                 cy="50%"
                                 outerRadius={80}
                                 fill="#8884d8"
-                                dataKey="percentage"
                                 label={(entry) => entry.name}
                             >
                                 {spendingBySourceChart.map((entry, index) => (
@@ -233,11 +226,7 @@ export default function Dashboard() {
                                     <p className="text-sm text-gray-500">{used.toFixed(0)}%</p>
                                 </div>
                                 <div className="w-full bg-pink-100 rounded-full h-2">
-                                    <div
-                                        className={`h-2 rounded-full ${used > 90 ? "bg-red-400" : "bg-pink-500"
-                                            }`}
-                                        style={{ width: `${used}%` }}
-                                    />
+                                    <div className={`h-2 rounded-full ${used > 90 ? "bg-red-400" : "bg-pink-500"}`} style={{ width: `${used}%` }} />
                                 </div>
                                 {used > 90 && (
                                     <div className="flex items-center gap-1 mt-1 text-xs text-red-500">
