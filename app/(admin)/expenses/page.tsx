@@ -12,7 +12,7 @@ import Input from "../../components/form/input/InputField";
 import Select from "../../components/ui/select/Select";
 import SimpleModal from "../../components/modals/SimpleModal";
 import { checkExistingPeriod } from "../../../lib/helpers/period";
-import { checkCurrentPeriod } from "../../../lib/helpers/expense";
+import { checkCurrentPeriod, checkExpense } from "../../../lib/helpers/expense";
 import ExpensePieChart from "./(components)/ExpensePieChart";
 
 const geistMono = Geist_Mono({
@@ -87,6 +87,9 @@ export default function Expenses() {
     const [failedMessage, setFailedMessage] = useState("");
     const [openModalConfirm, setOpenModalConfirm] = useState(false);
     const [confirmMessage, setConfirmMessage] = useState("");
+    const [openModalWarning, setOpenModalWarning] = useState(false);
+    const [warningMessage, setWarningMessage] = useState("");
+    const [confirmExceedingBudget, setConfirmExceedingBudget] = useState(false);
     const [currentBudgetId, setCurrentBudgetId] = useState(0);
     const [summary, setSummary] = useState<Summary[]>([])
 
@@ -198,6 +201,13 @@ export default function Expenses() {
                 setLoading(false);
                 return;
             }
+            if (!confirmExceedingBudget) {
+                const checkExpenseBudget = await checkExpense(Number(profile?.id), selectedExpense?.budget_id, selectedExpense?.amount, selectedExpense?.category_id)
+                if (checkExpenseBudget.isExceeding) {
+                    setWarningMessage(checkExpenseBudget?.message);
+                    setOpenModalWarning(true);
+                }
+            }
             const res = await fetch("/api/expense", {
                 method: "POST",
                 body: JSON.stringify({
@@ -221,18 +231,13 @@ export default function Expenses() {
         } catch (err) {
             console.error(err)
         } finally {
+            setConfirmExceedingBudget(false);
             closeModalAdd();
             setLoading(false);
         }
     }
 
     const handleOpenConfirmCreate = () => {
-        console.log("selectedExpense?.description: ", selectedExpense?.description)
-        console.log("selectedExpense?.amount: ", selectedExpense?.amount)
-        console.log("selectedExpense?.expense_date: ", selectedExpense?.expense_date)
-        console.log("selectedExpense?.budget_id: ", selectedExpense?.budget_id)
-        console.log("selectedExpense?.category_id: ", selectedExpense?.category_id)
-        console.log("selectedExpense?.source_id: ", selectedExpense?.source_id)
         if (!selectedExpense?.description
             || !selectedExpense?.amount
             || !selectedExpense?.expense_date
@@ -509,6 +514,20 @@ export default function Expenses() {
                     noButton
                     noButtonText="cancel"
                     handleNo={() => setOpenModalConfirm(false)}
+                />
+            )}
+            {openModalWarning && (
+                <SimpleModal
+                    type={"warning"}
+                    isOpen={openModalWarning}
+                    onClose={() => setOpenModalWarning(false)}
+                    message={warningMessage}
+                    yesButton
+                    yesButtonText="yes"
+                    handleYes={() => { setConfirmExceedingBudget(true); handleConfirmAction(); }}
+                    noButton
+                    noButtonText="cancel"
+                    handleNo={() => setOpenModalWarning(false)}
                 />
             )}
         </main>
