@@ -26,8 +26,20 @@ const pixelify = Pixelify_Sans({
 });
 
 export default function Bills() {
+    type billStatus = "pending" | "overdue" | "done";
+
     const now = new Date();
     const today = now.toISOString().split("T")[0];
+    const recurrenceOptions = [
+        { label: "daily", value: "daily" },
+        { label: "weekly", value: "weekly" },
+        { label: "monthly", value: "monthly" },
+    ]
+    const statusColors = {
+        pending: "bg-pink-200 hover:bg-pink-300",
+        overdue: "bg-red-200 hover:bg-red-300",
+        done: "bg-green-200 hover:bg-green-300"
+    };
     interface Bills {
         id: number;
         budget_id: number;
@@ -49,7 +61,7 @@ export default function Bills() {
         due_date: string;
         paid_date: string;
         recurrence_interval: string;
-        status: string;
+        status: billStatus;
     }
 
     interface Select {
@@ -156,7 +168,7 @@ export default function Bills() {
             due_date: "",
             paid_date: "",
             recurrence_interval: "",
-            status: "",
+            status: "pending",
         });
         setOpenModalAdd(true)
     }
@@ -167,13 +179,11 @@ export default function Bills() {
     }
 
     const handleSubmitCreateBill = async () => {
-        console.log("submit!")
         setLoading(true);
         try {
             if (!selectedBills?.description
                 || selectedBills?.amount < 0
                 || !selectedBills?.due_date
-                || selectedBills?.budget_id <= 0
                 || selectedBills?.category_id <= 0
                 || selectedBills?.source_id <= 0
                 || !selectedBills?.recurrence_interval
@@ -194,7 +204,7 @@ export default function Bills() {
                 method: "POST",
                 body: JSON.stringify({
                     user_id: profile?.id,
-                    budget_id: selectedBills?.budget_id,
+                    budget_id: selectedBills?.budget_id ?? null,
                     category_id: selectedBills?.category_id,
                     description: selectedBills?.description,
                     amount: selectedBills?.amount,
@@ -223,7 +233,6 @@ export default function Bills() {
         if (!selectedBills?.description
             || selectedBills?.amount < 0
             || !selectedBills?.due_date
-            || selectedBills?.budget_id <= 0
             || selectedBills?.category_id <= 0
             || selectedBills?.source_id <= 0
             || !selectedBills?.recurrence_interval
@@ -271,11 +280,18 @@ export default function Bills() {
                                 key={b.id}
                                 title={b.description}
                                 desc={formatRupiah(b.amount)}
-                                className="min-w-[400px] outline-gray-400 hover:bg-pink-400 cursor-pointer mt-6"
+                                className={`min-w-[400px] outline-gray-400 cursor-pointer mt-6 ${statusColors[b?.status] || ""}`}
                             >
-                                <span className="text-xs">
-                                    due: {moment(new Date(b.due_date)).format("D MMMM YYYY")}
-                                </span>
+                                <div className="flex flex-col">
+                                    {b.status === "done" && (
+                                        <span className="text-xs">
+                                            paid: {moment(new Date(b.paid_date)).format("D MMMM YYYY")}
+                                        </span>
+                                    )}
+                                    <span className="text-xs">
+                                        due: {moment(new Date(b.due_date)).format("D MMMM YYYY")} ({b.status})
+                                    </span>
+                                </div>
                                 <div className="flex flex-row justify-between text-xs mt-2">
                                     <div className="w-1/2">
                                         <div className="flex flex-col">
@@ -290,10 +306,20 @@ export default function Bills() {
                                         </div>
                                     </div>
                                     <div className="w-1/3">
-                                        <div className="flex flex-col">
-                                            <span className="text-gray-500">budget:</span>
-                                            <span>{b.budgets?.periods?.name}</span>
-                                        </div>
+                                        {b?.budgets?.periods && (
+                                            <div className="flex flex-col">
+                                                <span className="text-gray-500">recurrence:</span>
+                                                <span>{b.recurrence_interval}</span>
+                                            </div>)}
+                                    </div>
+                                </div>
+                                <div className="flex flex-row justify-between text-xs mt-2">
+                                    <div className="w-1/2">
+                                        {b?.budgets?.periods && (
+                                            <div className="flex flex-col">
+                                                <span className="text-gray-500">budget:</span>
+                                                <span>{b.budgets?.periods?.name}</span>
+                                            </div>)}
                                     </div>
                                 </div>
                             </Card>
@@ -301,7 +327,7 @@ export default function Bills() {
                     })
                 ) : (
                     <div className={`flex flex-col items-center justify-center min-h-[100px] text-gray-500 ${geistMono.className}`}>
-                        no expenses found!
+                        no bills found!
                     </div>
                 )}
                 {openModalAdd &&
@@ -313,53 +339,7 @@ export default function Bills() {
                         <form>
                             <div className="flex gap-4 items-center space-y-4">
                                 <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
-                                    description
-                                </div>
-                                <div className="flex-1">
-                                    <Input
-                                        type="text"
-                                        placeholder="enter your description..."
-                                        defaultValue={selectedBills?.description}
-                                        onChange={(e) => setSelectedBills((prev) =>
-                                            prev ? { ...prev, description: e.target.value } : prev
-                                        )}>
-                                    </Input>
-                                </div>
-                            </div>
-                            <div className="flex gap-4 items-center space-y-4">
-                                <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
-                                    amount
-                                </div>
-                                <div className="flex-1">
-                                    <Input
-                                        type="number"
-                                        placeholder="enter your amount..."
-                                        defaultValue={selectedBills && selectedBills?.amount >= 0 ? selectedBills?.amount : ""}
-                                        onChange={(e) => setSelectedBills((prev) =>
-                                            prev ? { ...prev, amount: Number(e.target.value) } : prev
-                                        )}
-                                        formatNumber={true}
-                                    ></Input>
-                                </div>
-                            </div>
-                            <div className="flex gap-4 items-center space-y-4">
-                                <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
-                                    date
-                                </div>
-                                <div className="flex-1">
-                                    <Input
-                                        type="date"
-                                        placeholder="enter your date of bills..."
-                                        defaultValue={selectedBills?.due_date ?? today}
-                                        onChange={(e) => setSelectedBills((prev) =>
-                                            prev ? { ...prev, Bills_date: e.target.value } : prev
-                                        )}>
-                                    </Input>
-                                </div>
-                            </div>
-                            <div className="flex gap-4 items-center space-y-4">
-                                <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
-                                    budget
+                                    budget (optional)
                                 </div>
                                 <div className="flex-1">
                                     <Select
@@ -432,6 +412,67 @@ export default function Bills() {
                                                     }
                                                     : prev
                                             )
+                                        }
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex gap-4 items-center space-y-4">
+                                <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
+                                    description
+                                </div>
+                                <div className="flex-1">
+                                    <Input
+                                        type="text"
+                                        placeholder="enter bill's description..."
+                                        defaultValue={selectedBills?.description}
+                                        onChange={(e) => setSelectedBills((prev) =>
+                                            prev ? { ...prev, description: e.target.value } : prev
+                                        )}>
+                                    </Input>
+                                </div>
+                            </div>
+                            <div className="flex gap-4 items-center space-y-4">
+                                <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
+                                    amount
+                                </div>
+                                <div className="flex-1">
+                                    <Input
+                                        type="number"
+                                        placeholder="enter bill's amount..."
+                                        defaultValue={selectedBills && selectedBills?.amount >= 0 ? selectedBills?.amount : ""}
+                                        onChange={(e) => setSelectedBills((prev) =>
+                                            prev ? { ...prev, amount: Number(e.target.value) } : prev
+                                        )}
+                                        formatNumber={true}
+                                    ></Input>
+                                </div>
+                            </div>
+                            <div className="flex gap-4 items-center space-y-4">
+                                <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
+                                    due date
+                                </div>
+                                <div className="flex-1">
+                                    <Input
+                                        type="date"
+                                        placeholder="enter the due date of bills..."
+                                        defaultValue={selectedBills?.due_date ?? today}
+                                        onChange={(e) => setSelectedBills((prev) =>
+                                            prev ? { ...prev, bills_date: e.target.value } : prev
+                                        )}>
+                                    </Input>
+                                </div>
+                            </div>
+                            <div className="flex gap-4 items-center space-y-4">
+                                <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
+                                    recurrence
+                                </div>
+                                <div className="flex-1">
+                                    <Select
+                                        options={recurrenceOptions}
+                                        placeholder="select recurrence..."
+                                        defaultValue={selectedBills?.recurrence_interval ?? ""}
+                                        onChange={(val: string) =>
+                                            setSelectedBills((prev) => prev ? { ...prev, recurrence_interval: val } : prev)
                                         }
                                     />
                                 </div>
