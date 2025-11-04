@@ -13,7 +13,6 @@ import Select from "../../components/ui/select/Select";
 import SimpleModal from "../../components/modals/SimpleModal";
 import { checkExistingPeriod } from "../../../lib/helpers/period";
 import { checkCurrentPeriod, checkExpense } from "../../../lib/helpers/expense";
-import ExpensePieChart from "./(components)/ExpensePieChart";
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-sono",

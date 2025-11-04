@@ -29,7 +29,7 @@ export async function GET(request: Request) {
         if (id) query = query.eq("id", id);
         if (userId) query = query.eq("user_id", userId);
         if (sourceId) query = query.eq("source_id", sourceId);
-        if (search) query = query.ilike("description", `${search}`);
+        if (search) query = query.ilike("description", `%${search}%`);
 
         const { data: result, error } = await query.order("expense_date", { ascending: false });
 
