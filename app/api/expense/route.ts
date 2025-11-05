@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         const sourceId = searchParams.get("sourceId");
         const search = searchParams.get("search");
 
-        let query = supabase.from("expenses").select("*, budgets(periods(name, start_date, end_date)), categories(name), sources(name)");
+        let query = supabase.from("expenses").select("*, budgets(id, periods(id, name, start_date, end_date)), categories(id, name), sources(id, name)");
 
         if (budgetId) query = query.eq("budget_id", budgetId);
         if (categoryId) query = query.eq("category_id", categoryId);

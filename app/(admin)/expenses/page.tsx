@@ -35,16 +35,20 @@ export default function Expenses() {
         expense_date: string;
         budget_id: number;
         budgets: {
+            id: number;
             periods: {
+                id: number;
                 name: string;
             }
         },
         category_id: number;
         categories: {
+            id: number;
             name: string;
         },
         source_id: number;
         sources: {
+            id: number;
             name: string;
         }
     }
@@ -73,7 +77,7 @@ export default function Expenses() {
     const { profile } = useProfile()
     const [loading, setLoading] = useState(false);
     const [expense, setExpense] = useState<Expense[]>([])
-    const [openModalAdd, setOpenModalAdd] = useState(false);
+    const [openModalForm, setOpenModalForm] = useState(false);
     const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
     const [budgetOptions, setBudgetOptions] = useState<{ value: string; label: string }[]>([]);
     const [sourceOptions, setSourceOptions] = useState<{ value: string; label: string }[]>([]);
@@ -89,6 +93,9 @@ export default function Expenses() {
     const [openModalWarning, setOpenModalWarning] = useState(false);
     const [warningMessage, setWarningMessage] = useState("");
     const [confirmExceedingBudget, setConfirmExceedingBudget] = useState(false);
+    const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
+    const [isCreateMode, setIsCreateMode] = useState(false);
+    const [selectedIdEditExpense, setSelectedIdEditExpense] = useState<number | null>(null);
     const [currentBudgetId, setCurrentBudgetId] = useState(0);
     const [summary, setSummary] = useState<Summary[]>([])
 
@@ -163,25 +170,33 @@ export default function Expenses() {
         if (cp) { setCurrentBudgetId(cp.data.budget_id) }
     }
 
-    const handleClickCreateExpense = () => {
+    const openModalCreate = () => {
         setSelectedExpense({
             id: 0,
             description: "",
             amount: 0,
             expense_date: today,
             budget_id: -1,
-            budgets: { periods: { name: "" } },
+            budgets: {
+                id: -1,
+                periods: {
+                    id: -1,
+                    name: ""
+                }
+            },
             category_id: -1,
-            categories: { name: "" },
+            categories: {
+                id: -1,
+                name: ""
+            },
             source_id: -1,
-            sources: { name: "" }
+            sources: {
+                id: -1,
+                name: ""
+            }
         });
-        setOpenModalAdd(true)
-    }
-
-    const closeModalAdd = () => {
-        setOpenModalAdd(false);
-        getExpenses();
+        setIsCreateMode(true);
+        setOpenModalForm(true)
     }
 
     const handleSubmitCreateExpense = async () => {
@@ -231,10 +246,112 @@ export default function Expenses() {
             console.error(err)
         } finally {
             setConfirmExceedingBudget(false);
-            closeModalAdd();
+            closeModalForm();
             setLoading(false);
         }
     }
+
+    const handleSubmitEditExpense = async (e?: React.FormEvent) => {
+        setLoading(true);
+        e?.preventDefault();
+        console.log("selectedExpense: " + JSON.stringify(selectedExpense))
+        try {
+            if (!selectedExpense
+                || selectedExpense?.id < 1
+                || !selectedExpense?.description
+                || !selectedExpense?.amount
+                || !selectedExpense?.expense_date
+                || !selectedExpense?.budget_id
+                || !selectedExpense?.category_id
+                || !selectedExpense?.source_id) {
+                setFailedMessage("fill all the required fields!");
+                setOpenModalFailed(true);
+                setLoading(false);
+                return;
+            }
+            console.log(JSON.stringify({
+
+            }))
+            const res = await fetch("/api/expense", {
+                method: "PUT",
+                body: JSON.stringify({
+                    id: selectedExpense?.id,
+                    user_id: profile?.id,
+                    budget_id: selectedExpense?.budget_id,
+                    category_id: selectedExpense?.category_id,
+                    description: selectedExpense?.description,
+                    amount: selectedExpense?.amount,
+                    expense_date: selectedExpense?.expense_date,
+                    source_id: selectedExpense?.source_id
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSuccessMessage("success update expense!");
+                setLoading(false);
+                setOpenModalSuccess(true);
+            } else {
+                setFailedMessage(data.message);
+                setLoading(false);
+                setOpenModalFailed(true);
+            }
+        } catch (err: any) {
+            console.error(err)
+        } finally {
+            closeModalForm();
+            setLoading(false)
+        }
+    };
+
+    const handleDeleteExpense = async (id: number) => {
+        setLoading(true);
+        console.log("selectedExpense: " + JSON.stringify(selectedExpense))
+        try {
+            if (!id || id === 0) {
+                setFailedMessage("fill all the required fields!");
+                setOpenModalFailed(true);
+                setLoading(false);
+                return;
+            }
+            const res = await fetch(`/api/expense?id=${id}`, {
+                method: "DELETE"
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSuccessMessage("success delete expense!");
+                setLoading(false);
+                setOpenModalSuccess(true);
+            } else {
+                setFailedMessage(data.message);
+                setLoading(false);
+                setOpenModalFailed(true);
+            }
+        } catch (err: any) {
+            console.error(err)
+        } finally {
+            closeModalForm();
+            setLoading(false)
+        }
+    };
+
+    const closeModalForm = () => {
+        getExpenses();
+        setOpenModalForm(false);
+        setSelectedIdEditExpense(null);
+        setIsCreateMode(false);
+    }
+
+    const handleOpenConfirmEdit = () => {
+        setConfirmMessage("are you sure you want to update this expense?");
+        setPendingAction("edit");
+        setOpenModalConfirm(true);
+    };
+
+    const handleOpenConfirmDelete = () => {
+        setConfirmMessage("are you sure you want to delete this expense?");
+        setPendingAction("delete");
+        setOpenModalConfirm(true);
+    };
 
     const handleOpenConfirmCreate = () => {
         if (!selectedExpense?.description
@@ -250,12 +367,57 @@ export default function Expenses() {
             return;
         }
         setConfirmMessage("are you sure you want to create this expense?");
+        setPendingAction("create");
         setOpenModalConfirm(true);
     };
 
+    const handleClickEditExpense = async (id: number) => {
+        console.log("id edit: ", id)
+        setLoading(true)
+        setSelectedIdEditExpense(id)
+        const foundExpense = expense.find((e) => e.id === id);
+        console.log("foundExpense: ", JSON.stringify(foundExpense))
+        if (foundExpense) {
+            setSelectedExpense({
+                id: id,
+                description: foundExpense.description,
+                amount: foundExpense.amount,
+                expense_date: foundExpense.expense_date,
+                budget_id: foundExpense.budget_id,
+                budgets: {
+                    id: foundExpense.budgets.id,
+                    periods: {
+                        id: foundExpense.budgets.periods.id,
+                        name: foundExpense.budgets.periods.name,
+                    }
+                },
+                category_id: foundExpense.category_id,
+                categories: {
+                    id: foundExpense.categories.id,
+                    name: foundExpense.categories.name,
+                },
+                source_id: foundExpense.source_id,
+                sources: {
+                    id: foundExpense.sources.id,
+                    name: foundExpense.sources.name,
+                }
+            })
+        }
+        setOpenModalForm(true);
+        setLoading(false);
+        setSelectedIdEditExpense(id);
+    }
+
     const handleConfirmAction = async () => {
-        await handleSubmitCreateExpense();
+        if (pendingAction === "edit") {
+            await handleSubmitEditExpense();
+        } else if (pendingAction === "delete") {
+            await handleDeleteExpense(selectedExpense?.id ?? 0);
+        } else if (pendingAction === "create") {
+            await handleSubmitCreateExpense();
+        }
         setOpenModalConfirm(false);
+        setPendingAction(null);
     };
 
     useEffect(() => {
@@ -281,7 +443,7 @@ export default function Expenses() {
             </h1>
             <div className="flex flex-wrap justify-center gap-x-3 text-center px-6">
                 {summary.map((s) => (
-                    <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} py-2 my-2 border shadow-xs max-w-[200px] sm:w-auto`}>
+                    <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} px-3 py-2 my-2 border shadow-xs max-w-[300px] sm:w-auto`}>
                         <h3 className="text-sm font-semibold py-1">{s.category_name}</h3>
                         <p className="text-xs py-2">Rp {s.sum_amount.toLocaleString("id-ID")}</p>
                         <p className="text-xs">{s.percentage_max_expense}% of budget's max expense</p>
@@ -290,7 +452,7 @@ export default function Expenses() {
                 ))}
             </div>
             <div className="mt-2 items-center justify-center">
-                <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => handleClickCreateExpense()}>
+                <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => openModalCreate()}>
                     <div className="flex flex-col">
                         <div className="flex flex-row items-center justify-center mb-1">
                             <svg id="plus-solid" width="20" height="20" fill="#FF6F91" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="23 11 23 13 22 13 22 14 14 14 14 22 13 22 13 23 11 23 11 22 10 22 10 14 2 14 2 13 1 13 1 11 2 11 2 10 10 10 10 2 11 2 11 1 13 1 13 2 14 2 14 10 22 10 22 11 23 11" /></svg>
@@ -306,6 +468,7 @@ export default function Expenses() {
                                 title={e.description}
                                 desc={formatRupiah(e.amount)}
                                 className="min-w-[400px] outline-gray-400 hover:bg-pink-400 cursor-pointer mt-6"
+                                onClick={() => handleClickEditExpense(e.id)}
                             >
                                 <span className="text-xs">
                                     {moment(new Date(e.expense_date)).format('dddd').substring(0, 3) + ", " + moment(new Date(e.expense_date)).format("D MMMM YYYY")}
@@ -338,11 +501,11 @@ export default function Expenses() {
                         no expenses found!
                     </div>
                 )}
-                {openModalAdd &&
+                {openModalForm &&
                     <FormModal
-                        isOpen={openModalAdd}
-                        onClose={closeModalAdd}
-                        title="add new expense"
+                        isOpen={openModalForm}
+                        onClose={closeModalForm}
+                        title={`${isCreateMode ? "create new" : "update"} expense`}
                     >
                         <form>
                             <div className="flex gap-4 items-center space-y-4">
@@ -367,12 +530,12 @@ export default function Expenses() {
                                 <div className="flex-1">
                                     <Input
                                         type="number"
+                                        formatNumber={true}
                                         placeholder="enter your amount..."
                                         defaultValue={selectedExpense && selectedExpense?.amount >= 0 ? selectedExpense?.amount : ""}
                                         onChange={(e) => setSelectedExpense((prev) =>
                                             prev ? { ...prev, amount: Number(e.target.value) } : prev
                                         )}
-                                        formatNumber={true}
                                     ></Input>
                                 </div>
                             </div>
@@ -403,16 +566,7 @@ export default function Expenses() {
                                         onChange={(val: string) => {
                                             const selectedLabel = budgetOptions.find((opt) => opt.value === val)?.label || "";
                                             setSelectedExpense((prev) =>
-                                                prev
-                                                    ? {
-                                                        ...prev,
-                                                        budget_id: Number(val),
-                                                        budgets: {
-                                                            ...prev.budgets,
-                                                            periods: { name: selectedLabel },
-                                                        },
-                                                    }
-                                                    : prev
+                                                prev ? { ...prev, budget_id: Number(val), budgets: { ...prev.budgets, id: Number(val) } } : prev
                                             );
                                         }}
                                     />
@@ -429,16 +583,7 @@ export default function Expenses() {
                                         defaultValue={selectedExpense && selectedExpense?.category_id >= 0 ? String(selectedExpense.category_id) : ""}
                                         onChange={(val: string) =>
                                             setSelectedExpense((prev) =>
-                                                prev
-                                                    ? {
-                                                        ...prev,
-                                                        category_id: Number(val),
-                                                        categories: {
-                                                            ...prev.categories,
-                                                            name: categoryOptions.find((opt) => opt.value === val)?.label || "",
-                                                        },
-                                                    }
-                                                    : prev
+                                                prev ? { ...prev, category_id: Number(val), categories: { ...prev.categories, id: Number(val) } } : prev
                                             )
                                         }
                                     />
@@ -470,10 +615,22 @@ export default function Expenses() {
                                     />
                                 </div>
                             </div>
-                            <div className="flex items-center justify-center py-6 gap-3">
-                                <Button onClick={() => handleOpenConfirmCreate()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
-                                    create
-                                </Button>
+                            <div className="flex items-center justify-center py-6">
+                                {isCreateMode ? (<>
+                                    <Button onClick={() => handleOpenConfirmCreate()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600 mx-2`}>
+                                        create
+                                    </Button>
+                                    <Button onClick={() => closeModalForm()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                                        cancel
+                                    </Button>
+                                </>) : (<>
+                                    <Button onClick={() => handleOpenConfirmEdit()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600 mx-2`}>
+                                        update
+                                    </Button>
+                                    <Button type="button" onClick={() => handleOpenConfirmDelete()} size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                                        delete
+                                    </Button>
+                                </>)}
                             </div>
                         </form>
                     </FormModal>
