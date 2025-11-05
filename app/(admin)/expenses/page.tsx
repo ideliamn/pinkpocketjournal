@@ -342,9 +342,6 @@ export default function Expenses() {
                 setLoading(false);
                 return;
             }
-            console.log(JSON.stringify({
-
-            }))
             const res = await fetch("/api/expense", {
                 method: "PUT",
                 body: JSON.stringify({

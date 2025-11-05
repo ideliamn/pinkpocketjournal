@@ -26,8 +26,49 @@ const pixelify = Pixelify_Sans({
 });
 
 export default function Bills() {
+    // TYPES //
     type billStatus = "pending" | "overdue" | "done";
 
+    // INTERFACES //
+    interface Bill {
+        id: number;
+        budget_id: number;
+        budgets: {
+            id: number;
+            periods: {
+                id: number;
+                name: string;
+            }
+        },
+        category_id: number;
+        categories: {
+            id: number;
+            name: string;
+        },
+        source_id: number;
+        sources: {
+            id: number;
+            name: string;
+        },
+        description: string;
+        amount: number;
+        due_date: string;
+        paid_date: string;
+        recurrence_interval: string;
+        status: billStatus;
+    }
+    interface Select {
+        id: number,
+        name: string;
+    }
+    interface Budget {
+        id: number,
+        periods: {
+            name: string;
+        }
+    }
+
+    // CONSTS //
     const now = new Date();
     const today = now.toISOString().split("T")[0];
     const recurrenceOptions = [
@@ -40,50 +81,14 @@ export default function Bills() {
         overdue: "hover:bg-red-300",
         done: "hover:bg-green-300"
     };
-    interface Bills {
-        id: number;
-        budget_id: number;
-        budgets: {
-            periods: {
-                name: string;
-            }
-        },
-        category_id: number;
-        categories: {
-            name: string;
-        },
-        source_id: number;
-        sources: {
-            name: string;
-        },
-        description: string;
-        amount: number;
-        due_date: string;
-        paid_date: string;
-        recurrence_interval: string;
-        status: billStatus;
-    }
-
-    interface Select {
-        id: number,
-        name: string;
-    }
-
-    interface Budget {
-        id: number,
-        periods: {
-            name: string;
-        }
-    }
-
     const { profile } = useProfile()
     const [loading, setLoading] = useState(false);
-    const [bills, setBills] = useState<Bills[]>([])
-    const [openModalAdd, setOpenModalAdd] = useState(false);
+    const [bill, setBill] = useState<Bill[]>([])
+    const [openModalForm, setOpenModalForm] = useState(false);
     const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
     const [budgetOptions, setBudgetOptions] = useState<{ value: string; label: string }[]>([]);
     const [sourceOptions, setSourceOptions] = useState<{ value: string; label: string }[]>([]);
-    const [selectedBills, setSelectedBills] = useState<Bills | null>(null);
+    const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
     const [openModalSuccess, setOpenModalSuccess] = useState(false);
     const closeModalSuccess = () => { setOpenModalSuccess(false) };
     const [successMessage, setSuccessMessage] = useState("");
@@ -95,8 +100,92 @@ export default function Bills() {
     const [openModalWarning, setOpenModalWarning] = useState(false);
     const [warningMessage, setWarningMessage] = useState("");
     const [confirmExceedingBudget, setConfirmExceedingBudget] = useState(false);
-    const [currentBillId, setCurrentBillId] = useState(0);
+    const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
+    const [isCreateMode, setIsCreateMode] = useState(false);
+    const [selectedIdEditBill, setSelectedIdEditBill] = useState<number | null>(null);
 
+    // HANDLE CLICK CONFIRM
+    const handleConfirmAction = async () => {
+        if (pendingAction === "edit") {
+            await handleSubmitEditBill();
+        } else if (pendingAction === "delete") {
+            await handleDeleteBill(selectedBill?.id ?? 0);
+        } else if (pendingAction === "create") {
+            await handleSubmitCreateBill();
+        }
+        setOpenModalConfirm(false);
+        setPendingAction(null);
+    };
+
+    // HANDLE CLOSE MODAL FORM
+    const closeModalForm = () => {
+        getBills();
+        setOpenModalForm(false);
+        setSelectedIdEditBill(null);
+        setIsCreateMode(false);
+    }
+
+    // HANDLE OPEN MODAL CREATE / EDIT
+    const openModalCreate = () => {
+        setSelectedBill({
+            id: 0,
+            budget_id: -1,
+            budgets: { id: -1, periods: { id: -1, name: "" } },
+            category_id: -1,
+            categories: { id: -1, name: "" },
+            source_id: -1,
+            sources: { id: -1, name: "" },
+            description: "",
+            amount: 0,
+            due_date: "",
+            paid_date: "",
+            recurrence_interval: "",
+            status: "pending",
+        });
+        setIsCreateMode(true);
+        setOpenModalForm(true);
+    }
+    const handleClickEditBill = async (id: number) => {
+        console.log("id edit: ", id)
+        setLoading(true)
+        setSelectedIdEditBill(id)
+        const foundBill = bill.find((b) => b.id === id);
+        console.log("foundBill: ", JSON.stringify(foundBill))
+        if (foundBill) {
+            setSelectedBill({
+                id: id,
+                budget_id: foundBill?.budget_id,
+                budgets: {
+                    id: foundBill.budgets?.id,
+                    periods: {
+                        id: foundBill.budgets.periods.id,
+                        name: foundBill.budgets.periods.name,
+                    }
+                },
+                category_id: foundBill.category_id,
+                categories: {
+                    id: foundBill.categories.id,
+                    name: foundBill.categories.name,
+                },
+                source_id: foundBill.source_id,
+                sources: {
+                    id: foundBill.sources.id,
+                    name: foundBill.sources.name,
+                },
+                description: foundBill.description,
+                amount: foundBill.amount,
+                due_date: foundBill.due_date,
+                paid_date: foundBill?.paid_date,
+                recurrence_interval: foundBill?.recurrence_interval,
+                status: foundBill?.status,
+            })
+        }
+        setOpenModalForm(true);
+        setLoading(false);
+        setSelectedIdEditBill(id);
+    }
+
+    // FETCH INITIAL DATA //
     const getBills = async () => {
         try {
             if (!profile?.id) return;
@@ -106,7 +195,7 @@ export default function Bills() {
             const res = await getBill.json();
             if (res.data) {
                 console.log("res.data: ", JSON.stringify(res.data))
-                setBills(res.data)
+                setBill(res.data)
             }
             setLoading(false)
         } catch (err) {
@@ -114,7 +203,6 @@ export default function Bills() {
         } finally {
         }
     }
-
     const fetchCategory = async () => {
         const getCategory = await fetch(`/api/category?userId=${profile?.id}`);
         const res = await getCategory.json();
@@ -127,7 +215,6 @@ export default function Bills() {
             setCategoryOptions(formattedOptions);
         }
     }
-
     const fetchBudget = async () => {
         const getBudget = await fetch(`/api/budget?userId=${profile?.id}`);
         const res = await getBudget.json();
@@ -140,7 +227,6 @@ export default function Bills() {
             setBudgetOptions(formattedOptions);
         }
     }
-
     const fetchSource = async () => {
         const getSource = await fetch(`/api/source?userId=${profile?.id}`);
         const res = await getSource.json();
@@ -154,47 +240,52 @@ export default function Bills() {
         }
     }
 
-    const handleClickCreateBill = () => {
-        setSelectedBills({
-            id: 0,
-            budget_id: -1,
-            budgets: { periods: { name: "" } },
-            category_id: -1,
-            categories: { name: "" },
-            source_id: -1,
-            sources: { name: "" },
-            description: "",
-            amount: 0,
-            due_date: "",
-            paid_date: "",
-            recurrence_interval: "",
-            status: "pending",
-        });
-        setOpenModalAdd(true)
-    }
+    // HANDLE CONFIRM FOR EACH ACTION //
+    const handleOpenConfirmCreate = () => {
+        if (!selectedBill?.description
+            || selectedBill?.amount < 0
+            || !selectedBill?.due_date
+            || selectedBill?.category_id <= 0
+            || selectedBill?.source_id <= 0
+            || !selectedBill?.recurrence_interval
+        ) {
+            setFailedMessage("fill all the required fields!");
+            setOpenModalFailed(true);
+            setLoading(false);
+            return;
+        }
+        setConfirmMessage("are you sure you want to create this bill?");
+        setOpenModalConfirm(true);
+    };
+    const handleOpenConfirmEdit = () => {
+        setConfirmMessage("are you sure you want to update this bill?");
+        setPendingAction("edit");
+        setOpenModalConfirm(true);
+    };
+    const handleOpenConfirmDelete = () => {
+        setConfirmMessage("are you sure you want to delete this bill?");
+        setPendingAction("delete");
+        setOpenModalConfirm(true);
+    };
 
-    const closeModalAdd = () => {
-        setOpenModalAdd(false);
-        getBills();
-    }
-
+    // HANDLE SUBMIT FUNCTIONS //
     const handleSubmitCreateBill = async () => {
         setLoading(true);
         try {
-            if (!selectedBills?.description
-                || selectedBills?.amount < 0
-                || !selectedBills?.due_date
-                || selectedBills?.category_id <= 0
-                || selectedBills?.source_id <= 0
-                || !selectedBills?.recurrence_interval
+            if (!selectedBill?.description
+                || selectedBill?.amount < 0
+                || !selectedBill?.due_date
+                || selectedBill?.category_id <= 0
+                || selectedBill?.source_id <= 0
+                || !selectedBill?.recurrence_interval
             ) {
                 setFailedMessage("fill all the required fields!");
                 setOpenModalFailed(true);
                 setLoading(false);
                 return;
             }
-            if (!confirmExceedingBudget && selectedBills?.budget_id) {
-                const checkExpenseBudget = await checkExpense(Number(profile?.id), selectedBills?.budget_id, selectedBills?.amount, selectedBills?.category_id)
+            if (!confirmExceedingBudget && selectedBill?.budget_id) {
+                const checkExpenseBudget = await checkExpense(Number(profile?.id), selectedBill?.budget_id, selectedBill?.amount, selectedBill?.category_id)
                 if (checkExpenseBudget.isExceeding) {
                     setWarningMessage(checkExpenseBudget?.message);
                     setOpenModalWarning(true);
@@ -204,12 +295,12 @@ export default function Bills() {
                 method: "POST",
                 body: JSON.stringify({
                     user_id: profile?.id,
-                    budget_id: selectedBills?.budget_id ?? null,
-                    category_id: selectedBills?.category_id,
-                    description: selectedBills?.description,
-                    amount: selectedBills?.amount,
-                    due_date: selectedBills?.due_date,
-                    source_id: selectedBills?.source_id
+                    budget_id: selectedBill?.budget_id ?? null,
+                    category_id: selectedBill?.category_id,
+                    description: selectedBill?.description,
+                    amount: selectedBill?.amount,
+                    due_date: selectedBill?.due_date,
+                    source_id: selectedBill?.source_id
                 })
             })
             const data = await res.json();
@@ -224,33 +315,96 @@ export default function Bills() {
             console.error(err)
         } finally {
             setConfirmExceedingBudget(false);
-            closeModalAdd();
+            closeModalForm();
             setLoading(false);
         }
     }
-
-    const handleOpenConfirmCreate = () => {
-        if (!selectedBills?.description
-            || selectedBills?.amount < 0
-            || !selectedBills?.due_date
-            || selectedBills?.category_id <= 0
-            || selectedBills?.source_id <= 0
-            || !selectedBills?.recurrence_interval
-        ) {
-            setFailedMessage("fill all the required fields!");
-            setOpenModalFailed(true);
+    const handleSubmitEditBill = async (e?: React.FormEvent) => {
+        setLoading(true);
+        e?.preventDefault();
+        console.log("selectedBill: " + JSON.stringify(selectedBill))
+        try {
+            if (!selectedBill
+                || selectedBill?.id < 1
+                || !selectedBill?.description
+                || selectedBill?.amount < 0
+                || !selectedBill?.due_date
+                || selectedBill?.category_id <= 0
+                || selectedBill?.source_id <= 0
+                || !selectedBill?.recurrence_interval
+            ) {
+                setFailedMessage("fill all the required fields!");
+                setOpenModalFailed(true);
+                setLoading(false);
+                return;
+            }
+            if (!confirmExceedingBudget && selectedBill?.budget_id) {
+                const checkExpenseBudget = await checkExpense(Number(profile?.id), selectedBill?.budget_id, selectedBill?.amount, selectedBill?.category_id)
+                if (checkExpenseBudget.isExceeding) {
+                    setWarningMessage(checkExpenseBudget?.message);
+                    setOpenModalWarning(true);
+                }
+            }
+            const res = await fetch("/api/bills", {
+                method: "POST",
+                body: JSON.stringify({
+                    user_id: profile?.id,
+                    budget_id: selectedBill?.budget_id ?? null,
+                    category_id: selectedBill?.category_id,
+                    description: selectedBill?.description,
+                    amount: selectedBill?.amount,
+                    due_date: selectedBill?.due_date,
+                    source_id: selectedBill?.source_id
+                })
+            })
+            const data = await res.json();
+            if (res.ok) {
+                setSuccessMessage("success");
+                setOpenModalSuccess(true);
+            } else {
+                setFailedMessage(data.message);
+                setOpenModalFailed(true);
+            }
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setConfirmExceedingBudget(false);
+            closeModalForm();
             setLoading(false);
-            return;
         }
-        setConfirmMessage("are you sure you want to create this bill?");
-        setOpenModalConfirm(true);
+    }
+    const handleDeleteBill = async (id: number) => {
+        setLoading(true);
+        console.log("selectedBill: " + JSON.stringify(selectedBill))
+        try {
+            if (!id || id === 0) {
+                setFailedMessage("fill all the required fields!");
+                setOpenModalFailed(true);
+                setLoading(false);
+                return;
+            }
+            const res = await fetch(`/api/bills?id=${id}`, {
+                method: "DELETE"
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSuccessMessage("success delete bill!");
+                setLoading(false);
+                setOpenModalSuccess(true);
+            } else {
+                setFailedMessage(data.message);
+                setLoading(false);
+                setOpenModalFailed(true);
+            }
+        } catch (err: any) {
+            console.error(err)
+        } finally {
+            closeModalForm();
+            setLoading(false)
+        }
     };
 
-    const handleConfirmAction = async () => {
-        await handleSubmitCreateBill();
-        setOpenModalConfirm(false);
-    };
-
+    // USE EFFECTS //
     useEffect(() => {
         setLoading(true)
         if (profile?.id) {
@@ -265,7 +419,7 @@ export default function Bills() {
         <main className="flex flex-col items-center min-h-screen pt-20 gap-10">
             {loading && <Loading />}
             <div className="mt-2 items-center justify-center">
-                <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => handleClickCreateBill()}>
+                <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => openModalCreate()}>
                     <div className="flex flex-col">
                         <div className="flex flex-row items-center justify-center mb-1">
                             <svg id="plus-solid" width="20" height="20" fill="#FF6F91" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="23 11 23 13 22 13 22 14 14 14 14 22 13 22 13 23 11 23 11 22 10 22 10 14 2 14 2 13 1 13 1 11 2 11 2 10 10 10 10 2 11 2 11 1 13 1 13 2 14 2 14 10 22 10 22 11 23 11" /></svg>
@@ -273,14 +427,15 @@ export default function Bills() {
                         add
                     </div>
                 </Button>
-                {bills.length > 0 ? (
-                    bills.map((b) => {
+                {bill.length > 0 ? (
+                    bill.map((b) => {
                         return (
                             <Card
                                 key={b.id}
                                 title={b.description}
                                 desc={formatRupiah(b.amount)}
                                 className={`min-w-[400px] outline-gray-400 cursor-pointer mt-6 ${statusColors[b?.status] || ""}`}
+                                onClick={() => handleClickEditBill(b.id)}
                             >
                                 <div className="flex flex-col">
                                     {b.status === "done" && (
@@ -330,11 +485,11 @@ export default function Bills() {
                         no bills found!
                     </div>
                 )}
-                {openModalAdd &&
+                {openModalForm &&
                     <FormModal
-                        isOpen={openModalAdd}
-                        onClose={closeModalAdd}
-                        title="add new bill"
+                        isOpen={openModalForm}
+                        onClose={closeModalForm}
+                        title={`${isCreateMode ? "create new" : "update"} bill`}
                     >
                         <form>
                             <div className="flex gap-4 items-center space-y-4">
@@ -345,20 +500,11 @@ export default function Bills() {
                                     <Select
                                         options={budgetOptions}
                                         placeholder="select budget..."
-                                        defaultValue={selectedBills && selectedBills?.budget_id >= 0 ? String(selectedBills?.budget_id) : ""}
+                                        defaultValue={selectedBill && selectedBill?.budget_id >= 0 ? String(selectedBill?.budget_id) : ""}
                                         onChange={(val: string) => {
                                             const selectedLabel = budgetOptions.find((opt) => opt.value === val)?.label || "";
-                                            setSelectedBills((prev) =>
-                                                prev
-                                                    ? {
-                                                        ...prev,
-                                                        budget_id: Number(val),
-                                                        budgets: {
-                                                            ...prev.budgets,
-                                                            periods: { name: selectedLabel },
-                                                        },
-                                                    }
-                                                    : prev
+                                            setSelectedBill((prev) =>
+                                                prev ? { ...prev, budget_id: Number(val), budgets: { ...prev.budgets, id: Number(val) } } : prev
                                             );
                                         }}
                                     />
@@ -372,9 +518,9 @@ export default function Bills() {
                                     <Select
                                         options={categoryOptions}
                                         placeholder="select category..."
-                                        defaultValue={selectedBills && selectedBills?.category_id >= 0 ? String(selectedBills.category_id) : ""}
+                                        defaultValue={selectedBill && selectedBill?.category_id >= 0 ? String(selectedBill.category_id) : ""}
                                         onChange={(val: string) =>
-                                            setSelectedBills((prev) =>
+                                            setSelectedBill((prev) =>
                                                 prev
                                                     ? {
                                                         ...prev,
@@ -398,9 +544,9 @@ export default function Bills() {
                                     <Select
                                         options={sourceOptions}
                                         placeholder="select source..."
-                                        defaultValue={selectedBills && selectedBills?.source_id >= 0 ? String(selectedBills.source_id) : ""}
+                                        defaultValue={selectedBill && selectedBill?.source_id >= 0 ? String(selectedBill.source_id) : ""}
                                         onChange={(val: string) =>
-                                            setSelectedBills((prev) =>
+                                            setSelectedBill((prev) =>
                                                 prev
                                                     ? {
                                                         ...prev,
@@ -424,8 +570,8 @@ export default function Bills() {
                                     <Input
                                         type="text"
                                         placeholder="enter bill's description..."
-                                        defaultValue={selectedBills?.description}
-                                        onChange={(e) => setSelectedBills((prev) =>
+                                        defaultValue={selectedBill?.description}
+                                        onChange={(e) => setSelectedBill((prev) =>
                                             prev ? { ...prev, description: e.target.value } : prev
                                         )}>
                                     </Input>
@@ -439,8 +585,8 @@ export default function Bills() {
                                     <Input
                                         type="number"
                                         placeholder="enter bill's amount..."
-                                        defaultValue={selectedBills && selectedBills?.amount >= 0 ? selectedBills?.amount : ""}
-                                        onChange={(e) => setSelectedBills((prev) =>
+                                        defaultValue={selectedBill && selectedBill?.amount >= 0 ? selectedBill?.amount : ""}
+                                        onChange={(e) => setSelectedBill((prev) =>
                                             prev ? { ...prev, amount: Number(e.target.value) } : prev
                                         )}
                                         formatNumber={true}
@@ -455,8 +601,8 @@ export default function Bills() {
                                     <Input
                                         type="date"
                                         placeholder="enter the due date of bills..."
-                                        defaultValue={selectedBills?.due_date ?? today}
-                                        onChange={(e) => setSelectedBills((prev) =>
+                                        defaultValue={selectedBill?.due_date ?? today}
+                                        onChange={(e) => setSelectedBill((prev) =>
                                             prev ? { ...prev, bills_date: e.target.value } : prev
                                         )}>
                                     </Input>
@@ -470,17 +616,29 @@ export default function Bills() {
                                     <Select
                                         options={recurrenceOptions}
                                         placeholder="select recurrence..."
-                                        defaultValue={selectedBills?.recurrence_interval ?? ""}
+                                        defaultValue={selectedBill?.recurrence_interval ?? ""}
                                         onChange={(val: string) =>
-                                            setSelectedBills((prev) => prev ? { ...prev, recurrence_interval: val } : prev)
+                                            setSelectedBill((prev) => prev ? { ...prev, recurrence_interval: val } : prev)
                                         }
                                     />
                                 </div>
                             </div>
-                            <div className="flex items-center justify-center py-6 gap-3">
-                                <Button onClick={() => handleOpenConfirmCreate()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
-                                    create
-                                </Button>
+                            <div className="flex items-center justify-center py-6">
+                                {isCreateMode ? (<>
+                                    <Button onClick={() => handleOpenConfirmCreate()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600 mx-2`}>
+                                        create
+                                    </Button>
+                                    <Button onClick={() => closeModalForm()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                                        cancel
+                                    </Button>
+                                </>) : (<>
+                                    <Button onClick={() => handleOpenConfirmEdit()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600 mx-2`}>
+                                        update
+                                    </Button>
+                                    <Button type="button" onClick={() => handleOpenConfirmDelete()} size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                                        delete
+                                    </Button>
+                                </>)}
                             </div>
                         </form>
                     </FormModal>
