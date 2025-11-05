@@ -160,7 +160,7 @@ export default function Dashboard() {
             </div>
 
             {/* daily expense chart */}
-            <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${geistMono.className}`}>
+            <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 text-s ${geistMono.className}`}>
                 <ChartCard title="daily expense chart">
                     <ResponsiveContainer width="100%" height={250}>
                         <AreaChart data={dailyExpenseChart}>
@@ -174,13 +174,12 @@ export default function Dashboard() {
                             <XAxis dataKey="expense_date" />
                             <YAxis />
                             <Tooltip />
-                            <Legend />
                             <Area
                                 type="monotone"
                                 dataKey="total_amount"
                                 stroke="#FF6384"
                                 fill="url(#colorExpense)"
-                                name="Expense"
+                                name="expense"
                                 strokeWidth={2}
                                 dot={false}
                             />
@@ -257,8 +256,7 @@ export default function Dashboard() {
                             {recentExpense.map((item, index) => (
                                 <TableRow
                                     key={index}
-                                    className={`border-spacing-2.5 text-sm ${index % 2 === 0 ? "bg-white" : "bg-pink-50"
-                                        }`}
+                                    className={`border-spacing-2.5 text-sm ${index % 2 === 0 ? "bg-white" : "bg-pink-50"}`}
                                 >
                                     <TableCell className="py-2 px-4">{item.expense_date}</TableCell>
                                     <TableCell className="py-2 px-4">{item.categories?.name}</TableCell>
