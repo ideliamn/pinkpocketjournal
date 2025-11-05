@@ -36,9 +36,9 @@ export default function Bills() {
         { label: "monthly", value: "monthly" },
     ]
     const statusColors = {
-        pending: "bg-pink-200 hover:bg-pink-300",
-        overdue: "bg-red-200 hover:bg-red-300",
-        done: "bg-green-200 hover:bg-green-300"
+        pending: "hover:bg-pink-300",
+        overdue: "hover:bg-red-300",
+        done: "hover:bg-green-300"
     };
     interface Bills {
         id: number;
@@ -309,7 +309,7 @@ export default function Bills() {
                                         {b?.budgets?.periods && (
                                             <div className="flex flex-col">
                                                 <span className="text-gray-500">recurrence:</span>
-                                                <span>{b.recurrence_interval}</span>
+                                                <span>{recurrenceOptions.find((r) => r.value === b.recurrence_interval)?.label}</span>
                                             </div>)}
                                     </div>
                                 </div>
