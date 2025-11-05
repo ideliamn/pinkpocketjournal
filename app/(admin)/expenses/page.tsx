@@ -114,6 +114,7 @@ export default function Expenses() {
     // HANDLE CLOSE MODAL FORM
     const closeModalForm = () => {
         getExpenses();
+        fetchSummary();
         setOpenModalForm(false);
         setSelectedIdEditExpense(null);
         setIsCreateMode(false);
