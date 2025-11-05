@@ -69,6 +69,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
+        const { data: checkExistingBC, error: errorCheckExistingBC } = await supabase.from("budget_categories").select("*").eq("budget_id", body.budget_id).eq("category_id", body.category_id);
+        if (checkExistingBC && checkExistingBC.length > 0) {
+            code = 0
+            message = "This category already have budget set for this period"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
+
         const insertBudgetCategory = {
             budget_id: body.budget_id,
             category_id: body.category_id,
@@ -107,6 +115,14 @@ export async function PUT(req: Request) {
         if (!body.id || !body.category_id || !body.amount) {
             code = 0
             message = "Please input all required fields!"
+            httpStatus = 400
+            return NextResponse.json({ code, message, data }, { status: httpStatus });
+        }
+
+        const { data: checkExistingBC, error: errorCheckExistingBC } = await supabase.from("budget_categories").select("*").eq("budget_id", body.budget_id).eq("category_id", body.category_id);
+        if (checkExistingBC && checkExistingBC.length > 0) {
+            code = 0
+            message = "This category already have budget set for this period"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
