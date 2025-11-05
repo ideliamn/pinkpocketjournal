@@ -26,8 +26,7 @@ const pixelify = Pixelify_Sans({
 });
 
 export default function Expenses() {
-    const now = new Date();
-    const today = now.toISOString().split("T")[0];
+    // INTERFACE //
     interface Expense {
         id: number;
         description: string;
@@ -52,19 +51,16 @@ export default function Expenses() {
             name: string;
         }
     }
-
     interface Select {
         id: number,
         name: string;
     }
-
     interface Budget {
         id: number,
         periods: {
             name: string;
         }
     }
-
     interface Summary {
         sum_amount: number,
         category_name: string,
@@ -74,6 +70,9 @@ export default function Expenses() {
         percentage_max_expense: number
     }
 
+    // CONST //
+    const now = new Date();
+    const today = now.toISOString().split("T")[0];
     const { profile } = useProfile()
     const [loading, setLoading] = useState(false);
     const [expense, setExpense] = useState<Expense[]>([])
@@ -99,6 +98,88 @@ export default function Expenses() {
     const [currentBudgetId, setCurrentBudgetId] = useState(0);
     const [summary, setSummary] = useState<Summary[]>([])
 
+    // HANDLE CLICK CONFIRM
+    const handleConfirmAction = async () => {
+        if (pendingAction === "edit") {
+            await handleSubmitEditExpense();
+        } else if (pendingAction === "delete") {
+            await handleDeleteExpense(selectedExpense?.id ?? 0);
+        } else if (pendingAction === "create") {
+            await handleSubmitCreateExpense();
+        }
+        setOpenModalConfirm(false);
+        setPendingAction(null);
+    };
+
+    // HANDLE CLOSE MODAL FORM
+    const closeModalForm = () => {
+        getExpenses();
+        setOpenModalForm(false);
+        setSelectedIdEditExpense(null);
+        setIsCreateMode(false);
+    }
+
+    // GET CURRENT PERIOD
+    const getCurrentPeriod = async () => {
+        const cp = await checkCurrentPeriod(Number(profile?.id))
+        if (cp) { setCurrentBudgetId(cp.data.budget_id) }
+    }
+
+    // HANDLE OPEN MODAL CREATE / EDIT
+    const openModalCreate = () => {
+        setSelectedExpense({
+            id: 0,
+            description: "",
+            amount: 0,
+            expense_date: today,
+            budget_id: -1,
+            budgets: { id: -1, periods: { id: -1, name: "" } },
+            category_id: -1,
+            categories: { id: -1, name: "" },
+            source_id: -1,
+            sources: { id: -1, name: "" }
+        });
+        setIsCreateMode(true);
+        setOpenModalForm(true)
+    }
+    const handleClickEditExpense = async (id: number) => {
+        console.log("id edit: ", id)
+        setLoading(true)
+        setSelectedIdEditExpense(id)
+        const foundExpense = expense.find((e) => e.id === id);
+        console.log("foundExpense: ", JSON.stringify(foundExpense))
+        if (foundExpense) {
+            setSelectedExpense({
+                id: id,
+                description: foundExpense.description,
+                amount: foundExpense.amount,
+                expense_date: foundExpense.expense_date,
+                budget_id: foundExpense.budget_id,
+                budgets: {
+                    id: foundExpense.budgets.id,
+                    periods: {
+                        id: foundExpense.budgets.periods.id,
+                        name: foundExpense.budgets.periods.name,
+                    }
+                },
+                category_id: foundExpense.category_id,
+                categories: {
+                    id: foundExpense.categories.id,
+                    name: foundExpense.categories.name,
+                },
+                source_id: foundExpense.source_id,
+                sources: {
+                    id: foundExpense.sources.id,
+                    name: foundExpense.sources.name,
+                }
+            })
+        }
+        setOpenModalForm(true);
+        setLoading(false);
+        setSelectedIdEditExpense(id);
+    }
+
+    // FETCH INITIAL DATA //
     const getExpenses = async () => {
         try {
             if (!profile?.id) return;
@@ -116,7 +197,6 @@ export default function Expenses() {
         } finally {
         }
     }
-
     const fetchCategory = async () => {
         const getCategory = await fetch(`/api/category?userId=${profile?.id}`);
         const res = await getCategory.json();
@@ -129,7 +209,6 @@ export default function Expenses() {
             setCategoryOptions(formattedOptions);
         }
     }
-
     const fetchBudget = async () => {
         const getBudget = await fetch(`/api/budget?userId=${profile?.id}`);
         const res = await getBudget.json();
@@ -142,7 +221,6 @@ export default function Expenses() {
             setBudgetOptions(formattedOptions);
         }
     }
-
     const fetchSource = async () => {
         const getSource = await fetch(`/api/source?userId=${profile?.id}`);
         const res = await getSource.json();
@@ -155,7 +233,6 @@ export default function Expenses() {
             setSourceOptions(formattedOptions);
         }
     }
-
     const fetchSummary = async () => {
         const getSummary = await fetch(`/api/expense/summary?budgetId=${currentBudgetId}`);
         const res = await getSummary.json();
@@ -165,40 +242,36 @@ export default function Expenses() {
         }
     }
 
-    const getCurrentPeriod = async () => {
-        const cp = await checkCurrentPeriod(Number(profile?.id))
-        if (cp) { setCurrentBudgetId(cp.data.budget_id) }
-    }
+    // HANDLE CONFIRM FOR EACH ACTION
+    const handleOpenConfirmCreate = () => {
+        if (!selectedExpense?.description
+            || !selectedExpense?.amount
+            || !selectedExpense?.expense_date
+            || !selectedExpense?.budget_id
+            || !selectedExpense?.category_id
+            || !selectedExpense?.source_id
+        ) {
+            setFailedMessage("fill all the required fields!");
+            setOpenModalFailed(true);
+            setLoading(false);
+            return;
+        }
+        setConfirmMessage("are you sure you want to create this expense?");
+        setPendingAction("create");
+        setOpenModalConfirm(true);
+    };
+    const handleOpenConfirmEdit = () => {
+        setConfirmMessage("are you sure you want to update this expense?");
+        setPendingAction("edit");
+        setOpenModalConfirm(true);
+    };
+    const handleOpenConfirmDelete = () => {
+        setConfirmMessage("are you sure you want to delete this expense?");
+        setPendingAction("delete");
+        setOpenModalConfirm(true);
+    };
 
-    const openModalCreate = () => {
-        setSelectedExpense({
-            id: 0,
-            description: "",
-            amount: 0,
-            expense_date: today,
-            budget_id: -1,
-            budgets: {
-                id: -1,
-                periods: {
-                    id: -1,
-                    name: ""
-                }
-            },
-            category_id: -1,
-            categories: {
-                id: -1,
-                name: ""
-            },
-            source_id: -1,
-            sources: {
-                id: -1,
-                name: ""
-            }
-        });
-        setIsCreateMode(true);
-        setOpenModalForm(true)
-    }
-
+    // HANDLE SUBMIT FUNCTIONS
     const handleSubmitCreateExpense = async () => {
         console.log("submit!")
         setLoading(true);
@@ -250,7 +323,6 @@ export default function Expenses() {
             setLoading(false);
         }
     }
-
     const handleSubmitEditExpense = async (e?: React.FormEvent) => {
         setLoading(true);
         e?.preventDefault();
@@ -302,7 +374,6 @@ export default function Expenses() {
             setLoading(false)
         }
     };
-
     const handleDeleteExpense = async (id: number) => {
         setLoading(true);
         console.log("selectedExpense: " + JSON.stringify(selectedExpense))
@@ -334,92 +405,7 @@ export default function Expenses() {
         }
     };
 
-    const closeModalForm = () => {
-        getExpenses();
-        setOpenModalForm(false);
-        setSelectedIdEditExpense(null);
-        setIsCreateMode(false);
-    }
-
-    const handleOpenConfirmEdit = () => {
-        setConfirmMessage("are you sure you want to update this expense?");
-        setPendingAction("edit");
-        setOpenModalConfirm(true);
-    };
-
-    const handleOpenConfirmDelete = () => {
-        setConfirmMessage("are you sure you want to delete this expense?");
-        setPendingAction("delete");
-        setOpenModalConfirm(true);
-    };
-
-    const handleOpenConfirmCreate = () => {
-        if (!selectedExpense?.description
-            || !selectedExpense?.amount
-            || !selectedExpense?.expense_date
-            || !selectedExpense?.budget_id
-            || !selectedExpense?.category_id
-            || !selectedExpense?.source_id
-        ) {
-            setFailedMessage("fill all the required fields!");
-            setOpenModalFailed(true);
-            setLoading(false);
-            return;
-        }
-        setConfirmMessage("are you sure you want to create this expense?");
-        setPendingAction("create");
-        setOpenModalConfirm(true);
-    };
-
-    const handleClickEditExpense = async (id: number) => {
-        console.log("id edit: ", id)
-        setLoading(true)
-        setSelectedIdEditExpense(id)
-        const foundExpense = expense.find((e) => e.id === id);
-        console.log("foundExpense: ", JSON.stringify(foundExpense))
-        if (foundExpense) {
-            setSelectedExpense({
-                id: id,
-                description: foundExpense.description,
-                amount: foundExpense.amount,
-                expense_date: foundExpense.expense_date,
-                budget_id: foundExpense.budget_id,
-                budgets: {
-                    id: foundExpense.budgets.id,
-                    periods: {
-                        id: foundExpense.budgets.periods.id,
-                        name: foundExpense.budgets.periods.name,
-                    }
-                },
-                category_id: foundExpense.category_id,
-                categories: {
-                    id: foundExpense.categories.id,
-                    name: foundExpense.categories.name,
-                },
-                source_id: foundExpense.source_id,
-                sources: {
-                    id: foundExpense.sources.id,
-                    name: foundExpense.sources.name,
-                }
-            })
-        }
-        setOpenModalForm(true);
-        setLoading(false);
-        setSelectedIdEditExpense(id);
-    }
-
-    const handleConfirmAction = async () => {
-        if (pendingAction === "edit") {
-            await handleSubmitEditExpense();
-        } else if (pendingAction === "delete") {
-            await handleDeleteExpense(selectedExpense?.id ?? 0);
-        } else if (pendingAction === "create") {
-            await handleSubmitCreateExpense();
-        }
-        setOpenModalConfirm(false);
-        setPendingAction(null);
-    };
-
+    // USE EFFECTS
     useEffect(() => {
         setLoading(true)
         if (profile?.id) {
@@ -430,7 +416,6 @@ export default function Expenses() {
             getCurrentPeriod();
         }
     }, [profile])
-
     useEffect(() => {
         if (currentBudgetId > 0) { fetchSummary() }
     }, [currentBudgetId > 0])
