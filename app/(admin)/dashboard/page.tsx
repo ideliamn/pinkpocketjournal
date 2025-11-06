@@ -10,7 +10,7 @@ import moment from "moment";
 import { Area, AreaChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatRupiah } from "../../../lib/helpers/format";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/tables";
-import { AlertTriangle, Clock, CreditCard, TrendingUp, Wallet } from "lucide-react";
+import { AlertTriangle, Clock, CreditCard, Receipt, TrendingUp, Wallet } from "lucide-react";
 
 const pixelify = Pixelify_Sans({
     subsets: ["latin"],
@@ -23,6 +23,9 @@ const geistMono = Geist_Mono({
 });
 
 export default function Dashboard() {
+    // TYPES //
+    type billStatus = "pending" | "overdue" | "done";
+
     // VARIABLES //
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', "#FF99C8", "#FFC9DE", "#FFD6A5", "#B9FBC0", "#A0C4FF"];
 
@@ -68,6 +71,13 @@ export default function Dashboard() {
         }
         amount: number;
     }
+    interface Bill {
+        id: number;
+        description: string;
+        amount: number;
+        due_date: string;
+        status: billStatus;
+    }
 
     // IMPORTS //
     const { profile } = useProfile()
@@ -79,6 +89,7 @@ export default function Dashboard() {
     const [spendingBySourceChart, setSpendingBySourceChart] = useState<SpendingBySourceChart[] | []>([])
     const [summaryExpense, setSummaryExpense] = useState<SummaryExpense | null>(null)
     const [recentExpense, setRecentExpense] = useState<RecentExpense[] | []>([])
+    const [bill, setBill] = useState<Bill[]>([])
 
     // FUNCTIONS //
     const getCurrentPeriod = async () => {
@@ -126,14 +137,26 @@ export default function Dashboard() {
         const res = await getDataChart.json();
         if (res.data) {
             const dataHistory = res.data
-            console.log("summary expense: ", dataHistory)
+            console.log("recent expense: ", dataHistory)
             setRecentExpense(dataHistory);
+        }
+    }
+    const fetchBills = async () => {
+        const getDataBills = await fetch(`/api/dashboard/bills?userId=${profile?.id}`)
+        const res = await getDataBills.json();
+        if (res.data) {
+            const bills = res.data
+            console.log("summary bills: ", bills)
+            setBill(bills);
         }
     }
 
     // USE EFFECTS //
     useEffect(() => {
-        if (profile?.id) { getCurrentPeriod() }
+        if (profile?.id) {
+            getCurrentPeriod()
+            fetchBills()
+        }
     }, [profile])
     useEffect(() => {
         if (currentPeriod?.data?.budget_id) {
@@ -187,8 +210,8 @@ export default function Dashboard() {
                     </ResponsiveContainer>
                 </ChartCard>
 
-                {/* spending by category chart */}
-                <ChartCard title="spending by source">
+                {/* spending by source chart */}
+                {/* <ChartCard title="spending by source">
                     <ResponsiveContainer width="100%" height={250}>
                         <PieChart>
                             <Pie
@@ -206,10 +229,44 @@ export default function Dashboard() {
                                 ))}
                             </Pie>
                             <Tooltip />
-                            {/* <Legend /> */}
                         </PieChart>
                     </ResponsiveContainer>
-                </ChartCard>
+                </ChartCard> */}
+
+                {/* upcoming bills */}
+                <div className="max-h-250 bg-white overflow-y-auto">
+                    <h2 className="text-pink-600 font-semibold flex items-center gap-2">
+                        <Receipt className="w-5 h-5 mx-5 my-5 text-pink-500" /> upcoming bills
+                    </h2>
+                    {bill.map((b) => (
+                        <div
+                            key={b.id}
+                            className="flex justify-between items-center border border-gray-100 rounded-xl p-3 mx-5 my-3 px-2 m hover:shadow-sm transition bg-green-300 bg-"
+                        >
+                            <div>
+                                <p className="text-sm font-medium text-gray-800">{b.description}</p>
+                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                    <Clock className="w-3 h-3 text-gray-400" />
+                                    {new Date(b.due_date).toLocaleDateString("id-ID", {
+                                        day: "2-digit",
+                                        month: "short",
+                                        year: "numeric",
+                                    })}
+                                </p>
+                            </div>
+                            <span
+                                className={`text-sm font-semibold ${b.status === "overdue"
+                                    ? "text-red-500"
+                                    : b.status === "pending"
+                                        ? "text-yellow-500"
+                                        : "text-green-600"
+                                    }`}
+                            >
+                                Rp {b.amount.toLocaleString("id-ID")}
+                            </span>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Progress Bar per Category */}
@@ -269,7 +326,7 @@ export default function Dashboard() {
                     </Table>
                 </div>
             </div>
-        </main>
+        </main >
     );
 
     function SummaryCard({ icon, label, value, color }) {
