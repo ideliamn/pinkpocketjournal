@@ -241,12 +241,12 @@ export default function Dashboard() {
                     {bill.map((b) => (
                         <div
                             key={b.id}
-                            className="flex justify-between items-center border border-gray-100 rounded-xl p-3 mx-5 my-3 px-2 m hover:shadow-sm transition bg-green-300 bg-"
+                            className={`flex justify-between items-center rounded-lg p-3 mx-5 my-3 px-2 m hover:shadow-sm transition ${b.status === "overdue" ? "bg-red-200" : b.status === "pending" ? "bg-yellow-200" : "bg-green-200"}`}
                         >
                             <div>
                                 <p className="text-sm font-medium text-gray-800">{b.description}</p>
-                                <p className="text-xs text-gray-500 flex items-center gap-1">
-                                    <Clock className="w-3 h-3 text-gray-400" />
+                                <p className="text-sm text-gray-500 flex items-center gap-1">
+                                    <Clock className="w-3 h-3 mx-1 text-gray-400" />
                                     {new Date(b.due_date).toLocaleDateString("id-ID", {
                                         day: "2-digit",
                                         month: "short",
@@ -254,23 +254,19 @@ export default function Dashboard() {
                                     })}
                                 </p>
                             </div>
-                            <span
-                                className={`text-sm font-semibold ${b.status === "overdue"
-                                    ? "text-red-500"
-                                    : b.status === "pending"
-                                        ? "text-yellow-500"
-                                        : "text-green-600"
-                                    }`}
-                            >
-                                Rp {b.amount.toLocaleString("id-ID")}
-                            </span>
+                            <div className="flex flex-col items-end justify-end">
+                                <span className={`text-sm font-medium py-1 ${b.status === "overdue" ? "text-red-500" : b.status === "pending" ? "text-yellow-500" : "text-green-500"}`}>{b.status}</span>
+                                <span className={`text - sm font - semibold`}>
+                                    {formatRupiah(b.amount)}
+                                </span>
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
 
             {/* Progress Bar per Category */}
-            <div className={`bg-white rounded-2xl p-6 shadow ${geistMono.className}`}>
+            <div className={`bg - white rounded - 2xl p - 6 shadow ${geistMono.className}`}>
                 <h2 className="text-pink-600 font-semibold mb-4">Category Budget Progress</h2>
                 <div className="space-y-4">
                     {spendingByCategoryChart.map((cat) => {
@@ -293,10 +289,11 @@ export default function Dashboard() {
                         );
                     })}
                 </div>
-            </div>
+            </div >
 
             {/* Recent Expenses Table */}
-            <div className={`bg-white rounded-2xl p-6 shadow ${geistMono.className}`}>
+            < div className={`bg-white rounded-2xl p-6 shadow ${geistMono.className}`
+            }>
                 <h2 className="text-pink-600 font-semibold mb-4 flex items-center gap-2">
                     <Clock className="w-5 h-5 text-pink-500" /> Recent Expenses
                 </h2>
@@ -325,7 +322,7 @@ export default function Dashboard() {
                         </TableBody>
                     </Table>
                 </div>
-            </div>
+            </div >
         </main >
     );
 
