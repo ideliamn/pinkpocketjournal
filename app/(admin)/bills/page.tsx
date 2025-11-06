@@ -156,25 +156,25 @@ export default function Bills() {
                 id: id,
                 budget_id: foundBill?.budget_id,
                 budgets: {
-                    id: foundBill.budgets?.id,
+                    id: foundBill?.budgets?.id,
                     periods: {
-                        id: foundBill.budgets.periods.id,
-                        name: foundBill.budgets.periods.name,
+                        id: foundBill?.budgets?.periods?.id,
+                        name: foundBill?.budgets?.periods?.name,
                     }
                 },
-                category_id: foundBill.category_id,
+                category_id: foundBill?.category_id,
                 categories: {
-                    id: foundBill.categories.id,
-                    name: foundBill.categories.name,
+                    id: foundBill?.categories?.id,
+                    name: foundBill?.categories?.name,
                 },
-                source_id: foundBill.source_id,
+                source_id: foundBill?.source_id,
                 sources: {
-                    id: foundBill.sources.id,
-                    name: foundBill.sources.name,
+                    id: foundBill?.sources?.id,
+                    name: foundBill?.sources?.name,
                 },
-                description: foundBill.description,
-                amount: foundBill.amount,
-                due_date: foundBill.due_date,
+                description: foundBill?.description,
+                amount: foundBill?.amount,
+                due_date: foundBill?.due_date,
                 paid_date: foundBill?.paid_date,
                 recurrence_interval: foundBill?.recurrence_interval,
                 status: foundBill?.status,
@@ -201,6 +201,7 @@ export default function Bills() {
         } catch (err) {
             console.error(err);
         } finally {
+            console.log("bill setelah setbill: ", bill)
         }
     }
     const fetchCategory = async () => {
@@ -220,10 +221,14 @@ export default function Bills() {
         const res = await getBudget.json();
         if (res.data) {
             const dataBudget: Budget[] = res.data
-            const formattedOptions = dataBudget.map((k) => ({
+            let formattedOptions = dataBudget.map((k) => ({
                 value: String(k.id),
                 label: k?.periods?.name,
             })).sort((a, b) => a.label.localeCompare(b.label));
+            formattedOptions.unshift({
+                value: "",
+                label: "no budget"
+            })
             setBudgetOptions(formattedOptions);
         }
     }
@@ -461,11 +466,10 @@ export default function Bills() {
                                         </div>
                                     </div>
                                     <div className="w-1/3">
-                                        {b?.budgets?.periods && (
-                                            <div className="flex flex-col">
-                                                <span className="text-gray-500">recurrence:</span>
-                                                <span>{recurrenceOptions.find((r) => r.value === b.recurrence_interval)?.label}</span>
-                                            </div>)}
+                                        <div className="flex flex-col">
+                                            <span className="text-gray-500">recurrence:</span>
+                                            <span>{recurrenceOptions.find((r) => r.value === b.recurrence_interval)?.label}</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex flex-row justify-between text-xs mt-2">
