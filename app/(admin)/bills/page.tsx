@@ -100,18 +100,23 @@ export default function Bills() {
     const [openModalWarning, setOpenModalWarning] = useState(false);
     const [warningMessage, setWarningMessage] = useState("");
     const [confirmExceedingBudget, setConfirmExceedingBudget] = useState(false);
-    const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
+    const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | "pay" | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
     const [selectedIdEditBill, setSelectedIdEditBill] = useState<number | null>(null);
+    const [idPay, setIdPay] = useState(0);
 
     // HANDLE CLICK CONFIRM
     const handleConfirmAction = async () => {
+        console.log("pendingAction: ", pendingAction)
+        console.log("selectedBill?.id", selectedBill?.id)
         if (pendingAction === "edit") {
             await handleSubmitEditBill();
         } else if (pendingAction === "delete") {
             await handleDeleteBill(selectedBill?.id ?? 0);
         } else if (pendingAction === "create") {
             await handleSubmitCreateBill();
+        } else if (pendingAction === "pay") {
+            await handleSubmitPayBill(idPay);
         }
         setOpenModalConfirm(false);
         setPendingAction(null);
@@ -183,6 +188,15 @@ export default function Bills() {
         setOpenModalForm(true);
         setLoading(false);
         setSelectedIdEditBill(id);
+    }
+    const handleClickPayBill = async (id: number) => {
+        console.log("id edit: ", id)
+        closeModalForm();
+        setLoading(true)
+        setIdPay(id)
+        setConfirmMessage("are you sure want to mark this bill as paid?")
+        setOpenModalConfirm(true);
+        setLoading(false);
     }
 
     // FETCH INITIAL DATA //
@@ -351,15 +365,17 @@ export default function Bills() {
                 }
             }
             const res = await fetch("/api/bills", {
-                method: "POST",
+                method: "PUT",
                 body: JSON.stringify({
+                    id: selectedBill?.id,
                     user_id: profile?.id,
                     budget_id: selectedBill?.budget_id ?? null,
                     category_id: selectedBill?.category_id,
                     description: selectedBill?.description,
                     amount: selectedBill?.amount,
                     due_date: selectedBill?.due_date,
-                    source_id: selectedBill?.source_id
+                    source_id: selectedBill?.source_id,
+                    recurrence_interval: selectedBill?.recurrence_interval
                 })
             })
             const data = await res.json();
@@ -408,6 +424,37 @@ export default function Bills() {
             setLoading(false)
         }
     };
+    const handleSubmitPayBill = async (id: number) => {
+        setLoading(true)
+        console.log("id pay bill: ", id)
+        try {
+            if (!id || id === 0) {
+                setFailedMessage("fill all the required fields!");
+                setOpenModalFailed(true);
+                setLoading(false);
+                return;
+            }
+            const res = await fetch(`/api/bills/pay?id=${id}`, {
+                method: "GET"
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSuccessMessage("success mark this bill as paid!");
+                setLoading(false);
+                setOpenModalSuccess(true);
+            } else {
+                setFailedMessage(data.message);
+                setLoading(false);
+                setOpenModalFailed(true);
+            }
+        } catch (err: any) {
+            console.error(err)
+        } finally {
+            setIdPay(0);
+            closeModalForm();
+            setLoading(false)
+        }
+    }
 
     // USE EFFECTS //
     useEffect(() => {
@@ -481,6 +528,17 @@ export default function Bills() {
                                             </div>)}
                                     </div>
                                 </div>
+                                {b.status !== "done" && (
+                                    <Button
+                                        size="xs"
+                                        variant="outline"
+                                        className="mt-2 cursor-pointer hover:bg-pink-400 hover:text-white"
+                                        onClick={() => { handleClickPayBill(b.id) }}
+                                    >
+                                        pay this bill
+                                    </Button>
+                                )
+                                }
                             </Card>
                         );
                     })
@@ -698,6 +756,6 @@ export default function Bills() {
                     handleNo={() => setOpenModalWarning(false)}
                 />
             )}
-        </main>
+        </main >
     );
 }

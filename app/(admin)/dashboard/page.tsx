@@ -210,29 +210,6 @@ export default function Dashboard() {
                     </ResponsiveContainer>
                 </ChartCard>
 
-                {/* spending by source chart */}
-                {/* <ChartCard title="spending by source">
-                    <ResponsiveContainer width="100%" height={250}>
-                        <PieChart>
-                            <Pie
-                                data={spendingBySourceChart}
-                                dataKey="percentage"
-                                nameKey="source_name"
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={80}
-                                fill="#8884d8"
-                                label={(entry) => entry.name}
-                            >
-                                {spendingBySourceChart.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <Tooltip />
-                        </PieChart>
-                    </ResponsiveContainer>
-                </ChartCard> */}
-
                 {/* upcoming bills */}
                 <div className="max-h-250 bg-white overflow-y-auto">
                     <h2 className="text-pink-600 font-semibold flex items-center gap-2">
@@ -269,12 +246,12 @@ export default function Dashboard() {
             <div className={`bg - white rounded - 2xl p - 6 shadow ${geistMono.className}`}>
                 <h2 className="text-pink-600 font-semibold mb-4">Category Budget Progress</h2>
                 <div className="space-y-4">
-                    {spendingByCategoryChart.map((cat) => {
-                        const used = Math.min(cat.percentage, 100);
+                    {spendingByCategoryChart.map((c) => {
+                        const used = Math.min(c.percentage, 100);
                         return (
-                            <div key={cat.name}>
+                            <div key={c.name}>
                                 <div className="flex justify-between mb-1">
-                                    <p className="text-sm font-medium">{cat.name}</p>
+                                    <p className="text-sm font-medium">{c.name}</p>
                                     <p className="text-sm text-gray-500">{used.toFixed(0)}%</p>
                                 </div>
                                 <div className="w-full bg-pink-100 rounded-full h-2">
@@ -292,8 +269,7 @@ export default function Dashboard() {
             </div >
 
             {/* Recent Expenses Table */}
-            < div className={`bg-white rounded-2xl p-6 shadow ${geistMono.className}`
-            }>
+            < div className={`bg-white rounded-2xl p-6 shadow ${geistMono.className}`}>
                 <h2 className="text-pink-600 font-semibold mb-4 flex items-center gap-2">
                     <Clock className="w-5 h-5 text-pink-500" /> Recent Expenses
                 </h2>
