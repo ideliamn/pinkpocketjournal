@@ -109,6 +109,7 @@ export default function Bills() {
     const handleConfirmAction = async () => {
         console.log("pendingAction: ", pendingAction)
         console.log("selectedBill?.id", selectedBill?.id)
+        console.log("id pay: ", idPay)
         if (pendingAction === "edit") {
             await handleSubmitEditBill();
         } else if (pendingAction === "delete") {
@@ -191,9 +192,9 @@ export default function Bills() {
     }
     const handleClickPayBill = async (id: number) => {
         console.log("id edit: ", id)
-        closeModalForm();
         setLoading(true)
         setIdPay(id)
+        setPendingAction("pay");
         setConfirmMessage("are you sure want to mark this bill as paid?")
         setOpenModalConfirm(true);
         setLoading(false);
@@ -450,6 +451,7 @@ export default function Bills() {
         } catch (err: any) {
             console.error(err)
         } finally {
+            setPendingAction(null);
             setIdPay(0);
             closeModalForm();
             setLoading(false)
@@ -533,9 +535,12 @@ export default function Bills() {
                                         size="xs"
                                         variant="outline"
                                         className="mt-2 cursor-pointer hover:bg-pink-400 hover:text-white"
-                                        onClick={() => { handleClickPayBill(b.id) }}
+                                        onClick={(e) => {
+                                            (e as React.MouseEvent).stopPropagation();
+                                            handleClickPayBill(b.id);
+                                        }}
                                     >
-                                        pay this bill
+                                        mark as paid
                                     </Button>
                                 )
                                 }
@@ -700,6 +705,14 @@ export default function Bills() {
                                     <Button type="button" onClick={() => handleOpenConfirmDelete()} size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
                                         delete
                                     </Button>
+                                    {selectedBill && selectedBill?.status !== "done" && (
+                                        <Button type="button" onClick={(e) => {
+                                            (e as React.MouseEvent).stopPropagation();
+                                            handleClickPayBill(selectedBill.id);
+                                        }} size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600 mx-2`}>
+                                            mark as paid
+                                        </Button>
+                                    )}
                                 </>)}
                             </div>
                         </form>
