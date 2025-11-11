@@ -20,19 +20,19 @@ export async function GET(request: Request) {
         const { data: bills, error: errorChart } = await supabase
             .from("bills")
             .select("id, description, amount, due_date, status")
-            .order("due_date", { ascending: false });
+            .eq("user_id", userId)
+            .order("due_date", { ascending: true });
 
         console.log("bills: " + JSON.stringify(bills))
 
         if (bills && bills.length > 0) {
-            const sortedBills = bills.sort((a, b) => {
+            bills.sort((a, b) => {
                 const statusOrder: Record<string, number> = { overdue: 1, pending: 2, done: 3 };
                 if (statusOrder[a.status] !== statusOrder[b.status]) {
                     return statusOrder[a.status] - statusOrder[b.status];
                 }
                 return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
             });
-
             data = bills
         } else {
             code = 0
