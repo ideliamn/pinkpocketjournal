@@ -16,13 +16,13 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
-        const budgetId = searchParams.get("budgetId");
+        const planId = searchParams.get("planId");
         const categoryId = searchParams.get("categoryId");
         const userId = searchParams.get("userId");
 
-        let query = supabase.from("budget_categories").select("*, categories(id, user_id, name), budgets(id, periods(id, name, start_date, end_date))");
+        let query = supabase.from("category_plans").select("*, categories(id, user_id, name), plans(id, name, start_date, end_date)");
 
-        if (budgetId) query = query.eq("budget_id", budgetId);
+        if (planId) query = query.eq("budget_id", planId);
         if (categoryId) query = query.eq("category_id", categoryId);
         if (id) query = query.eq("id", id);
 
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
         if (!result || result.length < 1 || (userId && (!resultFiltered || resultFiltered.length < 1))) {
             code = 0
-            message = budgetId && categoryId ? "No budget is set for this category" : "Budget category not found"
+            message = planId && categoryId ? "No plan is set for this category" : "Category plan not found"
             httpStatus = 404
         } else {
             data = userId ? resultFiltered : result
@@ -62,14 +62,14 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        if (!body.budget_id || !body.category_id || !body.amount) {
+        if (!body.plan_id || !body.category_id || !body.amount) {
             code = 0
             message = "Please input all required fields!"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: checkExistingBC, error: errorCheckExistingBC } = await supabase.from("budget_categories").select("*").eq("budget_id", body.budget_id).eq("category_id", body.category_id);
+        const { data: checkExistingBC, error: errorCheckExistingBC } = await supabase.from("category_plans").select("*").eq("plan_id", body.plan_id).eq("category_id", body.category_id);
         if (checkExistingBC && checkExistingBC.length > 0) {
             code = 0
             message = "This category already have budget set for this period"
@@ -78,13 +78,13 @@ export async function POST(req: Request) {
         }
 
         const insertBudgetCategory = {
-            budget_id: body.budget_id,
+            plan_id: body.plan_id,
             category_id: body.category_id,
             amount: body.amount
         }
 
         const { data: insertedData, error } = await supabase
-            .from("budget_categories")
+            .from("category_plans")
             .insert([insertBudgetCategory])
             .select();
 
@@ -119,10 +119,10 @@ export async function PUT(req: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: checkExistingBC, error: errorCheckExistingBC } = await supabase.from("budget_categories").select("*").eq("budget_id", body.budget_id).eq("category_id", body.category_id);
+        const { data: checkExistingBC, error: errorCheckExistingBC } = await supabase.from("category_plans").select("*").eq("plan_id", body.budget_id).eq("category_id", body.category_id);
         if (checkExistingBC && checkExistingBC.length > 0) {
             code = 0
-            message = "This category already have budget set for this period"
+            message = "This category already have plan set"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
@@ -138,7 +138,7 @@ export async function PUT(req: Request) {
         }
 
         const { data: updatedData, error } = await supabase
-            .from("budget_categories")
+            .from("category_plans")
             .update(updateBudgetCategory)
             .eq("id", body.id)
             .select();
@@ -175,16 +175,16 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: checkData, error: checkDataError } = await supabase.from("budget_categories").select("*").eq("id", id);
+        const { data: checkData, error: checkDataError } = await supabase.from("category_plans").select("*").eq("id", id);
 
         if (!checkData || checkData.length < 1) {
             code = 0
-            message = "Budget category not found!"
+            message = "Category plan not found!"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: deletedData, error } = await supabase.from("budget_categories").delete().eq("id", id).single();
+        const { data: deletedData, error } = await supabase.from("category_plans").delete().eq("id", id).single();
 
         if (error) {
             throw new Error(error.message)

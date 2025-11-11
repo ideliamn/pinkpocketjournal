@@ -23,18 +23,15 @@ const pixelify = Pixelify_Sans({
     weight: ["400"],
 });
 
-export default function BudgetCategories() {
-    interface BudgetCategories {
+export default function PlanCategories() {
+    interface PlanCategories {
         id: number;
-        budget_id: number;
-        budgets: {
+        plan_id: number;
+        plans: {
             id: number;
-            periods: {
-                id: number;
-                name: string;
-                start_date: string;
-                end_date: string;
-            }
+            name: string;
+            start_date: string;
+            end_date: string;
         },
         category_id: number;
         categories: {
@@ -45,13 +42,11 @@ export default function BudgetCategories() {
         amount: number;
     }
 
-    interface Budget {
+    interface Plan {
         id: number,
-        periods: {
-            name: string;
-            start_date: string;
-            end_date: string;
-        }
+        name: string;
+        start_date: string;
+        end_date: string;
     }
 
     interface Select {
@@ -62,10 +57,10 @@ export default function BudgetCategories() {
     const { profile } = useProfile()
     const [loading, setLoading] = useState(false);
     const [openModalForm, setOpenModalForm] = useState(false);
-    const [budgetCategories, setBudgetCategories] = useState<BudgetCategories[]>([])
-    const [budgetOptions, setBudgetOptions] = useState<{ value: string; label: string }[]>([]);
+    const [categoryPlans, setPlanCategories] = useState<PlanCategories[]>([])
+    const [planOptions, setPlanOptions] = useState<{ value: string; label: string }[]>([]);
     const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
-    const [selectedBC, setSelectedBC] = useState<BudgetCategories | null>(null);
+    const [selectedCP, setSelectedCP] = useState<PlanCategories | null>(null);
     const [openModalSuccess, setOpenModalSuccess] = useState(false);
     const closeModalSuccess = () => { setOpenModalSuccess(false) };
     const [successMessage, setSuccessMessage] = useState("");
@@ -76,50 +71,47 @@ export default function BudgetCategories() {
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
     const [confirmMessage, setConfirmMessage] = useState("");
     const [isCreateMode, setIsCreateMode] = useState(false);
-    const [selectedIdEditBC, setSelectedIdEditBC] = useState<number | null>(null);
+    const [selectedIdEditCP, setSelectedIdEditCP] = useState<number | null>(null);
 
-    const handleClickEditBC = async (idBC: number) => {
-        console.log("id: ", idBC)
+    const handleClickEditCP = async (idCP: number) => {
+        console.log("id: ", idCP)
         setLoading(true)
-        setSelectedIdEditBC(idBC)
-        const foundBC = budgetCategories.find((bc) => bc.id === idBC);
-        console.log("foundBC: ", JSON.stringify(foundBC))
-        if (foundBC) {
-            setSelectedBC({
-                id: foundBC.id,
-                budget_id: foundBC.budget_id,
-                budgets: {
-                    id: foundBC.budgets.id,
-                    periods: {
-                        id: foundBC.budgets.periods.id,
-                        name: foundBC.budgets.periods.name,
-                        start_date: foundBC.budgets.periods.start_date,
-                        end_date: foundBC.budgets.periods.end_date,
-                    }
+        setSelectedIdEditCP(idCP)
+        const foundCP = categoryPlans.find((bc) => bc.id === idCP);
+        console.log("foundCP: ", JSON.stringify(foundCP))
+        if (foundCP) {
+            setSelectedCP({
+                id: foundCP.id,
+                plan_id: foundCP.plan_id,
+                plans: {
+                    id: foundCP.plans.id,
+                    name: foundCP.plans.name,
+                    start_date: foundCP.plans.start_date,
+                    end_date: foundCP.plans.end_date,
                 },
-                category_id: foundBC.category_id,
+                category_id: foundCP.category_id,
                 categories: {
-                    id: foundBC.categories.id,
-                    name: foundBC.categories.name,
-                    user_id: foundBC.categories.user_id,
+                    id: foundCP.categories.id,
+                    name: foundCP.categories.name,
+                    user_id: foundCP.categories.user_id,
                 },
-                amount: foundBC.amount,
+                amount: foundCP.amount,
             });
         }
         setOpenModalForm(true)
         setLoading(false)
-        setSelectedIdEditBC(idBC);
+        setSelectedIdEditCP(idCP);
     }
 
-    const getBudgetCategories = async () => {
+    const getPlanCategories = async () => {
         try {
             if (!profile?.id) return;
-            const getBudgetCategories = await fetch(`/api/budget-category?userId=${profile?.id}`, {
+            const getPlanCategories = await fetch(`/api/category-plan?userId=${profile?.id}`, {
                 method: "GET"
             });
-            const res = await getBudgetCategories.json();
+            const res = await getPlanCategories.json();
             if (res.data) {
-                setBudgetCategories(res.data)
+                setPlanCategories(res.data)
             }
             setLoading(false)
         } catch (err) {
@@ -128,20 +120,20 @@ export default function BudgetCategories() {
         }
     }
 
-    const fetchBudget = async () => {
-        const getBudget = await fetch(`/api/budget?userId=${profile?.id}`);
-        const res = await getBudget.json();
+    const fetchPlan = async () => {
+        const getPlan = await fetch(`/api/plan?userId=${profile?.id}`);
+        const res = await getPlan.json();
         if (res.data) {
-            const dataBudget: Budget[] = res.data
+            const dataPlan: Plan[] = res.data
             const today = new Date();
-            const formattedOptions = dataBudget.map((b) => (
+            const formattedOptions = dataPlan.map((b) => (
                 {
                     value: String(b.id),
-                    label: b?.periods?.name + " (" +
-                        `${(today >= (new Date(b?.periods?.start_date)) && today <= (new Date(b?.periods?.end_date))) ? "active" : "inactive"}`
+                    label: b?.name + " (" +
+                        `${(today >= (new Date(b?.start_date)) && today <= (new Date(b?.end_date))) ? "active" : "inactive"}`
                         + ")",
                 })).sort((a, b) => a.label.localeCompare(b.label));
-            setBudgetOptions(formattedOptions);
+            setPlanOptions(formattedOptions);
         }
     }
 
@@ -159,19 +151,16 @@ export default function BudgetCategories() {
     }
 
     const openModalCreate = () => {
-        const firstBudget = budgetOptions.length > 0 ? budgetOptions[0] : null;
+        const firstPlan = planOptions.length > 0 ? planOptions[0] : null;
         const firstCategory = categoryOptions.length > 0 ? categoryOptions[0] : null;
-        setSelectedBC({
+        setSelectedCP({
             id: 0,
-            budget_id: firstBudget ? Number(firstBudget.value) : -1,
-            budgets: {
-                id: firstBudget ? Number(firstBudget.value) : -1,
-                periods: {
-                    id: -1,
-                    name: "",
-                    start_date: "",
-                    end_date: "",
-                }
+            plan_id: firstPlan ? Number(firstPlan.value) : -1,
+            plans: {
+                id: firstPlan ? Number(firstPlan.value) : -1,
+                name: "",
+                start_date: "",
+                end_date: "",
             },
             category_id: firstCategory ? Number(firstCategory.value) : -1,
             categories: {
@@ -186,9 +175,9 @@ export default function BudgetCategories() {
     }
 
     const closeModalForm = () => {
-        getBudgetCategories();
+        getPlanCategories();
         setOpenModalForm(false);
-        setSelectedIdEditBC(null)
+        setSelectedIdEditCP(null)
         setIsCreateMode(false);
     }
 
@@ -206,45 +195,45 @@ export default function BudgetCategories() {
 
     const handleConfirmAction = async () => {
         if (pendingAction === "edit") {
-            await handleSubmitEditBC();
+            await handleSubmitEditCP();
         } else if (pendingAction === "delete") {
-            await handleDeleteBC(selectedBC?.id ?? 0);
+            await handleDeleteCP(selectedCP?.id ?? 0);
         } else if (pendingAction === "create") {
-            await handleSubmitCreateBC();
+            await handleSubmitCreateCP();
         }
         setOpenModalConfirm(false);
         setPendingAction(null);
     };
 
-    const handleSubmitEditBC = async (e?: React.FormEvent) => {
+    const handleSubmitEditCP = async (e?: React.FormEvent) => {
         setLoading(true);
         e?.preventDefault();
-        console.log("selectedBC: " + JSON.stringify(selectedBC))
+        console.log("selectedCP: " + JSON.stringify(selectedCP))
         try {
-            if (!selectedBC || selectedBC?.id < 1 || selectedBC.budget_id < 1 || selectedBC.category_id < 1 || selectedBC.amount < 0) {
+            if (!selectedCP || selectedCP?.id < 1 || selectedCP.plan_id < 1 || selectedCP.category_id < 1 || selectedCP.amount < 0) {
                 setFailedMessage("fill all the required fields!");
                 setOpenModalFailed(true);
                 setLoading(false);
                 return;
             }
             console.log(JSON.stringify({
-                id: selectedBC.id,
-                budget_id: selectedBC.budget_id,
-                category_id: selectedBC.category_id,
-                amount: selectedBC.amount
+                id: selectedCP.id,
+                plan_id: selectedCP.plan_id,
+                category_id: selectedCP.category_id,
+                amount: selectedCP.amount
             }))
-            const res = await fetch("/api/budget-category", {
+            const res = await fetch("/api/plan-category", {
                 method: "PUT",
                 body: JSON.stringify({
-                    id: selectedBC.id,
-                    budget_id: selectedBC.budget_id,
-                    category_id: selectedBC.category_id,
-                    amount: selectedBC.amount
+                    id: selectedCP.id,
+                    plan_id: selectedCP.plan_id,
+                    category_id: selectedCP.category_id,
+                    amount: selectedCP.amount
                 }),
             });
             const data = await res.json();
             if (res.ok) {
-                setSuccessMessage("success update budget for this category!");
+                setSuccessMessage("success update plan for this category!");
                 setLoading(false);
                 setOpenModalSuccess(true);
             } else {
@@ -260,9 +249,9 @@ export default function BudgetCategories() {
         }
     };
 
-    const handleDeleteBC = async (id: number) => {
+    const handleDeleteCP = async (id: number) => {
         setLoading(true);
-        console.log("selectedBC: " + JSON.stringify(selectedBC))
+        console.log("selectedCP: " + JSON.stringify(selectedCP))
         try {
             if (!id || id === 0) {
                 setFailedMessage("fill all the required fields!");
@@ -270,12 +259,12 @@ export default function BudgetCategories() {
                 setLoading(false);
                 return;
             }
-            const res = await fetch(`/api/budget-category?id=${id}`, {
+            const res = await fetch(`/api/category-plan?id=${id}`, {
                 method: "DELETE"
             });
             const data = await res.json();
             if (res.ok) {
-                setSuccessMessage("success delete budget for this category!");
+                setSuccessMessage("success delete plan for this category!");
                 setLoading(false);
                 setOpenModalSuccess(true);
             } else {
@@ -297,21 +286,21 @@ export default function BudgetCategories() {
         setOpenModalConfirm(true);
     };
 
-    const handleSubmitCreateBC = async () => {
+    const handleSubmitCreateCP = async () => {
         setLoading(true);
         try {
-            if (!selectedBC?.category_id || !selectedBC.amount) {
+            if (!selectedCP?.category_id || !selectedCP.amount) {
                 setFailedMessage("fill all the required fields!");
                 setOpenModalFailed(true);
                 setLoading(false);
                 return;
             }
-            const res = await fetch("/api/budget-category", {
+            const res = await fetch("/api/category-plan", {
                 method: "POST",
                 body: JSON.stringify({
-                    budget_id: selectedBC.budget_id,
-                    category_id: selectedBC.category_id,
-                    amount: selectedBC.amount,
+                    plan_id: selectedCP.plan_id,
+                    category_id: selectedCP.category_id,
+                    amount: selectedCP.amount,
                 }),
             });
             const data = await res.json();
@@ -334,9 +323,9 @@ export default function BudgetCategories() {
     useEffect(() => {
         setLoading(true)
         if (profile?.id) {
-            getBudgetCategories()
+            getPlanCategories()
             fetchCategory();
-            fetchBudget();
+            fetchPlan();
         }
     }, [profile])
 
@@ -344,7 +333,7 @@ export default function BudgetCategories() {
         <main className="flex flex-col items-center min-h-screen pt-20">
             {loading && <Loading />}
             <h1 className={`${pixelify.className} text-xl`}>
-                budget categories
+                category plan
             </h1>
             <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => openModalCreate()}>
                 <div className="flex flex-col">
@@ -354,21 +343,21 @@ export default function BudgetCategories() {
                     add
                 </div>
             </Button>
-            {budgetCategories.length > 0 ? (
-                budgetCategories.map((b) => {
+            {categoryPlans.length > 0 ? (
+                categoryPlans.map((b) => {
                     const today = new Date();
-                    const start = new Date(b.budgets.periods.start_date);
-                    const end = new Date(b.budgets.periods.end_date);
+                    const start = new Date(b.plans?.start_date);
+                    const end = new Date(b.plans?.end_date);
                     const isActive = today >= start && today <= end;
                     return (
                         <Card
                             key={b.id}
                             title={b.categories.name}
                             className="min-w-[400px] outline-gray-400 hover:bg-pink-400 cursor-pointer mt-6"
-                            onClick={() => handleClickEditBC(b.id)}
+                            onClick={() => handleClickEditCP(b.id)}
                         >
                             <div className="flex flex-col gap-1">
-                                <span className="text-xs">period: {b.budgets.periods.name} ({isActive ? "active" : "inactive"})</span>
+                                <span className="text-xs">period: {b.plans?.name} ({isActive ? "active" : "inactive"})</span>
                                 <span className="text-xs">
                                     amount: {formatRupiah(b.amount)}
                                 </span>
@@ -378,28 +367,28 @@ export default function BudgetCategories() {
                 })
             ) : (
                 <div className={`flex flex-col items-center justify-center min-h-[100px] text-gray-500 ${geistMono.className}`}>
-                    no budget categories found!
+                    no category plan found!
                 </div>
             )}
             {openModalForm &&
                 <FormModal
                     isOpen={openModalForm}
                     onClose={closeModalForm}
-                    title={`${isCreateMode ? "create new" : "update"} budget category`}
+                    title={`${isCreateMode ? "create new" : "update"} plan category`}
                 >
                     <form>
                         <div className="flex gap-4 items-center space-y-4">
                             <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
-                                budget
+                                plan
                             </div>
                             <div className="flex-1">
                                 <Select
-                                    options={budgetOptions}
-                                    placeholder="select budget..."
-                                    defaultValue={selectedBC ? String(selectedBC?.budget_id) : ""}
+                                    options={planOptions}
+                                    placeholder="select plan..."
+                                    defaultValue={selectedCP ? String(selectedCP?.plan_id) : ""}
                                     onChange={(val: string) =>
-                                        setSelectedBC((prev) =>
-                                            prev ? { ...prev, budget_id: Number(val), budgets: { ...prev.budgets, id: Number(val) } } : prev
+                                        setSelectedCP((prev) =>
+                                            prev ? { ...prev, plan_id: Number(val), plans: { ...prev.plans, id: Number(val) } } : prev
                                         )
                                     }
                                 />
@@ -413,9 +402,9 @@ export default function BudgetCategories() {
                                 <Select
                                     options={categoryOptions}
                                     placeholder="select category..."
-                                    defaultValue={selectedBC ? String(selectedBC?.category_id) : ""}
+                                    defaultValue={selectedCP ? String(selectedCP?.category_id) : ""}
                                     onChange={(val: string) =>
-                                        setSelectedBC((prev) =>
+                                        setSelectedCP((prev) =>
                                             prev ? { ...prev, category_id: Number(val), categories: { ...prev.categories, id: Number(val) } } : prev
                                         )
                                     }
@@ -430,8 +419,8 @@ export default function BudgetCategories() {
                                 <Input
                                     type="number"
                                     formatNumber={true}
-                                    defaultValue={selectedBC?.amount}
-                                    onChange={(e) => setSelectedBC((prev) =>
+                                    defaultValue={selectedCP?.amount}
+                                    onChange={(e) => setSelectedCP((prev) =>
                                         prev ? { ...prev, amount: Number(e.target.value) } : prev
                                     )}>
                                 </Input>
