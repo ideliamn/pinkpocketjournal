@@ -14,12 +14,12 @@ export async function GET(request: Request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const budgetId = searchParams.get("budgetId");
+        const planId = searchParams.get("planId");
 
-        console.log("budgetId: ", budgetId)
+        console.log("planId: ", planId)
 
         const { data: dataSummary, error: errorSummary } = await supabase
-            .rpc("summary_expense_category", { p_budget_id: Number(budgetId) })
+            .rpc("summary_expense_category", { p_plan_id: Number(planId) })
 
         console.log("dataSummary: " + JSON.stringify(dataSummary))
 

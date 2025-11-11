@@ -20,7 +20,7 @@ export async function GET(request: Request) {
         const search = searchParams.get("search");
 
         let query = supabase.from("bills")
-            .select("id, budget_id, budgets(id, periods(id, name)), category_id, categories(id, name), source_id, sources(id, name), description, amount, due_date, paid_date, recurrence_interval, status");
+            .select("id, plan_id, plans(id, name), category_id, categories(id, name), source_id, sources(id, name), description, amount, due_date, paid_date, recurrence_interval, status");
 
         if (id) query = query.eq("id", id);
         if (userId) query = query.eq("user_id", userId);
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
 
         const insertBill = {
             user_id: body.user_id,
-            budget_id: body?.budget_id ?? null,
+            plan_id: body?.plan_id ?? null,
             category_id: body.category_id,
             source_id: body.source_id,
             description: body.description,
@@ -113,7 +113,7 @@ export async function PUT(req: Request) {
 
         const updateBill = {
             user_id: body.user_id,
-            budget_id: body?.budget_id ?? null,
+            plan_id: body?.plan_id ?? null,
             category_id: body.category_id,
             source_id: body.source_id,
             description: body.description,

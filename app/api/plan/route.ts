@@ -17,13 +17,13 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
         const userId = searchParams.get("userId");
-        const periodId = searchParams.get("periodId");
+        const planId = searchParams.get("planId");
         const status = searchParams.get("status");
 
-        let query = supabase.from("budgets").select("*, periods(name, start_date, end_date), budget_categories(id, amount, categories(id, name))");
+        let query = supabase.from("plans").select("*, category_plans(id, amount, categories(id, name))");
 
         if (userId) query = query.eq("user_id", userId);
-        if (periodId) query = query.eq("period_id", periodId);
+        if (planId) query = query.eq("plan_id", planId);
         if (id) query = query.eq("id", id);
 
         let { data: result, error } = await query;
@@ -36,15 +36,14 @@ export async function GET(request: Request) {
             const today = new Date().toISOString().split("T")[0];
             result = result.filter(
                 (r) =>
-                    r.periods &&
-                    r.periods.start_date <= today &&
-                    r.periods.end_date >= today
+                    r.start_date <= today &&
+                    r.end_date >= today
             );
         }
 
         if (!result || result.length < 1) {
             code = 0
-            message = "Budget not found"
+            message = "Plan not found"
             httpStatus = 404
         } else {
             data = result

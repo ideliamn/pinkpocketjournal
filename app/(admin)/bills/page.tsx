@@ -32,13 +32,10 @@ export default function Bills() {
     // INTERFACES //
     interface Bill {
         id: number;
-        budget_id: number;
-        budgets: {
+        plan_id: number;
+        plans: {
             id: number;
-            periods: {
-                id: number;
-                name: string;
-            }
+            name: string;
         },
         category_id: number;
         categories: {
@@ -135,8 +132,8 @@ export default function Bills() {
     const openModalCreate = () => {
         setSelectedBill({
             id: 0,
-            budget_id: -1,
-            budgets: { id: -1, periods: { id: -1, name: "" } },
+            plan_id: -1,
+            plans: { id: -1, name: "" },
             category_id: -1,
             categories: { id: -1, name: "" },
             source_id: -1,
@@ -160,13 +157,10 @@ export default function Bills() {
         if (foundBill) {
             setSelectedBill({
                 id: id,
-                budget_id: foundBill?.budget_id,
-                budgets: {
-                    id: foundBill?.budgets?.id,
-                    periods: {
-                        id: foundBill?.budgets?.periods?.id,
-                        name: foundBill?.budgets?.periods?.name,
-                    }
+                plan_id: foundBill?.plan_id,
+                plans: {
+                    id: foundBill?.plans?.id,
+                    name: foundBill?.plans?.name,
                 },
                 category_id: foundBill?.category_id,
                 categories: {
@@ -304,8 +298,8 @@ export default function Bills() {
                 setLoading(false);
                 return;
             }
-            if (!confirmExceedingBudget && selectedBill?.budget_id) {
-                const checkExpenseBudget = await checkExpense(Number(profile?.id), selectedBill?.budget_id, selectedBill?.amount, selectedBill?.category_id)
+            if (!confirmExceedingBudget && selectedBill?.plan_id) {
+                const checkExpenseBudget = await checkExpense(Number(profile?.id), selectedBill?.plan_id, selectedBill?.amount, selectedBill?.category_id)
                 if (checkExpenseBudget.isExceeding) {
                     setWarningMessage(checkExpenseBudget?.message);
                     setOpenModalWarning(true);
@@ -315,7 +309,7 @@ export default function Bills() {
                 method: "POST",
                 body: JSON.stringify({
                     user_id: profile?.id,
-                    budget_id: selectedBill?.budget_id ?? null,
+                    plan_id: selectedBill?.plan_id ?? null,
                     category_id: selectedBill?.category_id,
                     description: selectedBill?.description,
                     amount: selectedBill?.amount,
@@ -358,8 +352,8 @@ export default function Bills() {
                 setLoading(false);
                 return;
             }
-            if (!confirmExceedingBudget && selectedBill?.budget_id) {
-                const checkExpenseBudget = await checkExpense(Number(profile?.id), selectedBill?.budget_id, selectedBill?.amount, selectedBill?.category_id)
+            if (!confirmExceedingBudget && selectedBill?.plan_id) {
+                const checkExpenseBudget = await checkExpense(Number(profile?.id), selectedBill?.plan_id, selectedBill?.amount, selectedBill?.category_id)
                 if (checkExpenseBudget.isExceeding) {
                     setWarningMessage(checkExpenseBudget?.message);
                     setOpenModalWarning(true);
@@ -370,7 +364,7 @@ export default function Bills() {
                 body: JSON.stringify({
                     id: selectedBill?.id,
                     user_id: profile?.id,
-                    budget_id: selectedBill?.budget_id ?? null,
+                    plan_id: selectedBill?.plan_id ?? null,
                     category_id: selectedBill?.category_id,
                     description: selectedBill?.description,
                     amount: selectedBill?.amount,
@@ -523,10 +517,10 @@ export default function Bills() {
                                 </div>
                                 <div className="flex flex-row justify-between text-xs mt-2">
                                     <div className="w-1/2">
-                                        {b?.budgets?.periods && (
+                                        {b?.plans && (
                                             <div className="flex flex-col">
                                                 <span className="text-gray-500">budget:</span>
-                                                <span>{b.budgets?.periods?.name}</span>
+                                                <span>{b.plans?.name}</span>
                                             </div>)}
                                     </div>
                                 </div>
@@ -567,11 +561,11 @@ export default function Bills() {
                                     <Select
                                         options={budgetOptions}
                                         placeholder="select budget..."
-                                        defaultValue={selectedBill && selectedBill?.budget_id >= 0 ? String(selectedBill?.budget_id) : ""}
+                                        defaultValue={selectedBill && selectedBill?.plan_id >= 0 ? String(selectedBill?.plan_id) : ""}
                                         onChange={(val: string) => {
                                             const selectedLabel = budgetOptions.find((opt) => opt.value === val)?.label || "";
                                             setSelectedBill((prev) =>
-                                                prev ? { ...prev, budget_id: Number(val), budgets: { ...prev.budgets, id: Number(val) } } : prev
+                                                prev ? { ...prev, plan_id: Number(val), budgets: { ...prev.plans, id: Number(val) } } : prev
                                             );
                                         }}
                                     />

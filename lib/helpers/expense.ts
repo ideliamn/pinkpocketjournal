@@ -5,7 +5,7 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export async function checkExpense(userId: number, budgetId: number, amount: number, categoryId?: number) {
+export async function checkExpense(userId: number, planId: number, amount: number, categoryId?: number) {
     console.log("amount", amount)
 
     let response = {
@@ -17,7 +17,7 @@ export async function checkExpense(userId: number, budgetId: number, amount: num
         .from("expenses")
         .select("amount")
         .eq("user_id", userId)
-        .eq("budget_id", budgetId)
+        .eq("plan_id", planId)
 
     if (categoryId) { query = query.eq("category_id", categoryId); }
 
@@ -31,14 +31,14 @@ export async function checkExpense(userId: number, budgetId: number, amount: num
     console.log("totalExpense", totalExpense)
 
     if (categoryId) {
-        const { data: checkCategoryBudget, error: errorCheckCategory } = await supabase
-            .from("budget_categories")
+        const { data: checkCategoryPlans, error: errorCheckCategory } = await supabase
+            .from("category_plans")
             .select("amount")
-            .eq("budget_id", budgetId)
+            .eq("plan_id", planId)
             .eq("category_id", categoryId)
             .single();
 
-        const categoryLimit = checkCategoryBudget?.amount || 0;
+        const categoryLimit = checkCategoryPlans?.amount || 0;
 
         console.log("categoryLimit", categoryLimit)
 
@@ -56,7 +56,7 @@ export async function checkExpense(userId: number, budgetId: number, amount: num
     const { data: checkBudget, error: errorCheckBudget } = await supabase
         .from("budgets")
         .select("max_expense")
-        .eq("id", budgetId)
+        .eq("id", planId)
         .single();
 
     const maxExpense = checkBudget?.max_expense || 0;
@@ -78,9 +78,8 @@ export async function checkExpense(userId: number, budgetId: number, amount: num
 
 export async function checkCurrentPeriod(userId: number) {
     type CurrentPeriod = {
-        budget_id: number;
-        period_id: number;
-        period_name: string;
+        plan_id: number;
+        plan_name: string;
         user_id: number;
         start_date: string;
         end_date: string;
@@ -89,8 +88,7 @@ export async function checkCurrentPeriod(userId: number) {
     let response = {
         isExist: false,
         data: {
-            budget_id: 0,
-            period_id: 0,
+            plan_id: 0,
             user_id: 0
         }
     }

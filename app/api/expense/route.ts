@@ -17,14 +17,14 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
         const userId = searchParams.get("userId");
-        const budgetId = searchParams.get("budgetId");
+        const planId = searchParams.get("planId");
         const categoryId = searchParams.get("categoryId");
         const sourceId = searchParams.get("sourceId");
         const search = searchParams.get("search");
 
-        let query = supabase.from("expenses").select("*, budgets(id, periods(id, name, start_date, end_date)), categories(id, name), sources(id, name)");
+        let query = supabase.from("expenses").select("*, plans(id, name, start_date, end_date), categories(id, name), sources(id, name)");
 
-        if (budgetId) query = query.eq("budget_id", budgetId);
+        if (planId) query = query.eq("plan_id", planId);
         if (categoryId) query = query.eq("category_id", categoryId);
         if (id) query = query.eq("id", id);
         if (userId) query = query.eq("user_id", userId);
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        if (!body.user_id || !body.budget_id || !body.category_id || !body.description || !body.amount || !body.source_id || !body.expense_date) {
+        if (!body.user_id || !body.plan_id || !body.category_id || !body.description || !body.amount || !body.source_id || !body.expense_date) {
             code = 0
             message = "Please input all required fields!"
             httpStatus = 400
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
 
         const insertExpense = {
             user_id: body.user_id,
-            budget_id: body.budget_id,
+            plan_id: body.plan_id,
             category_id: body.category_id,
             description: body.description,
             amount: body.amount,
@@ -108,7 +108,7 @@ export async function PUT(req: Request) {
     try {
         const body = await req.json();
 
-        if (!body.id || !body.user_id || !body.budget_id || !body.category_id || !body.description || !body.amount || !body.source_id || !body.expense_date) {
+        if (!body.id || !body.user_id || !body.plan_id || !body.category_id || !body.description || !body.amount || !body.source_id || !body.expense_date) {
             code = 0
             message = "Please input all required fields!"
             httpStatus = 400
@@ -117,7 +117,7 @@ export async function PUT(req: Request) {
 
         const updateExpense = {
             user_id: body.user_id,
-            budget_id: body.budget_id,
+            plan_id: body.plan_id,
             category_id: body.category_id,
             description: body.description,
             amount: body.amount,

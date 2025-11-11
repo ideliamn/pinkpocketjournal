@@ -32,13 +32,10 @@ export default function Expenses() {
         description: string;
         amount: number;
         expense_date: string;
-        budget_id: number;
-        budgets: {
+        plan_id: number;
+        plans: {
             id: number;
-            periods: {
-                id: number;
-                name: string;
-            }
+            name: string;
         },
         category_id: number;
         categories: {
@@ -55,11 +52,9 @@ export default function Expenses() {
         id: number,
         name: string;
     }
-    interface Budget {
+    interface Plan {
         id: number,
-        periods: {
-            name: string;
-        }
+        name: string;
     }
     interface Summary {
         sum_amount: number,
@@ -78,7 +73,7 @@ export default function Expenses() {
     const [expense, setExpense] = useState<Expense[]>([])
     const [openModalForm, setOpenModalForm] = useState(false);
     const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
-    const [budgetOptions, setBudgetOptions] = useState<{ value: string; label: string }[]>([]);
+    const [planOptions, setPlanOptions] = useState<{ value: string; label: string }[]>([]);
     const [sourceOptions, setSourceOptions] = useState<{ value: string; label: string }[]>([]);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
     const [openModalSuccess, setOpenModalSuccess] = useState(false);
@@ -91,11 +86,11 @@ export default function Expenses() {
     const [confirmMessage, setConfirmMessage] = useState("");
     const [openModalWarning, setOpenModalWarning] = useState(false);
     const [warningMessage, setWarningMessage] = useState("");
-    const [confirmExceedingBudget, setConfirmExceedingBudget] = useState(false);
+    const [confirmExceedingPlan, setConfirmExceedingPlan] = useState(false);
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
     const [selectedIdEditExpense, setSelectedIdEditExpense] = useState<number | null>(null);
-    const [currentBudgetId, setCurrentBudgetId] = useState(0);
+    const [currentPlanId, setCurrentPlanId] = useState(0);
     const [summary, setSummary] = useState<Summary[]>([])
 
     // HANDLE CLICK CONFIRM
@@ -123,7 +118,7 @@ export default function Expenses() {
     // GET CURRENT PERIOD
     const getCurrentPeriod = async () => {
         const cp = await checkCurrentPeriod(Number(profile?.id))
-        if (cp) { setCurrentBudgetId(cp.data.budget_id) }
+        if (cp) { setCurrentPlanId(cp.data.plan_id) }
     }
 
     // HANDLE OPEN MODAL CREATE / EDIT
@@ -133,8 +128,8 @@ export default function Expenses() {
             description: "",
             amount: 0,
             expense_date: today,
-            budget_id: -1,
-            budgets: { id: -1, periods: { id: -1, name: "" } },
+            plan_id: -1,
+            plans: { id: -1, name: "" },
             category_id: -1,
             categories: { id: -1, name: "" },
             source_id: -1,
@@ -155,13 +150,10 @@ export default function Expenses() {
                 description: foundExpense.description,
                 amount: foundExpense.amount,
                 expense_date: foundExpense.expense_date,
-                budget_id: foundExpense.budget_id,
-                budgets: {
-                    id: foundExpense.budgets.id,
-                    periods: {
-                        id: foundExpense.budgets.periods.id,
-                        name: foundExpense.budgets.periods.name,
-                    }
+                plan_id: foundExpense.plan_id,
+                plans: {
+                    id: foundExpense.plans.id,
+                    name: foundExpense.plans.name
                 },
                 category_id: foundExpense.category_id,
                 categories: {
@@ -210,16 +202,16 @@ export default function Expenses() {
             setCategoryOptions(formattedOptions);
         }
     }
-    const fetchBudget = async () => {
-        const getBudget = await fetch(`/api/budget?userId=${profile?.id}`);
-        const res = await getBudget.json();
+    const fetchPlan = async () => {
+        const getPlan = await fetch(`/api/plan?userId=${profile?.id}`);
+        const res = await getPlan.json();
         if (res.data) {
-            const dataBudget: Budget[] = res.data
-            const formattedOptions = dataBudget.map((k) => ({
+            const dataPlan: Plan[] = res.data
+            const formattedOptions = dataPlan.map((k) => ({
                 value: String(k.id),
-                label: k?.periods?.name,
+                label: k?.name,
             })).sort((a, b) => a.label.localeCompare(b.label));
-            setBudgetOptions(formattedOptions);
+            setPlanOptions(formattedOptions);
         }
     }
     const fetchSource = async () => {
@@ -235,7 +227,7 @@ export default function Expenses() {
         }
     }
     const fetchSummary = async () => {
-        const getSummary = await fetch(`/api/expense/summary?budgetId=${currentBudgetId}`);
+        const getSummary = await fetch(`/api/expense/summary?planId=${currentPlanId}`);
         const res = await getSummary.json();
         if (res.data) {
             const dataSummary: Summary[] = res.data
@@ -248,7 +240,7 @@ export default function Expenses() {
         if (!selectedExpense?.description
             || !selectedExpense?.amount
             || !selectedExpense?.expense_date
-            || !selectedExpense?.budget_id
+            || !selectedExpense?.plan_id
             || !selectedExpense?.category_id
             || !selectedExpense?.source_id
         ) {
@@ -280,7 +272,7 @@ export default function Expenses() {
             if (!selectedExpense?.description
                 || selectedExpense?.amount < 0
                 || !selectedExpense?.expense_date
-                || selectedExpense?.budget_id <= 0
+                || selectedExpense?.plan_id <= 0
                 || selectedExpense?.category_id <= 0
                 || selectedExpense?.source_id <= 0
             ) {
@@ -289,10 +281,10 @@ export default function Expenses() {
                 setLoading(false);
                 return;
             }
-            if (!confirmExceedingBudget) {
-                const checkExpenseBudget = await checkExpense(Number(profile?.id), selectedExpense?.budget_id, selectedExpense?.amount, selectedExpense?.category_id)
-                if (checkExpenseBudget.isExceeding) {
-                    setWarningMessage(checkExpenseBudget?.message);
+            if (!confirmExceedingPlan) {
+                const checkExpensePlan = await checkExpense(Number(profile?.id), selectedExpense?.plan_id, selectedExpense?.amount, selectedExpense?.category_id)
+                if (checkExpensePlan.isExceeding) {
+                    setWarningMessage(checkExpensePlan?.message);
                     setOpenModalWarning(true);
                 }
             }
@@ -300,7 +292,7 @@ export default function Expenses() {
                 method: "POST",
                 body: JSON.stringify({
                     user_id: profile?.id,
-                    budget_id: selectedExpense?.budget_id,
+                    plan_id: selectedExpense?.plan_id,
                     category_id: selectedExpense?.category_id,
                     description: selectedExpense?.description,
                     amount: selectedExpense?.amount,
@@ -319,7 +311,7 @@ export default function Expenses() {
         } catch (err) {
             console.error(err)
         } finally {
-            setConfirmExceedingBudget(false);
+            setConfirmExceedingPlan(false);
             closeModalForm();
             setLoading(false);
         }
@@ -334,7 +326,7 @@ export default function Expenses() {
                 || !selectedExpense?.description
                 || !selectedExpense?.amount
                 || !selectedExpense?.expense_date
-                || !selectedExpense?.budget_id
+                || !selectedExpense?.plan_id
                 || !selectedExpense?.category_id
                 || !selectedExpense?.source_id) {
                 setFailedMessage("fill all the required fields!");
@@ -347,7 +339,7 @@ export default function Expenses() {
                 body: JSON.stringify({
                     id: selectedExpense?.id,
                     user_id: profile?.id,
-                    budget_id: selectedExpense?.budget_id,
+                    plan_id: selectedExpense?.plan_id,
                     category_id: selectedExpense?.category_id,
                     description: selectedExpense?.description,
                     amount: selectedExpense?.amount,
@@ -409,14 +401,14 @@ export default function Expenses() {
         if (profile?.id) {
             getExpenses();
             fetchCategory();
-            fetchBudget();
+            fetchPlan();
             fetchSource();
             getCurrentPeriod();
         }
     }, [profile])
     useEffect(() => {
-        if (currentBudgetId > 0) { fetchSummary() }
-    }, [currentBudgetId > 0])
+        if (currentPlanId > 0) { fetchSummary() }
+    }, [currentPlanId > 0])
 
     return (
         <main className="flex flex-col items-center min-h-screen pt-20 gap-10">
@@ -429,8 +421,8 @@ export default function Expenses() {
                     <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} px-3 py-2 my-2 border shadow-xs max-w-[300px] sm:w-auto`}>
                         <h3 className="text-sm font-semibold py-1">{s.category_name}</h3>
                         <p className="text-xs py-2">Rp {s.sum_amount.toLocaleString("id-ID")}</p>
-                        <p className="text-xs">{s.percentage_max_expense}% of budget's max expense</p>
-                        {s.bc_limit && (<p className="text-xs">{s.percentage_bc_limit}% of category's budget</p>)}
+                        <p className="text-xs">{s.percentage_max_expense}% of plan's max expense</p>
+                        {s.bc_limit && (<p className="text-xs">{s.percentage_bc_limit}% of category's plan</p>)}
                     </div>
                 ))}
             </div>
@@ -471,8 +463,8 @@ export default function Expenses() {
                                     </div>
                                     <div className="w-1/3">
                                         <div className="flex flex-col">
-                                            <span className="text-gray-500">budget:</span>
-                                            <span>{e.budgets?.periods?.name}</span>
+                                            <span className="text-gray-500">plan:</span>
+                                            <span>{e.plans?.name}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -539,17 +531,17 @@ export default function Expenses() {
                             </div>
                             <div className="flex gap-4 items-center space-y-4">
                                 <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
-                                    budget
+                                    plan
                                 </div>
                                 <div className="flex-1">
                                     <Select
-                                        options={budgetOptions}
-                                        placeholder="select budget..."
-                                        defaultValue={selectedExpense && selectedExpense?.budget_id >= 0 ? String(selectedExpense?.budget_id) : ""}
+                                        options={planOptions}
+                                        placeholder="select plan..."
+                                        defaultValue={selectedExpense && selectedExpense?.plan_id >= 0 ? String(selectedExpense?.plan_id) : ""}
                                         onChange={(val: string) => {
-                                            const selectedLabel = budgetOptions.find((opt) => opt.value === val)?.label || "";
+                                            const selectedLabel = planOptions.find((opt) => opt.value === val)?.label || "";
                                             setSelectedExpense((prev) =>
-                                                prev ? { ...prev, budget_id: Number(val), budgets: { ...prev.budgets, id: Number(val) } } : prev
+                                                prev ? { ...prev, plan_id: Number(val), plans: { ...prev.plans, id: Number(val) } } : prev
                                             );
                                         }}
                                     />
@@ -663,7 +655,7 @@ export default function Expenses() {
                     message={warningMessage}
                     yesButton
                     yesButtonText="yes"
-                    handleYes={() => { setConfirmExceedingBudget(true); handleConfirmAction(); }}
+                    handleYes={() => { setConfirmExceedingPlan(true); handleConfirmAction(); }}
                     noButton
                     noButtonText="cancel"
                     handleNo={() => setOpenModalWarning(false)}
