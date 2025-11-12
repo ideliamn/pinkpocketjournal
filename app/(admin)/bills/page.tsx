@@ -58,11 +58,9 @@ export default function Bills() {
         id: number,
         name: string;
     }
-    interface Budget {
+    interface Plan {
         id: number,
-        periods: {
-            name: string;
-        }
+        name: string;
     }
 
     // CONSTS //
@@ -83,7 +81,7 @@ export default function Bills() {
     const [bill, setBill] = useState<Bill[]>([])
     const [openModalForm, setOpenModalForm] = useState(false);
     const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
-    const [budgetOptions, setBudgetOptions] = useState<{ value: string; label: string }[]>([]);
+    const [planOptions, setPlanOptions] = useState<{ value: string; label: string }[]>([]);
     const [sourceOptions, setSourceOptions] = useState<{ value: string; label: string }[]>([]);
     const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
     const [openModalSuccess, setOpenModalSuccess] = useState(false);
@@ -96,7 +94,7 @@ export default function Bills() {
     const [confirmMessage, setConfirmMessage] = useState("");
     const [openModalWarning, setOpenModalWarning] = useState(false);
     const [warningMessage, setWarningMessage] = useState("");
-    const [confirmExceedingBudget, setConfirmExceedingBudget] = useState(false);
+    const [confirmExceedingPlan, setConfirmExceedingPlan] = useState(false);
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | "pay" | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
     const [selectedIdEditBill, setSelectedIdEditBill] = useState<number | null>(null);
@@ -225,20 +223,22 @@ export default function Bills() {
             setCategoryOptions(formattedOptions);
         }
     }
-    const fetchBudget = async () => {
-        const getBudget = await fetch(`/api/budget?userId=${profile?.id}`);
-        const res = await getBudget.json();
+    const fetchPlan = async () => {
+        const getPlan = await fetch(`/api/plan?userId=${profile?.id}`);
+        const res = await getPlan.json();
         if (res.data) {
-            const dataBudget: Budget[] = res.data
-            let formattedOptions = dataBudget.map((k) => ({
+            const dataPlan: Plan[] = res.data
+            console.log("dataPlan: ", dataPlan)
+            let formattedOptions = dataPlan.map((k) => ({
                 value: String(k.id),
-                label: k?.periods?.name,
+                label: k?.name,
             })).sort((a, b) => a.label.localeCompare(b.label));
+            console.log("formattedOptions plan: ", formattedOptions)
             formattedOptions.unshift({
                 value: "",
-                label: "no budget"
+                label: "no plan"
             })
-            setBudgetOptions(formattedOptions);
+            setPlanOptions(formattedOptions);
         }
     }
     const fetchSource = async () => {
@@ -298,10 +298,10 @@ export default function Bills() {
                 setLoading(false);
                 return;
             }
-            if (!confirmExceedingBudget && selectedBill?.plan_id) {
-                const checkExpenseBudget = await checkExpense(Number(profile?.id), selectedBill?.plan_id, selectedBill?.amount, selectedBill?.category_id)
-                if (checkExpenseBudget.isExceeding) {
-                    setWarningMessage(checkExpenseBudget?.message);
+            if (!confirmExceedingPlan && selectedBill?.plan_id) {
+                const checkExpensePlan = await checkExpense(Number(profile?.id), selectedBill?.plan_id, selectedBill?.amount, selectedBill?.category_id)
+                if (checkExpensePlan.isExceeding) {
+                    setWarningMessage(checkExpensePlan?.message);
                     setOpenModalWarning(true);
                 }
             }
@@ -328,7 +328,7 @@ export default function Bills() {
         } catch (err) {
             console.error(err)
         } finally {
-            setConfirmExceedingBudget(false);
+            setConfirmExceedingPlan(false);
             closeModalForm();
             setLoading(false);
         }
@@ -352,10 +352,10 @@ export default function Bills() {
                 setLoading(false);
                 return;
             }
-            if (!confirmExceedingBudget && selectedBill?.plan_id) {
-                const checkExpenseBudget = await checkExpense(Number(profile?.id), selectedBill?.plan_id, selectedBill?.amount, selectedBill?.category_id)
-                if (checkExpenseBudget.isExceeding) {
-                    setWarningMessage(checkExpenseBudget?.message);
+            if (!confirmExceedingPlan && selectedBill?.plan_id) {
+                const checkExpensePlan = await checkExpense(Number(profile?.id), selectedBill?.plan_id, selectedBill?.amount, selectedBill?.category_id)
+                if (checkExpensePlan.isExceeding) {
+                    setWarningMessage(checkExpensePlan?.message);
                     setOpenModalWarning(true);
                 }
             }
@@ -384,7 +384,7 @@ export default function Bills() {
         } catch (err) {
             console.error(err)
         } finally {
-            setConfirmExceedingBudget(false);
+            setConfirmExceedingPlan(false);
             closeModalForm();
             setLoading(false);
         }
@@ -458,7 +458,7 @@ export default function Bills() {
         if (profile?.id) {
             getBills();
             fetchCategory();
-            fetchBudget();
+            fetchPlan();
             fetchSource();
         }
     }, [profile])
@@ -519,7 +519,7 @@ export default function Bills() {
                                     <div className="w-1/2">
                                         {b?.plans && (
                                             <div className="flex flex-col">
-                                                <span className="text-gray-500">budget:</span>
+                                                <span className="text-gray-500">plan:</span>
                                                 <span>{b.plans?.name}</span>
                                             </div>)}
                                     </div>
@@ -555,19 +555,27 @@ export default function Bills() {
                         <form>
                             <div className="flex gap-4 items-center space-y-4">
                                 <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
-                                    budget (optional)
+                                    plan (optional)
                                 </div>
                                 <div className="flex-1">
                                     <Select
-                                        options={budgetOptions}
-                                        placeholder="select budget..."
+                                        options={planOptions}
+                                        placeholder="select plan..."
                                         defaultValue={selectedBill && selectedBill?.plan_id >= 0 ? String(selectedBill?.plan_id) : ""}
-                                        onChange={(val: string) => {
-                                            const selectedLabel = budgetOptions.find((opt) => opt.value === val)?.label || "";
+                                        onChange={(val: string) =>
                                             setSelectedBill((prev) =>
-                                                prev ? { ...prev, plan_id: Number(val), budgets: { ...prev.plans, id: Number(val) } } : prev
-                                            );
-                                        }}
+                                                prev
+                                                    ? {
+                                                        ...prev,
+                                                        plan_id: Number(val),
+                                                        plans: {
+                                                            ...prev.plans,
+                                                            name: planOptions.find((opt) => opt.value === val)?.label || "",
+                                                        },
+                                                    }
+                                                    : prev
+                                            )
+                                        }
                                     />
                                 </div>
                             </div>
@@ -757,7 +765,7 @@ export default function Bills() {
                     message={warningMessage}
                     yesButton
                     yesButtonText="yes"
-                    handleYes={() => { setConfirmExceedingBudget(true); handleConfirmAction(); }}
+                    handleYes={() => { setConfirmExceedingPlan(true); handleConfirmAction(); }}
                     noButton
                     noButtonText="cancel"
                     handleNo={() => setOpenModalWarning(false)}
