@@ -99,8 +99,15 @@ export default function Dashboard() {
         const getDataChart = await fetch(`/api/dashboard/daily-expense-chart?planId=${currentPeriod?.data?.plan_id}`);
         const res = await getDataChart.json();
         if (res.data) {
-            const dataPlan: DailyExpenseChart[] = res.data
-            console.log("dataPlan: ", dataPlan)
+            let dataPlan: DailyExpenseChart[] = res.data
+            console.log("dataPlan: ", JSON.stringify(dataPlan))
+            dataPlan = dataPlan.map(d => ({
+                ...d,
+                expense_date: new Date(d.expense_date).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "short"
+                })
+            }));
             setDailyExpenseChart(dataPlan);
         }
     }
