@@ -10,6 +10,9 @@ const supabase = createClient(
 export async function GET(request: Request) {
     let code = 1
     let message = "OK"
+    let total = 0
+    let currentPage = 0
+    let totalPages = 0
     let httpStatus = 200
     let data: any[] = []
 
@@ -21,8 +24,11 @@ export async function GET(request: Request) {
         const categoryId = searchParams.get("categoryId");
         const sourceId = searchParams.get("sourceId");
         const search = searchParams.get("search");
+        const page = Number(searchParams.get("page"));
+        const limit = Number(searchParams.get("limit"));
+        const offset = (page - 1) * limit;
 
-        let query = supabase.from("expenses").select("*, plans(id, name, start_date, end_date), categories(id, name), sources(id, name)");
+        let query = supabase.from("expenses").select("*, plans(id, name, start_date, end_date), categories(id, name), sources(id, name)", { count: "exact" })
 
         if (planId) query = query.eq("plan_id", planId);
         if (categoryId) query = query.eq("category_id", categoryId);
@@ -31,21 +37,24 @@ export async function GET(request: Request) {
         if (sourceId) query = query.eq("source_id", sourceId);
         if (search) query = query.ilike("description", `%${search}%`);
 
-        const { data: result, error } = await query.order("expense_date", { ascending: false });
+        const { data: result, error, count } = await query.range(offset, offset + limit - 1).order("expense_date", { ascending: false });
 
         if (error) {
             throw new Error(error.message)
         }
 
-        if (!result || result.length < 1) {
+        if (!result || result.length < 1 || !count || count < 1) {
             code = 0
             message = "Expense not found"
             httpStatus = 404
         } else {
+            total = count;
+            currentPage = page;
+            totalPages = Math.ceil(count / limit);
             data = result
         }
 
-        return NextResponse.json({ code, message, data }, { status: httpStatus })
+        return NextResponse.json({ code, message, total, currentPage, totalPages, data }, { status: httpStatus })
     }
     catch (err: any) {
         code = 0

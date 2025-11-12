@@ -91,7 +91,10 @@ export default function Expenses() {
     const [isCreateMode, setIsCreateMode] = useState(false);
     const [selectedIdEditExpense, setSelectedIdEditExpense] = useState<number | null>(null);
     const [currentPlanId, setCurrentPlanId] = useState(0);
-    const [summary, setSummary] = useState<Summary[]>([])
+    const [summary, setSummary] = useState<Summary[]>([]);
+    const [expenses, setExpenses] = useState([]);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     // HANDLE CLICK CONFIRM
     const handleConfirmAction = async () => {
@@ -173,21 +176,26 @@ export default function Expenses() {
     }
 
     // FETCH INITIAL DATA //
-    const getExpenses = async () => {
+    const getExpenses = async (pageNum = 1) => {
+        setLoading(true);
         try {
             if (!profile?.id) return;
-            const getExpense = await fetch(`/api/expense?userId=${profile?.id}`, {
+            const getExpense = await fetch(`/api/expense?userId=${profile?.id}&page=${pageNum}&limit=10`, {
                 method: "GET"
             });
             const res = await getExpense.json();
             if (res.data) {
                 console.log("res.data: ", JSON.stringify(res.data))
                 setExpense(res.data)
+                setExpenses(res.data);
+                setPage(res.currentPage);
+                setTotalPages(res.totalPages);
             }
             setLoading(false)
         } catch (err) {
             console.error(err);
         } finally {
+            setLoading(false);
         }
     }
     const fetchCategory = async () => {
@@ -476,6 +484,28 @@ export default function Expenses() {
                         no expenses found!
                     </div>
                 )}
+                {expense.length > 0 && (
+                    <div className={`flex justify-center items-center gap-2 mt-6 ${geistMono.className}`}>
+                        <button
+                            disabled={page === 1}
+                            onClick={() => getExpenses(page - 1)}
+                            className="px-3 py-1 border disabled:opacity-50 cursor-pointer hover:bg-pink-500 hover:text-white"
+                        >
+                            prev
+                        </button>
+
+                        <span className="text-sm text-gray-600">
+                            page {page} of {totalPages}
+                        </span>
+
+                        <button
+                            disabled={page === totalPages}
+                            onClick={() => getExpenses(page + 1)}
+                            className="px-3 py-1 border disabled:opacity-50 cursor-pointer hover:bg-pink-500 hover:text-white"
+                        >
+                            next
+                        </button>
+                    </div>)}
                 {openModalForm &&
                     <FormModal
                         isOpen={openModalForm}
