@@ -15,12 +15,12 @@ export async function GET(request: Request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const budgetId = searchParams.get("budgetId")
+        const planId = searchParams.get("planId")
 
         const { data: dataExpenses, error: errorExpenses } = await supabase
             .from("expenses")
             .select("expense_date, amount, categories(name)")
-            .eq("budget_id", budgetId)
+            .eq("plan_id", planId)
             .order("expense_date", { ascending: false })
             .limit(5)
 

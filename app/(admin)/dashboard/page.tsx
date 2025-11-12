@@ -33,9 +33,8 @@ export default function Dashboard() {
     interface CurrentPeriod {
         isExist: boolean;
         data: {
-            budget_id: number;
-            period_id: number;
-            period_name: string;
+            plan_id: number;
+            plan_name: string;
             user_id: number;
             start_date: string;
             end_date: string;
@@ -44,7 +43,7 @@ export default function Dashboard() {
     interface DailyExpenseChart {
         expense_date: string;
         amount: number;
-        budgets: {
+        plans: {
             max_expense: number;
         }
     }
@@ -97,43 +96,43 @@ export default function Dashboard() {
         if (cp.isExist) { setCurrentPeriod(cp) }
     }
     const fetchDailyExpenseChart = async () => {
-        const getDataChart = await fetch(`/api/dashboard/daily-expense-chart?budgetId=${currentPeriod?.data?.budget_id}`);
+        const getDataChart = await fetch(`/api/dashboard/daily-expense-chart?planId=${currentPeriod?.data?.plan_id}`);
         const res = await getDataChart.json();
         if (res.data) {
-            const dataBudget: DailyExpenseChart[] = res.data
-            console.log("dataBudget: ", dataBudget)
-            setDailyExpenseChart(dataBudget);
+            const dataPlan: DailyExpenseChart[] = res.data
+            console.log("dataPlan: ", dataPlan)
+            setDailyExpenseChart(dataPlan);
         }
     }
     const fetchSpendingByCategoryChart = async () => {
-        const getDataChart = await fetch(`/api/dashboard/spending-by-category-chart?budgetId=${currentPeriod?.data?.budget_id}`)
+        const getDataChart = await fetch(`/api/dashboard/spending-by-category-chart?planId=${currentPeriod?.data?.plan_id}`)
         const res = await getDataChart.json();
         if (res.data) {
-            const dataBudget: SpendingByCategoryChart[] = res.data
-            console.log("dataBudget: ", dataBudget)
-            setSpendingByCategoryChart(dataBudget);
+            const dataPlan: SpendingByCategoryChart[] = res.data
+            console.log("dataPlan: ", dataPlan)
+            setSpendingByCategoryChart(dataPlan);
         }
     }
     const fetchSpendingBySourceChart = async () => {
-        const getDataChart = await fetch(`/api/dashboard/spending-by-source-chart?budgetId=${currentPeriod?.data?.budget_id}`)
+        const getDataChart = await fetch(`/api/dashboard/spending-by-source-chart?planId=${currentPeriod?.data?.plan_id}`)
         const res = await getDataChart.json();
         if (res.data) {
-            const dataBudget: SpendingBySourceChart[] = res.data
-            console.log("dataBudget: ", dataBudget)
-            setSpendingBySourceChart(dataBudget);
+            const dataPlan: SpendingBySourceChart[] = res.data
+            console.log("dataPlan: ", dataPlan)
+            setSpendingBySourceChart(dataPlan);
         }
     }
     const fetchSummaryExpense = async () => {
-        const getDataChart = await fetch(`/api/dashboard/summary-expense?budgetId=${currentPeriod?.data?.budget_id}`)
+        const getDataChart = await fetch(`/api/dashboard/summary-expense?planId=${currentPeriod?.data?.plan_id}`)
         const res = await getDataChart.json();
         if (res.data) {
-            const dataBudget = res.data
-            console.log("summary expense: ", dataBudget[0])
-            setSummaryExpense(dataBudget[0]);
+            const dataPlan = res.data
+            console.log("summary expense: ", dataPlan[0])
+            setSummaryExpense(dataPlan[0]);
         }
     }
     const fetchRecentExpense = async () => {
-        const getDataChart = await fetch(`/api/dashboard/recent-expense?budgetId=${currentPeriod?.data?.budget_id}`)
+        const getDataChart = await fetch(`/api/dashboard/recent-expense?planId=${currentPeriod?.data?.plan_id}`)
         const res = await getDataChart.json();
         if (res.data) {
             const dataHistory = res.data
@@ -159,14 +158,14 @@ export default function Dashboard() {
         }
     }, [profile])
     useEffect(() => {
-        if (currentPeriod?.data?.budget_id) {
+        if (currentPeriod?.data?.plan_id) {
             fetchDailyExpenseChart();
             fetchSpendingByCategoryChart();
             fetchSpendingBySourceChart();
             fetchSummaryExpense();
             fetchRecentExpense();
         }
-    }, [currentPeriod?.data?.budget_id])
+    }, [currentPeriod?.data?.plan_id])
 
     return (
         <main className="min-h-screen w-full bg-pink-50 p-6 space-y-8">
@@ -177,7 +176,7 @@ export default function Dashboard() {
 
             {/* Summary Cards */}
             <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${geistMono.className}`}>
-                <SummaryCard icon={<Wallet className="text-green-500 w-6 h-6 mr-3" />} label="Total Budget" value={summaryExpense?.max_expense} color="green" />
+                <SummaryCard icon={<Wallet className="text-green-500 w-6 h-6 mr-3" />} label="Total Plan" value={summaryExpense?.max_expense} color="green" />
                 <SummaryCard icon={<CreditCard className="text-red-500 w-6 h-6 mr-3" />} label="Total Expense" value={summaryExpense?.total_expense} color="red" />
                 <SummaryCard icon={<TrendingUp className="text-blue-500 w-6 h-6 mr-3" />} label="Remaining" value={summaryExpense?.remaining} color="blue" />
             </div>
@@ -244,7 +243,7 @@ export default function Dashboard() {
 
             {/* Progress Bar per Category */}
             <div className={`bg - white rounded - 2xl p - 6 shadow ${geistMono.className}`}>
-                <h2 className="text-pink-600 font-semibold mb-4">Category Budget Progress</h2>
+                <h2 className="text-pink-600 font-semibold mb-4">Category Plan Progress</h2>
                 <div className="space-y-4">
                     {spendingByCategoryChart.map((c) => {
                         const used = Math.min(c.percentage, 100);

@@ -15,10 +15,10 @@ export async function GET(request: Request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const budgetId = searchParams.get("budgetId")
+        const planId = searchParams.get("planId")
 
         const { data: dataChart, error: errorChart } = await supabase
-            .rpc("summary_expense_dashboard", { p_budget_id: Number(budgetId) })
+            .rpc("summary_expense_dashboard", { p_plan_id: Number(planId) })
 
         console.log("dataChart: " + JSON.stringify(dataChart))
 
