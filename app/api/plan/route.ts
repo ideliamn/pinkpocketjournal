@@ -68,23 +68,24 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        if (!body.user_id || !body.period_id || !body.income || !body.max_expense) {
+        if (!body.user_id || !body.name || !body.start_date || !body.end_date || !body.max_expense) {
             code = 0
             message = "Please input all required fields!"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const insertBudget = {
+        const insertPlan = {
             user_id: body.user_id,
-            period_id: body.period_id,
-            income: body.income,
+            name: body.name,
+            start_date: body.start_date,
+            end_date: body.end_date,
             max_expense: body.max_expense
         }
 
         const { data: insertedData, error } = await supabase
-            .from("budgets")
-            .insert([insertBudget])
+            .from("plans")
+            .insert([insertPlan])
             .select();
 
         if (error) {
@@ -111,24 +112,25 @@ export async function PUT(req: Request) {
     try {
         const body = await req.json();
 
-        if (!body.id || !body.user_id || !body.period_id || !body.income || !body.max_expense) {
+        if (!body.id || !body.user_id || !body.name || !body.start_date || !body.end_date || !body.max_expense) {
             code = 0
             message = "Please input all required fields!"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const updateBudget = {
+        const updatePlan = {
             user_id: body.user_id,
-            period_id: body.period_id,
-            income: body.income,
+            name: body.name,
+            start_date: body.start_date,
+            end_date: body.end_date,
             max_expense: body.max_expense,
             updated_at: dateTimeNow()
         }
 
         const { data: updatedData, error } = await supabase
-            .from("budgets")
-            .update(updateBudget)
+            .from("plans")
+            .update(updatePlan)
             .eq("id", body.id)
             .select();
 
@@ -164,16 +166,16 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: checkData, error: checkDataError } = await supabase.from("budgets").select("*").eq("id", id);
+        const { data: checkData, error: checkDataError } = await supabase.from("plans").select("*").eq("id", id);
 
         if (!checkData || checkData.length < 1) {
             code = 0
-            message = "Budget not found!"
+            message = "Plan not found!"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: deletedData, error } = await supabase.from("budgets").delete().eq("id", id).single();
+        const { data: deletedData, error } = await supabase.from("plans").delete().eq("id", id).single();
 
         if (error) {
             throw new Error(error.message)

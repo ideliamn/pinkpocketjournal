@@ -34,16 +34,13 @@ export default function ModalDetail({
     isOpen,
     onClose,
 }: ModalDetailProps) {
-    interface Budget {
+    interface Plan {
         id: number;
-        income: number;
         max_expense: number;
-        periods: {
-            name: string;
-            end_date: string;
-            start_date: string;
-        },
-        budget_categories: [
+        name: string;
+        end_date: string;
+        start_date: string;
+        category_plans: [
             {
                 id: number,
                 amount: number,
@@ -56,18 +53,18 @@ export default function ModalDetail({
     }
 
     const [loading, setLoading] = useState(false);
-    const [budget, setBudget] = useState<Budget | null>(null);
+    const [plan, setPlan] = useState<Plan | null>(null);
 
-    const getBudgetDetail = async () => {
+    const getPlanDetail = async () => {
         try {
             if (!id) return;
             setLoading(true)
-            const getBudget = await fetch(`/api/budget?id=${id}`, {
+            const getPlan = await fetch(`/api/plan?id=${id}`, {
                 method: "GET"
             });
-            const res = await getBudget.json();
+            const res = await getPlan.json();
             if (res.data) {
-                setBudget(res.data[0])
+                setPlan(res.data[0])
             }
         } catch (err) {
             console.error(err);
@@ -94,7 +91,7 @@ export default function ModalDetail({
     }, [])
 
     useEffect(() => {
-        if (id) getBudgetDetail()
+        if (id) getPlanDetail()
     }, [id])
 
     const getRemainingDays = (endDate: string) => {
@@ -102,13 +99,13 @@ export default function ModalDetail({
         const end = new Date(endDate);
         const diff = end.getTime() - today.getTime();
         const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-        return days > 0 ? `${days} days left until period ends` : "period has ended";
+        return days > 0 ? `${days} days left until plan's period ends` : "plan's period has ended";
     };
 
-    let totalAllocated = budget?.budget_categories.reduce((sum, cat) => sum + cat.amount, 0) ?? 0;
-    let remaining = budget?.max_expense ? budget?.max_expense - totalAllocated : 0
+    let totalAllocated = plan?.category_plans.reduce((sum, cat) => sum + cat.amount, 0) ?? 0;
+    let remaining = plan?.max_expense ? plan?.max_expense - totalAllocated : 0
 
-    interface BudgetCategories {
+    interface PlanCategories {
         id: number,
         amount: number,
         categories: Categories
@@ -119,10 +116,10 @@ export default function ModalDetail({
         name: string;
     }
 
-    const [selectedIdEditBC, setSelectedIdEditBC] = useState<number | null>(null);
-    const [openModalEditBC, setOpenModalEditBC] = useState(false);
+    const [selectedIdEditCP, setSelectedIdEditCP] = useState<number | null>(null);
+    const [openModalEditCP, setOpenModalEditCP] = useState(false);
     const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
-    const [selectedBC, setSelectedBC] = useState<BudgetCategories | null>(null);
+    const [selectedCP, setSelectedCP] = useState<PlanCategories | null>(null);
     const [openModalSuccess, setOpenModalSuccess] = useState(false);
     const closeModalSuccess = () => { setOpenModalSuccess(false) };
     const [successMessage, setSuccessMessage] = useState("");
@@ -135,24 +132,24 @@ export default function ModalDetail({
     const [isCreateMode, setIsCreateMode] = useState(false);
 
 
-    const handleClickEditBC = async (idBC: number) => {
-        console.log("id: ", idBC)
+    const handleClickEditCP = async (idCP: number) => {
+        console.log("id: ", idCP)
         setLoading(true)
-        setSelectedIdEditBC(idBC)
-        const foundBC = budget?.budget_categories.find((bc) => bc.id === idBC);
-        if (foundBC) {
-            setSelectedBC({
-                id: foundBC.id,
-                amount: foundBC.amount,
+        setSelectedIdEditCP(idCP)
+        const foundCP = plan?.category_plans.find((cp) => cp.id === idCP);
+        if (foundCP) {
+            setSelectedCP({
+                id: foundCP.id,
+                amount: foundCP.amount,
                 categories: {
-                    id: foundBC.categories.id,
-                    name: foundBC.categories.name
+                    id: foundCP.categories.id,
+                    name: foundCP.categories.name
                 }
             });
         }
-        setOpenModalEditBC(true)
+        setOpenModalEditCP(true)
         setLoading(false)
-        setSelectedIdEditBC(idBC);
+        setSelectedIdEditCP(idCP);
     }
 
     const handleOpenConfirmEdit = () => {
@@ -169,51 +166,51 @@ export default function ModalDetail({
 
     const handleConfirmAction = async () => {
         if (pendingAction === "edit") {
-            await handleSubmitEditBC();
+            await handleSubmitEditCP();
         } else if (pendingAction === "delete") {
-            await handleDeleteBC(selectedBC?.id ?? 0);
+            await handleDeleteCP(selectedCP?.id ?? 0);
         } else if (pendingAction === "create") {
-            await handleSubmitCreateBC();
+            await handleSubmitCreateCP();
         }
         setOpenModalConfirm(false);
         setPendingAction(null);
     };
 
-    const openModalCreateBC = () => {
-        setSelectedBC({ id: 0, amount: 0, categories: { id: 0, name: "" } });
+    const openModalCreateCP = () => {
+        setSelectedCP({ id: 0, amount: 0, categories: { id: 0, name: "" } });
         setIsCreateMode(true);
-        setOpenModalEditBC(true);
+        setOpenModalEditCP(true);
     }
 
-    const closeModalEditBC = () => {
-        getBudgetDetail()
-        setOpenModalEditBC(false);
-        setSelectedIdEditBC(null)
+    const closeModalEditCP = () => {
+        getPlanDetail()
+        setOpenModalEditCP(false);
+        setSelectedIdEditCP(null)
         setIsCreateMode(false);
     }
 
-    const handleSubmitEditBC = async (e?: React.FormEvent) => {
+    const handleSubmitEditCP = async (e?: React.FormEvent) => {
         setLoading(true);
         e?.preventDefault();
-        console.log("selectedBC: " + JSON.stringify(selectedBC))
+        console.log("selectedCP: " + JSON.stringify(selectedCP))
         try {
-            if (!selectedBC?.id || !selectedBC.categories.id || !selectedBC.amount) {
+            if (!selectedCP?.id || !selectedCP.categories.id || !selectedCP.amount) {
                 setFailedMessage("fill all the required fields!");
                 setOpenModalFailed(true);
                 setLoading(false);
                 return;
             }
-            const res = await fetch("/api/budget-category", {
+            const res = await fetch("/api/Plan-category", {
                 method: "PUT",
                 body: JSON.stringify({
-                    id: selectedBC.id,
-                    category_id: selectedBC.categories.id,
-                    amount: selectedBC.amount
+                    id: selectedCP.id,
+                    category_id: selectedCP.categories.id,
+                    amount: selectedCP.amount
                 }),
             });
             const data = await res.json();
             if (res.ok) {
-                setSuccessMessage("success update budget for this category!");
+                setSuccessMessage("success update Plan for this category!");
                 setLoading(false);
                 setOpenModalSuccess(true);
             } else {
@@ -224,14 +221,14 @@ export default function ModalDetail({
         } catch (err: any) {
             console.error(err)
         } finally {
-            closeModalEditBC();
+            closeModalEditCP();
             setLoading(false)
         }
     };
 
-    const handleDeleteBC = async (id: number) => {
+    const handleDeleteCP = async (id: number) => {
         setLoading(true);
-        console.log("selectedBC: " + JSON.stringify(selectedBC))
+        console.log("selectedCP: " + JSON.stringify(selectedCP))
         try {
             if (!id || id === 0) {
                 setFailedMessage("fill all the required fields!");
@@ -239,12 +236,12 @@ export default function ModalDetail({
                 setLoading(false);
                 return;
             }
-            const res = await fetch(`/api/budget-category?id=${id}`, {
+            const res = await fetch(`/api/Plan-category?id=${id}`, {
                 method: "DELETE"
             });
             const data = await res.json();
             if (res.ok) {
-                setSuccessMessage("success delete budget for this category!");
+                setSuccessMessage("success delete Plan for this category!");
                 setLoading(false);
                 setOpenModalSuccess(true);
             } else {
@@ -255,7 +252,7 @@ export default function ModalDetail({
         } catch (err: any) {
             console.error(err)
         } finally {
-            closeModalEditBC();
+            closeModalEditCP();
             setLoading(false)
         }
     };
@@ -266,21 +263,21 @@ export default function ModalDetail({
         setOpenModalConfirm(true);
     };
 
-    const handleSubmitCreateBC = async () => {
+    const handleSubmitCreateCP = async () => {
         setLoading(true);
         try {
-            if (!selectedBC?.categories.id || !selectedBC.amount) {
+            if (!selectedCP?.categories.id || !selectedCP.amount) {
                 setFailedMessage("fill all the required fields!");
                 setOpenModalFailed(true);
                 setLoading(false);
                 return;
             }
-            const res = await fetch("/api/budget-category", {
+            const res = await fetch("/api/category-plans", {
                 method: "POST",
                 body: JSON.stringify({
-                    budget_id: id,
-                    category_id: selectedBC.categories.id,
-                    amount: selectedBC.amount,
+                    plan_id: id,
+                    category_id: selectedCP.categories.id,
+                    amount: selectedCP.amount,
                 }),
             });
             const data = await res.json();
@@ -294,7 +291,7 @@ export default function ModalDetail({
         } catch (err) {
             console.error(err);
         } finally {
-            closeModalEditBC();
+            closeModalEditCP();
             setLoading(false);
             setIsCreateMode(false);
         }
@@ -302,50 +299,49 @@ export default function ModalDetail({
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} className="max-w-[600px] p-10">
-            {loading ? (<Loading />) : budget ? (
+            {loading ? (<Loading />) : plan ? (
                 <div className={`${geistMono.className} text-left space-y-2 pt-3`}>
                     <h2 className="text-md">
-                        {budget?.periods?.name}
+                        {plan?.name}
                     </h2>
                     <p className="text-sm text-gray-500">
-                        {moment(budget?.periods.start_date).format("D MMMM YYYY")} - {moment(budget?.periods.end_date).format("D MMMM YYYY")}
+                        {moment(plan.start_date).format("D MMMM YYYY")} - {moment(plan.end_date).format("D MMMM YYYY")}
                     </p>
                     <p className="text-sm text-gray-400">
-                        {getRemainingDays(budget.periods.end_date)}
+                        {getRemainingDays(plan.end_date)}
                     </p>
                     <div className="flex flex-col border-t border-gray-300 pt-4 gap-1">
-                        <p className="text-sm">income: <span>{formatRupiah(budget?.income ?? 0)}</span></p>
-                        <p className="text-sm">max expense: <span>{formatRupiah(budget?.max_expense ?? 0)}</span></p>
+                        <p className="text-sm">max expense: <span>{formatRupiah(plan?.max_expense ?? 0)}</span></p>
                         <p className="text-sm">total allocated: <span>{formatRupiah(totalAllocated ?? 0)}</span></p>
                         <p className="text-sm">remaining: <span>{formatRupiah(remaining)}</span></p>
                     </div>
                     <div className="mt-4">
                         <p className=" mb-2 text-gray-600">categories:</p>
-                        {budget?.budget_categories.map((cat, i) => (
+                        {plan?.category_plans.map((cat, i) => (
                             <div key={i} className="flex justify-between text-sm py-1">
                                 <span>{cat.categories.name}</span>
                                 <div className="flex flex-row items-center justify-center">
                                     <span>{formatRupiah(cat.amount)}</span>
-                                    <Button size="xs" variant="primary" className={`${geistMono.className} text-xs cursor-pointer hover:underline hover:bg-pink-200 ml-1`} onClick={() => handleClickEditBC(cat.id)}>
+                                    <Button size="xs" variant="primary" className={`${geistMono.className} text-xs cursor-pointer hover:underline hover:bg-pink-200 ml-1`} onClick={() => handleClickEditCP(cat.id)}>
                                         <svg id="pencil-solid" width="15" height="15" fill="#FF6F91" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="8 20 9 20 9 21 8 21 8 22 7 22 7 23 1 23 1 17 2 17 2 16 3 16 3 15 4 15 4 16 5 16 5 17 6 17 6 18 7 18 7 19 8 19 8 20" /><polygon points="17 10 18 10 18 12 17 12 17 13 16 13 16 14 15 14 15 15 14 15 14 16 13 16 13 17 12 17 12 18 11 18 11 19 10 19 10 18 9 18 9 17 8 17 8 16 7 16 7 15 6 15 6 14 5 14 5 13 6 13 6 12 7 12 7 11 8 11 8 10 9 10 9 9 10 9 10 8 11 8 11 7 12 7 12 6 14 6 14 7 15 7 15 8 16 8 16 9 17 9 17 10" /><polygon points="23 4 23 7 22 7 22 8 21 8 21 9 19 9 19 8 18 8 18 7 17 7 17 6 16 6 16 5 15 5 15 3 16 3 16 2 17 2 17 1 20 1 20 2 21 2 21 3 22 3 22 4 23 4" /></svg>
                                     </Button>
-                                    <Button size="xs" variant="primary" className={`${geistMono.className} text-xs cursor-pointer hover:underline hover:bg-pink-200`} onClick={() => { handleDeleteBC(cat.id) }}><svg id="trash-alt-solid" width="15" height="15" fill="#FF6F91" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="22 3 22 5 2 5 2 3 8 3 8 2 9 2 9 1 15 1 15 2 16 2 16 3 22 3" /><path d="m4,7v15h1v1h14v-2h1V7H4Zm12,12h-2v-10h2v10Zm-6,0h-2v-10h2v10Z" /></svg></Button>
+                                    <Button size="xs" variant="primary" className={`${geistMono.className} text-xs cursor-pointer hover:underline hover:bg-pink-200`} onClick={() => { handleDeleteCP(cat.id) }}><svg id="trash-alt-solid" width="15" height="15" fill="#FF6F91" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="22 3 22 5 2 5 2 3 8 3 8 2 9 2 9 1 15 1 15 2 16 2 16 3 22 3" /><path d="m4,7v15h1v1h14v-2h1V7H4Zm12,12h-2v-10h2v10Zm-6,0h-2v-10h2v10Z" /></svg></Button>
                                 </div>
                             </div>
                         ))}
-                        <Button size="sm" variant="primary" className={`${geistMono.className} text-sm text-gray-500 cursor-pointer hover:underline hover:text-pink-600`} onClick={() => openModalCreateBC()}>add new category for this period...</Button>
+                        <Button size="sm" variant="primary" className={`${geistMono.className} text-sm text-gray-500 cursor-pointer hover:underline hover:text-pink-600`} onClick={() => openModalCreateCP()}>plan new categories...</Button>
                     </div>
                 </div>
             ) : (
-                <div className={`flex justify-center text-center ${geistMono.className} text-left space-y-2 pt-6`}>no budget information found!</div>
+                <div className={`flex justify-center text-center ${geistMono.className} text-left space-y-2 pt-6`}>no plan information found!</div>
             )}
-            {openModalEditBC && (
+            {openModalEditCP && (
                 <FormModal
-                    isOpen={openModalEditBC}
-                    onClose={closeModalEditBC}
+                    isOpen={openModalEditCP}
+                    onClose={closeModalEditCP}
                 >
                     <h2 className={`${geistMono.className} font-semibold text-md text-left space-y-2 pt-3 py-3`}>
-                        edit budget for category
+                        edit plan for category
                     </h2>
                     <form>
                         <div className="flex gap-4 items-center space-y-4">
@@ -356,9 +352,9 @@ export default function ModalDetail({
                                 <Select
                                     options={categoryOptions}
                                     placeholder="categories"
-                                    defaultValue={selectedBC ? String(selectedBC?.categories?.id) : ""}
+                                    defaultValue={selectedCP ? String(selectedCP?.categories?.id) : ""}
                                     onChange={(val: string) =>
-                                        setSelectedBC((prev) =>
+                                        setSelectedCP((prev) =>
                                             prev ? { ...prev, categories: { ...prev.categories, id: Number(val) } } : prev
                                         )
                                     } />
@@ -371,8 +367,8 @@ export default function ModalDetail({
                             <div className="flex-1">
                                 <Input
                                     type="number"
-                                    defaultValue={selectedBC?.amount}
-                                    onChange={(e) => setSelectedBC((prev) =>
+                                    defaultValue={selectedCP?.amount}
+                                    onChange={(e) => setSelectedCP((prev) =>
                                         prev ? { ...prev, amount: Number(e.target.value) } : prev
                                     )}>
                                 </Input>
@@ -383,7 +379,7 @@ export default function ModalDetail({
                                 <Button onClick={() => handleOpenConfirmCreate()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
                                     create
                                 </Button>
-                                <Button onClick={() => closeModalEditBC()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
+                                <Button onClick={() => closeModalEditCP()} type="button" size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`}>
                                     cancel
                                 </Button>
                             </>) : (<>
