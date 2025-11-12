@@ -64,6 +64,7 @@ export default function Dashboard() {
         remaining: number;
     }
     interface RecentExpense {
+        description: string;
         expense_date: string;
         categories: {
             name: string;
@@ -200,7 +201,7 @@ export default function Dashboard() {
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="expense_date" />
+                            <XAxis dataKey="expense_date" className="text-xs" />
                             <YAxis />
                             <Tooltip />
                             <Area
@@ -250,7 +251,7 @@ export default function Dashboard() {
 
             {/* Progress Bar per Category */}
             <div className={`bg - white rounded - 2xl p - 6 shadow ${geistMono.className}`}>
-                <h2 className="text-pink-600 font-semibold mb-4">Category Plan Progress</h2>
+                <h2 className="text-pink-600 font-semibold mb-4">top spending categories</h2>
                 <div className="space-y-4">
                     {spendingByCategoryChart.map((c) => {
                         const used = Math.min(c.percentage, 100);
@@ -277,15 +278,16 @@ export default function Dashboard() {
             {/* Recent Expenses Table */}
             < div className={`bg-white rounded-2xl p-6 shadow ${geistMono.className}`}>
                 <h2 className="text-pink-600 font-semibold mb-4 flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-pink-500" /> Recent Expenses
+                    <Clock className="w-5 h-5 text-pink-500" /> recent expenses
                 </h2>
                 <div className="overflow-x-auto">
                     <Table className="min-w-full text-left">
                         <TableHeader>
                             <TableRow>
-                                <TableCell className="py-2 px-4 rounded-tl-lg">Date</TableCell>
-                                <TableCell className="py-2 px-4">Category</TableCell>
-                                <TableCell className="py-2 px-4 rounded-tr-lg">Amount</TableCell>
+                                <TableCell className="py-2 px-4 rounded-tl-lg">date</TableCell>
+                                <TableCell className="py-2 px-4">category</TableCell>
+                                <TableCell className="py-2 px-4">description</TableCell>
+                                <TableCell className="py-2 px-4 rounded-tr-lg">amount</TableCell>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -296,6 +298,7 @@ export default function Dashboard() {
                                 >
                                     <TableCell className="py-2 px-4">{item.expense_date}</TableCell>
                                     <TableCell className="py-2 px-4">{item.categories?.name}</TableCell>
+                                    <TableCell className="py-2 px-4">{item.description}</TableCell>
                                     <TableCell className="py-2 px-4 text-pink-600 font-medium">
                                         {formatRupiah(item.amount)}
                                     </TableCell>

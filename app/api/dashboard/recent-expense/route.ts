@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
         const { data: dataExpenses, error: errorExpenses } = await supabase
             .from("expenses")
-            .select("expense_date, amount, categories(name)")
+            .select("description, expense_date, amount, categories(name)")
             .eq("plan_id", planId)
             .order("expense_date", { ascending: false })
             .limit(5)
