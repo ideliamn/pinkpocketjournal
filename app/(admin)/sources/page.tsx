@@ -45,11 +45,14 @@ export default function Sources() {
     const [selectedIdEditSource, setSelectedIdEditSource] = useState<number | null>(null);
     const [source, setSource] = useState<Source[]>([])
     const [selectedSource, setSelectedSource] = useState<Source | null>(null);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
-    const getSource = async () => {
+    const getSource = async (pageNum = 1) => {
+        setLoading(true)
         try {
             if (!profile?.id) return;
-            const getSource = await fetch(`/api/source?userId=${profile?.id}`, {
+            const getSource = await fetch(`/api/source?userId=${profile?.id}&page=${pageNum}&limit=10`, {
                 method: "GET"
             });
             const res = await getSource.json();
@@ -60,6 +63,7 @@ export default function Sources() {
         } catch (err) {
             console.error(err);
         } finally {
+            setLoading(false)
         }
     }
 
@@ -283,6 +287,28 @@ export default function Sources() {
                     </div>
                 )}
             </div>
+            {source.length > 0 && (
+                <div className={`flex justify-center items-center gap-2 mt-6 ${geistMono.className}`}>
+                    <button
+                        disabled={page === 1}
+                        onClick={() => getSource(page - 1)}
+                        className="px-3 py-1 border disabled:opacity-50 cursor-pointer hover:bg-pink-500 hover:text-white"
+                    >
+                        prev
+                    </button>
+
+                    <span className="text-sm text-gray-600">
+                        page {page} of {totalPages}
+                    </span>
+
+                    <button
+                        disabled={page === totalPages}
+                        onClick={() => getSource(page + 1)}
+                        className="px-3 py-1 border disabled:opacity-50 cursor-pointer hover:bg-pink-500 hover:text-white"
+                    >
+                        next
+                    </button>
+                </div>)}
             {openModalForm &&
                 <FormModal
                     isOpen={openModalForm}

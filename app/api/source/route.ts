@@ -10,6 +10,10 @@ const supabase = createClient(
 export async function GET(request: Request) {
     let code = 1
     let message = "OK"
+    let total = 0
+    let currentPage = 0
+    let totalPages = 0
+    let offset = 0
     let httpStatus = 200
     let data: any[] = []
 
@@ -18,28 +22,38 @@ export async function GET(request: Request) {
         const userId = searchParams.get("userId")
         const id = searchParams.get("id");
         const search = searchParams.get("search");
+        const page = Number(searchParams.get("page")) || null;
+        const limit = Number(searchParams.get("limit")) || null;
 
-        let query = supabase.from("sources").select("*");
+        let query = supabase.from("sources").select("*", { count: "exact" });
 
         if (id) query = query.eq("id", id);
         if (userId) query = query.eq("user_id", userId);
         if (search) query = query.ilike("name", `${search}`);
 
-        const { data: result, error } = await query;
+        if (page && limit) {
+            offset = (page - 1) * limit;
+            query = query.range(offset, offset + limit - 1)
+        }
+
+        const { data: result, error, count } = await query.order("name", { ascending: true });
 
         if (error) {
             throw new Error(error.message)
         }
 
-        if (!result || result.length < 1) {
+        if (!result || result.length < 1 || !count || count < 1) {
             code = 0
             message = "Source not found"
             httpStatus = 404
         } else {
+            total = count;
+            currentPage = page ?? 0;
+            totalPages = limit ? Math.ceil(count / limit) : 0;
             data = result
         }
 
-        return NextResponse.json({ code, message, data }, { status: httpStatus })
+        return NextResponse.json({ code, message, total, currentPage, totalPages, data }, { status: httpStatus })
     }
     catch (err: any) {
         code = 0

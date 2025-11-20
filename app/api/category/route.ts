@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     let total = 0
     let currentPage = 0
     let totalPages = 0
+    let offset = 0
     let httpStatus = 200
     let data: any[] = []
 
@@ -22,9 +23,8 @@ export async function GET(request: Request) {
         const userId = searchParams.get("userId");
         const type = searchParams.get("type");
         const search = searchParams.get("search");
-        const page = Number(searchParams.get("page"));
-        const limit = Number(searchParams.get("limit"));
-        const offset = (page - 1) * limit;
+        const page = Number(searchParams.get("page")) || null;
+        const limit = Number(searchParams.get("limit")) || null;
 
         let query = supabase
             .from("categories")
@@ -35,20 +35,16 @@ export async function GET(request: Request) {
         if (search) query = query.ilike("name", `%${search}%`);
         if (type) query = query.eq("type", type);
 
-        const { data: result, error, count } = await query
-            .range(offset, offset + limit - 1)
-            .order("name", { ascending: true });
+        if (page && limit) {
+            offset = (page - 1) * limit;
+            query = query.range(offset, offset + limit - 1)
+        }
+
+        const { data: result, error, count } = await query.order("name", { ascending: true });
 
         if (error) {
             throw new Error(error.message)
         }
-
-        console.log("CATEGORY")
-        console.log("result", JSON.stringify(result))
-        console.log("!result", !result)
-        console.log("result.length < 1", (result.length < 1))
-        console.log("!count", !count)
-        console.log("count < 1", (count < 1))
 
         if (!result || result.length < 1 || !count || count < 1) {
             code = 0
@@ -56,8 +52,8 @@ export async function GET(request: Request) {
             httpStatus = 404
         } else {
             total = count;
-            currentPage = page;
-            totalPages = Math.ceil(count / limit);
+            currentPage = page ?? 0;
+            totalPages = limit ? Math.ceil(count / limit) : 0;
             data = result
         }
 
