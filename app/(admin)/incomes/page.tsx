@@ -424,16 +424,6 @@ export default function Incomes() {
             <h1 className={`${pixelify.className} text-xl`}>
                 incomes
             </h1>
-            <div className="flex flex-wrap justify-center gap-x-3 text-center px-6">
-                {summary.map((s) => (
-                    <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} px-3 py-2 my-2 border shadow-xs max-w-[300px] sm:w-auto`}>
-                        <h3 className="text-sm font-semibold py-1">{s.category_name}</h3>
-                        <p className="text-xs py-2">Rp {s.sum_amount.toLocaleString("id-ID")}</p>
-                        <p className="text-xs">{s.percentage_max_income}% of plan's max income</p>
-                        {s.bc_limit && (<p className="text-xs">{s.percentage_bc_limit}% of category's plan</p>)}
-                    </div>
-                ))}
-            </div>
             <div className="mt-2 items-center justify-center">
                 <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => openModalCreate()}>
                     <div className="flex flex-col">
