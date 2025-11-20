@@ -28,7 +28,10 @@ export async function GET(request: Request) {
         const limit = Number(searchParams.get("limit"));
         const offset = (page - 1) * limit;
 
-        let query = supabase.from("expenses").select("*, plans(id, name, start_date, end_date), categories(id, name), sources(id, name)", { count: "exact" })
+        let query = supabase
+            .from("expenses")
+            .select("*, plans(id, name, start_date, end_date), categories(id, name), sources(id, name)"
+                , { count: "exact" })
 
         if (planId) query = query.eq("plan_id", planId);
         if (categoryId) query = query.eq("category_id", categoryId);
@@ -37,7 +40,9 @@ export async function GET(request: Request) {
         if (sourceId) query = query.eq("source_id", sourceId);
         if (search) query = query.ilike("description", `%${search}%`);
 
-        const { data: result, error, count } = await query.range(offset, offset + limit - 1).order("expense_date", { ascending: false });
+        const { data: result, error, count } = await query
+            .range(offset, offset + limit - 1)
+            .order("expense_date", { ascending: false });
 
         if (error) {
             throw new Error(error.message)

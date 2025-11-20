@@ -52,21 +52,27 @@ export default function Categories() {
     const [selectedIdEditCategory, setSelectedIdEditCategory] = useState<number | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
     const [category, setCategory] = useState<Category[]>([]);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
-    const getCategories = async () => {
+    const getCategories = async (pageNum = 1) => {
+        setLoading(true);
         try {
             if (!profile?.id) return;
-            const getCategory = await fetch(`/api/category?userId=${profile?.id}`, {
+            const getCategory = await fetch(`/api/category?userId=${profile?.id}&page=${pageNum}&limit=10`, {
                 method: "GET"
             });
             const res = await getCategory.json();
             if (res.data) {
                 setCategory(res.data)
+                setPage(res.currentPage);
+                setTotalPages(res.totalPages);
             }
             setLoading(false)
         } catch (err) {
             console.error(err);
         } finally {
+            setLoading(false)
         }
     }
 
@@ -290,6 +296,28 @@ export default function Categories() {
                     </div>
                 )}
             </div>
+            {category.length > 0 && (
+                <div className={`flex justify-center items-center gap-2 mt-6 ${geistMono.className}`}>
+                    <button
+                        disabled={page === 1}
+                        onClick={() => getCategories(page - 1)}
+                        className="px-3 py-1 border disabled:opacity-50 cursor-pointer hover:bg-pink-500 hover:text-white"
+                    >
+                        prev
+                    </button>
+
+                    <span className="text-sm text-gray-600">
+                        page {page} of {totalPages}
+                    </span>
+
+                    <button
+                        disabled={page === totalPages}
+                        onClick={() => getCategories(page + 1)}
+                        className="px-3 py-1 border disabled:opacity-50 cursor-pointer hover:bg-pink-500 hover:text-white"
+                    >
+                        next
+                    </button>
+                </div>)}
             {openModalForm &&
                 <FormModal
                     isOpen={openModalForm}

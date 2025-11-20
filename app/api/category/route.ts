@@ -10,6 +10,9 @@ const supabase = createClient(
 export async function GET(request: Request) {
     let code = 1
     let message = "OK"
+    let total = 0
+    let currentPage = 0
+    let totalPages = 0
     let httpStatus = 200
     let data: any[] = []
 
@@ -17,31 +20,48 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
         const userId = searchParams.get("userId");
-        const search = searchParams.get("search");
         const type = searchParams.get("type");
+        const search = searchParams.get("search");
+        const page = Number(searchParams.get("page"));
+        const limit = Number(searchParams.get("limit"));
+        const offset = (page - 1) * limit;
 
-        let query = supabase.from("categories").select("*");
+        let query = supabase
+            .from("categories")
+            .select("*", { count: "exact" });
 
         if (id) query = query.eq("id", id);
         if (userId) query = query.eq("user_id", userId);
         if (search) query = query.ilike("name", `%${search}%`);
         if (type) query = query.eq("type", type);
 
-        const { data: result, error } = await query.order("name", { ascending: true });
+        const { data: result, error, count } = await query
+            .range(offset, offset + limit - 1)
+            .order("name", { ascending: true });
 
         if (error) {
             throw new Error(error.message)
         }
 
-        if (!result || result.length < 1) {
+        console.log("CATEGORY")
+        console.log("result", JSON.stringify(result))
+        console.log("!result", !result)
+        console.log("result.length < 1", (result.length < 1))
+        console.log("!count", !count)
+        console.log("count < 1", (count < 1))
+
+        if (!result || result.length < 1 || !count || count < 1) {
             code = 0
             message = userId ? "No category is set for this user" : "Category not found"
             httpStatus = 404
         } else {
+            total = count;
+            currentPage = page;
+            totalPages = Math.ceil(count / limit);
             data = result
         }
 
-        return NextResponse.json({ code, message, data }, { status: httpStatus })
+        return NextResponse.json({ code, message, total, currentPage, totalPages, data }, { status: httpStatus })
     }
     catch (err: any) {
         code = 0
