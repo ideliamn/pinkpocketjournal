@@ -25,13 +25,13 @@ const pixelify = Pixelify_Sans({
     weight: ["400"],
 });
 
-export default function Expenses() {
+export default function Incomes() {
     // INTERFACE //
-    interface Expense {
+    interface Income {
         id: number;
         description: string;
         amount: number;
-        expense_date: string;
+        income_date: string;
         plan_id: number;
         plans: {
             id: number;
@@ -60,9 +60,9 @@ export default function Expenses() {
         sum_amount: number,
         category_name: string,
         bc_limit: number,
-        max_expense: number,
+        max_income: number,
         percentage_bc_limit: number,
-        percentage_max_expense: number
+        percentage_max_income: number
     }
 
     // CONST //
@@ -70,12 +70,12 @@ export default function Expenses() {
     const today = now.toISOString().split("T")[0];
     const { profile } = useProfile()
     const [loading, setLoading] = useState(false);
-    const [expense, setExpense] = useState<Expense[]>([])
+    const [income, setIncome] = useState<Income[]>([])
     const [openModalForm, setOpenModalForm] = useState(false);
     const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
     const [planOptions, setPlanOptions] = useState<{ value: string; label: string }[]>([]);
     const [sourceOptions, setSourceOptions] = useState<{ value: string; label: string }[]>([]);
-    const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+    const [selectedIncome, setSelectedIncome] = useState<Income | null>(null);
     const [openModalSuccess, setOpenModalSuccess] = useState(false);
     const closeModalSuccess = () => { setOpenModalSuccess(false) };
     const [successMessage, setSuccessMessage] = useState("");
@@ -89,21 +89,21 @@ export default function Expenses() {
     const [confirmExceedingPlan, setConfirmExceedingPlan] = useState(false);
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
-    const [selectedIdEditExpense, setSelectedIdEditExpense] = useState<number | null>(null);
+    const [selectedIdEditIncome, setSelectedIdEditIncome] = useState<number | null>(null);
     const [currentPlanId, setCurrentPlanId] = useState(0);
     const [summary, setSummary] = useState<Summary[]>([]);
-    const [expenses, setExpenses] = useState([]);
+    const [incomes, setIncomes] = useState([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
     // HANDLE CLICK CONFIRM
     const handleConfirmAction = async () => {
         if (pendingAction === "edit") {
-            await handleSubmitEditExpense();
+            await handleSubmitEditIncome();
         } else if (pendingAction === "delete") {
-            await handleDeleteExpense(selectedExpense?.id ?? 0);
+            await handleDeleteIncome(selectedIncome?.id ?? 0);
         } else if (pendingAction === "create") {
-            await handleSubmitCreateExpense();
+            await handleSubmitCreateIncome();
         }
         setOpenModalConfirm(false);
         setPendingAction(null);
@@ -111,10 +111,10 @@ export default function Expenses() {
 
     // HANDLE CLOSE MODAL FORM
     const closeModalForm = () => {
-        getExpenses();
+        getIncomes();
         fetchSummary();
         setOpenModalForm(false);
-        setSelectedIdEditExpense(null);
+        setSelectedIdEditIncome(null);
         setIsCreateMode(false);
     }
 
@@ -126,11 +126,11 @@ export default function Expenses() {
 
     // HANDLE OPEN MODAL CREATE / EDIT
     const openModalCreate = () => {
-        setSelectedExpense({
+        setSelectedIncome({
             id: 0,
             description: "",
             amount: 0,
-            expense_date: today,
+            income_date: today,
             plan_id: -1,
             plans: { id: -1, name: "" },
             category_id: -1,
@@ -141,53 +141,53 @@ export default function Expenses() {
         setIsCreateMode(true);
         setOpenModalForm(true)
     }
-    const handleClickEditExpense = async (id: number) => {
+    const handleClickEditIncome = async (id: number) => {
         console.log("id edit: ", id)
         setLoading(true)
-        setSelectedIdEditExpense(id)
-        const foundExpense = expense.find((e) => e.id === id);
-        console.log("foundExpense: ", JSON.stringify(foundExpense))
-        if (foundExpense) {
-            setSelectedExpense({
+        setSelectedIdEditIncome(id)
+        const foundIncome = income.find((e) => e.id === id);
+        console.log("foundIncome: ", JSON.stringify(foundIncome))
+        if (foundIncome) {
+            setSelectedIncome({
                 id: id,
-                description: foundExpense.description,
-                amount: foundExpense.amount,
-                expense_date: foundExpense.expense_date,
-                plan_id: foundExpense.plan_id,
+                description: foundIncome.description,
+                amount: foundIncome.amount,
+                income_date: foundIncome.income_date,
+                plan_id: foundIncome.plan_id,
                 plans: {
-                    id: foundExpense.plans.id,
-                    name: foundExpense.plans.name
+                    id: foundIncome.plans.id,
+                    name: foundIncome.plans.name
                 },
-                category_id: foundExpense.category_id,
+                category_id: foundIncome.category_id,
                 categories: {
-                    id: foundExpense.categories.id,
-                    name: foundExpense.categories.name,
+                    id: foundIncome.categories.id,
+                    name: foundIncome.categories.name,
                 },
-                source_id: foundExpense.source_id,
+                source_id: foundIncome.source_id,
                 sources: {
-                    id: foundExpense.sources.id,
-                    name: foundExpense.sources.name,
+                    id: foundIncome.sources.id,
+                    name: foundIncome.sources.name,
                 }
             })
         }
         setOpenModalForm(true);
         setLoading(false);
-        setSelectedIdEditExpense(id);
+        setSelectedIdEditIncome(id);
     }
 
     // FETCH INITIAL DATA //
-    const getExpenses = async (pageNum = 1) => {
+    const getIncomes = async (pageNum = 1) => {
         setLoading(true);
         try {
             if (!profile?.id) return;
-            const getExpense = await fetch(`/api/expense?userId=${profile?.id}&page=${pageNum}&limit=10`, {
+            const getIncome = await fetch(`/api/income?userId=${profile?.id}&page=${pageNum}&limit=10`, {
                 method: "GET"
             });
-            const res = await getExpense.json();
+            const res = await getIncome.json();
             if (res.data) {
                 console.log("res.data: ", JSON.stringify(res.data))
-                setExpense(res.data)
-                setExpenses(res.data);
+                setIncome(res.data)
+                setIncomes(res.data);
                 setPage(res.currentPage);
                 setTotalPages(res.totalPages);
             }
@@ -199,7 +199,7 @@ export default function Expenses() {
         }
     }
     const fetchCategory = async () => {
-        const getCategory = await fetch(`/api/category?userId=${profile?.id}&type=expense`);
+        const getCategory = await fetch(`/api/category?userId=${profile?.id}&type=income`);
         const res = await getCategory.json();
         if (res.data) {
             const dataCategory: Select[] = res.data
@@ -235,7 +235,7 @@ export default function Expenses() {
         }
     }
     const fetchSummary = async () => {
-        const getSummary = await fetch(`/api/expense/summary?planId=${currentPlanId}`);
+        const getSummary = await fetch(`/api/income/summary?planId=${currentPlanId}`);
         const res = await getSummary.json();
         if (res.data) {
             const dataSummary: Summary[] = res.data
@@ -245,44 +245,44 @@ export default function Expenses() {
 
     // HANDLE CONFIRM FOR EACH ACTION
     const handleOpenConfirmCreate = () => {
-        if (!selectedExpense?.description
-            || !selectedExpense?.amount
-            || !selectedExpense?.expense_date
-            || !selectedExpense?.plan_id
-            || !selectedExpense?.category_id
-            || !selectedExpense?.source_id
+        if (!selectedIncome?.description
+            || !selectedIncome?.amount
+            || !selectedIncome?.income_date
+            || !selectedIncome?.plan_id
+            || !selectedIncome?.category_id
+            || !selectedIncome?.source_id
         ) {
             setFailedMessage("fill all the required fields!");
             setOpenModalFailed(true);
             setLoading(false);
             return;
         }
-        setConfirmMessage("are you sure you want to create this expense?");
+        setConfirmMessage("are you sure you want to create this income?");
         setPendingAction("create");
         setOpenModalConfirm(true);
     };
     const handleOpenConfirmEdit = () => {
-        setConfirmMessage("are you sure you want to update this expense?");
+        setConfirmMessage("are you sure you want to update this income?");
         setPendingAction("edit");
         setOpenModalConfirm(true);
     };
     const handleOpenConfirmDelete = () => {
-        setConfirmMessage("are you sure you want to delete this expense?");
+        setConfirmMessage("are you sure you want to delete this income?");
         setPendingAction("delete");
         setOpenModalConfirm(true);
     };
 
     // HANDLE SUBMIT FUNCTIONS
-    const handleSubmitCreateExpense = async () => {
+    const handleSubmitCreateIncome = async () => {
         console.log("submit!")
         setLoading(true);
         try {
-            if (!selectedExpense?.description
-                || selectedExpense?.amount < 0
-                || !selectedExpense?.expense_date
-                || selectedExpense?.plan_id <= 0
-                || selectedExpense?.category_id <= 0
-                || selectedExpense?.source_id <= 0
+            if (!selectedIncome?.description
+                || selectedIncome?.amount < 0
+                || !selectedIncome?.income_date
+                || selectedIncome?.plan_id <= 0
+                || selectedIncome?.category_id <= 0
+                || selectedIncome?.source_id <= 0
             ) {
                 setFailedMessage("fill all the required fields!");
                 setOpenModalFailed(true);
@@ -290,22 +290,22 @@ export default function Expenses() {
                 return;
             }
             if (!confirmExceedingPlan) {
-                const checkExpensePlan = await checkExpense(Number(profile?.id), selectedExpense?.plan_id, selectedExpense?.amount, selectedExpense?.category_id)
-                if (checkExpensePlan.isExceeding) {
-                    setWarningMessage(checkExpensePlan?.message);
+                const checkIncomePlan = await checkExpense(Number(profile?.id), selectedIncome?.plan_id, selectedIncome?.amount, selectedIncome?.category_id)
+                if (checkIncomePlan.isExceeding) {
+                    setWarningMessage(checkIncomePlan?.message);
                     setOpenModalWarning(true);
                 }
             }
-            const res = await fetch("/api/expense", {
+            const res = await fetch("/api/income", {
                 method: "POST",
                 body: JSON.stringify({
                     user_id: profile?.id,
-                    plan_id: selectedExpense?.plan_id,
-                    category_id: selectedExpense?.category_id,
-                    description: selectedExpense?.description,
-                    amount: selectedExpense?.amount,
-                    expense_date: selectedExpense?.expense_date,
-                    source_id: selectedExpense?.source_id
+                    plan_id: selectedIncome?.plan_id,
+                    category_id: selectedIncome?.category_id,
+                    description: selectedIncome?.description,
+                    amount: selectedIncome?.amount,
+                    income_date: selectedIncome?.income_date,
+                    source_id: selectedIncome?.source_id
                 })
             })
             const data = await res.json();
@@ -324,40 +324,40 @@ export default function Expenses() {
             setLoading(false);
         }
     }
-    const handleSubmitEditExpense = async (e?: React.FormEvent) => {
+    const handleSubmitEditIncome = async (e?: React.FormEvent) => {
         setLoading(true);
         e?.preventDefault();
-        console.log("selectedExpense: " + JSON.stringify(selectedExpense))
+        console.log("selectedIncome: " + JSON.stringify(selectedIncome))
         try {
-            if (!selectedExpense
-                || selectedExpense?.id < 1
-                || !selectedExpense?.description
-                || !selectedExpense?.amount
-                || !selectedExpense?.expense_date
-                || !selectedExpense?.plan_id
-                || !selectedExpense?.category_id
-                || !selectedExpense?.source_id) {
+            if (!selectedIncome
+                || selectedIncome?.id < 1
+                || !selectedIncome?.description
+                || !selectedIncome?.amount
+                || !selectedIncome?.income_date
+                || !selectedIncome?.plan_id
+                || !selectedIncome?.category_id
+                || !selectedIncome?.source_id) {
                 setFailedMessage("fill all the required fields!");
                 setOpenModalFailed(true);
                 setLoading(false);
                 return;
             }
-            const res = await fetch("/api/expense", {
+            const res = await fetch("/api/income", {
                 method: "PUT",
                 body: JSON.stringify({
-                    id: selectedExpense?.id,
+                    id: selectedIncome?.id,
                     user_id: profile?.id,
-                    plan_id: selectedExpense?.plan_id,
-                    category_id: selectedExpense?.category_id,
-                    description: selectedExpense?.description,
-                    amount: selectedExpense?.amount,
-                    expense_date: selectedExpense?.expense_date,
-                    source_id: selectedExpense?.source_id
+                    plan_id: selectedIncome?.plan_id,
+                    category_id: selectedIncome?.category_id,
+                    description: selectedIncome?.description,
+                    amount: selectedIncome?.amount,
+                    income_date: selectedIncome?.income_date,
+                    source_id: selectedIncome?.source_id
                 }),
             });
             const data = await res.json();
             if (res.ok) {
-                setSuccessMessage("success update expense!");
+                setSuccessMessage("success update income!");
                 setLoading(false);
                 setOpenModalSuccess(true);
             } else {
@@ -372,9 +372,9 @@ export default function Expenses() {
             setLoading(false)
         }
     };
-    const handleDeleteExpense = async (id: number) => {
+    const handleDeleteIncome = async (id: number) => {
         setLoading(true);
-        console.log("selectedExpense: " + JSON.stringify(selectedExpense))
+        console.log("selectedIncome: " + JSON.stringify(selectedIncome))
         try {
             if (!id || id === 0) {
                 setFailedMessage("fill all the required fields!");
@@ -382,12 +382,12 @@ export default function Expenses() {
                 setLoading(false);
                 return;
             }
-            const res = await fetch(`/api/expense?id=${id}`, {
+            const res = await fetch(`/api/income?id=${id}`, {
                 method: "DELETE"
             });
             const data = await res.json();
             if (res.ok) {
-                setSuccessMessage("success delete expense!");
+                setSuccessMessage("success delete income!");
                 setLoading(false);
                 setOpenModalSuccess(true);
             } else {
@@ -407,7 +407,7 @@ export default function Expenses() {
     useEffect(() => {
         setLoading(true)
         if (profile?.id) {
-            getExpenses();
+            getIncomes();
             fetchCategory();
             fetchPlan();
             fetchSource();
@@ -422,14 +422,14 @@ export default function Expenses() {
         <main className="flex flex-col items-center min-h-screen pt-20 gap-10">
             {loading && <Loading />}
             <h1 className={`${pixelify.className} text-xl`}>
-                expenses
+                incomes
             </h1>
             <div className="flex flex-wrap justify-center gap-x-3 text-center px-6">
                 {summary.map((s) => (
                     <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} px-3 py-2 my-2 border shadow-xs max-w-[300px] sm:w-auto`}>
                         <h3 className="text-sm font-semibold py-1">{s.category_name}</h3>
                         <p className="text-xs py-2">Rp {s.sum_amount.toLocaleString("id-ID")}</p>
-                        <p className="text-xs">{s.percentage_max_expense}% of plan's max expense</p>
+                        <p className="text-xs">{s.percentage_max_income}% of plan's max income</p>
                         {s.bc_limit && (<p className="text-xs">{s.percentage_bc_limit}% of category's plan</p>)}
                     </div>
                 ))}
@@ -443,18 +443,18 @@ export default function Expenses() {
                         add
                     </div>
                 </Button>
-                {expense.length > 0 ? (
-                    expense.map((e) => {
+                {income.length > 0 ? (
+                    income.map((e) => {
                         return (
                             <Card
                                 key={e.id}
                                 title={e.description}
                                 desc={formatRupiah(e.amount)}
                                 className="min-w-[400px] outline-gray-400 hover:bg-pink-400 cursor-pointer mt-6"
-                                onClick={() => handleClickEditExpense(e.id)}
+                                onClick={() => handleClickEditIncome(e.id)}
                             >
                                 <span className="text-xs">
-                                    {moment(new Date(e.expense_date)).format('dddd').substring(0, 3) + ", " + moment(new Date(e.expense_date)).format("D MMMM YYYY")}
+                                    {moment(new Date(e.income_date)).format('dddd').substring(0, 3) + ", " + moment(new Date(e.income_date)).format("D MMMM YYYY")}
                                 </span>
                                 <div className="flex flex-row justify-between text-xs mt-2">
                                     <div className="w-1/2">
@@ -481,14 +481,14 @@ export default function Expenses() {
                     })
                 ) : (
                     <div className={`flex flex-col items-center justify-center min-h-[100px] text-gray-500 ${geistMono.className}`}>
-                        no expenses found!
+                        no incomes found!
                     </div>
                 )}
-                {expense.length > 0 && (
+                {income.length > 0 && (
                     <div className={`flex justify-center items-center gap-2 mt-6 ${geistMono.className}`}>
                         <button
                             disabled={page === 1}
-                            onClick={() => getExpenses(page - 1)}
+                            onClick={() => getIncomes(page - 1)}
                             className="px-3 py-1 border disabled:opacity-50 cursor-pointer hover:bg-pink-500 hover:text-white"
                         >
                             prev
@@ -500,7 +500,7 @@ export default function Expenses() {
 
                         <button
                             disabled={page === totalPages}
-                            onClick={() => getExpenses(page + 1)}
+                            onClick={() => getIncomes(page + 1)}
                             className="px-3 py-1 border disabled:opacity-50 cursor-pointer hover:bg-pink-500 hover:text-white"
                         >
                             next
@@ -510,7 +510,7 @@ export default function Expenses() {
                     <FormModal
                         isOpen={openModalForm}
                         onClose={closeModalForm}
-                        title={`${isCreateMode ? "create new" : "update"} expense`}
+                        title={`${isCreateMode ? "create new" : "update"} income`}
                     >
                         <form>
                             <div className="flex gap-4 items-center space-y-4">
@@ -521,8 +521,8 @@ export default function Expenses() {
                                     <Input
                                         type="text"
                                         placeholder="enter your description..."
-                                        defaultValue={selectedExpense?.description}
-                                        onChange={(e) => setSelectedExpense((prev) =>
+                                        defaultValue={selectedIncome?.description}
+                                        onChange={(e) => setSelectedIncome((prev) =>
                                             prev ? { ...prev, description: e.target.value } : prev
                                         )}>
                                     </Input>
@@ -537,8 +537,8 @@ export default function Expenses() {
                                         type="number"
                                         formatNumber={true}
                                         placeholder="enter your amount..."
-                                        defaultValue={selectedExpense && selectedExpense?.amount >= 0 ? selectedExpense?.amount : ""}
-                                        onChange={(e) => setSelectedExpense((prev) =>
+                                        defaultValue={selectedIncome && selectedIncome?.amount >= 0 ? selectedIncome?.amount : ""}
+                                        onChange={(e) => setSelectedIncome((prev) =>
                                             prev ? { ...prev, amount: Number(e.target.value) } : prev
                                         )}
                                     ></Input>
@@ -551,10 +551,10 @@ export default function Expenses() {
                                 <div className="flex-1">
                                     <Input
                                         type="date"
-                                        placeholder="enter your date of expense..."
-                                        defaultValue={selectedExpense?.expense_date ?? today}
-                                        onChange={(e) => setSelectedExpense((prev) =>
-                                            prev ? { ...prev, expense_date: e.target.value } : prev
+                                        placeholder="enter your date of income..."
+                                        defaultValue={selectedIncome?.income_date ?? today}
+                                        onChange={(e) => setSelectedIncome((prev) =>
+                                            prev ? { ...prev, income_date: e.target.value } : prev
                                         )}>
                                     </Input>
                                 </div>
@@ -567,10 +567,10 @@ export default function Expenses() {
                                     <Select
                                         options={planOptions}
                                         placeholder="select plan..."
-                                        defaultValue={selectedExpense && selectedExpense?.plan_id >= 0 ? String(selectedExpense?.plan_id) : ""}
+                                        defaultValue={selectedIncome && selectedIncome?.plan_id >= 0 ? String(selectedIncome?.plan_id) : ""}
                                         onChange={(val: string) => {
                                             const selectedLabel = planOptions.find((opt) => opt.value === val)?.label || "";
-                                            setSelectedExpense((prev) =>
+                                            setSelectedIncome((prev) =>
                                                 prev ? { ...prev, plan_id: Number(val), plans: { ...prev.plans, id: Number(val) } } : prev
                                             );
                                         }}
@@ -585,9 +585,9 @@ export default function Expenses() {
                                     <Select
                                         options={categoryOptions}
                                         placeholder="select category..."
-                                        defaultValue={selectedExpense && selectedExpense?.category_id >= 0 ? String(selectedExpense.category_id) : ""}
+                                        defaultValue={selectedIncome && selectedIncome?.category_id >= 0 ? String(selectedIncome.category_id) : ""}
                                         onChange={(val: string) =>
-                                            setSelectedExpense((prev) =>
+                                            setSelectedIncome((prev) =>
                                                 prev ? { ...prev, category_id: Number(val), categories: { ...prev.categories, id: Number(val) } } : prev
                                             )
                                         }
@@ -602,9 +602,9 @@ export default function Expenses() {
                                     <Select
                                         options={sourceOptions}
                                         placeholder="select source..."
-                                        defaultValue={selectedExpense && selectedExpense?.source_id >= 0 ? String(selectedExpense.source_id) : ""}
+                                        defaultValue={selectedIncome && selectedIncome?.source_id >= 0 ? String(selectedIncome.source_id) : ""}
                                         onChange={(val: string) =>
-                                            setSelectedExpense((prev) =>
+                                            setSelectedIncome((prev) =>
                                                 prev
                                                     ? {
                                                         ...prev,

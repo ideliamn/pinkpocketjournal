@@ -12,6 +12,7 @@ import Button from "../../components/ui/button/Button";
 import FormModal from "../../components/modals/FormModal";
 import Input from "../../components/form/input/InputField";
 import SimpleModal from "../../components/modals/SimpleModal";
+import Select from "../../components/ui/select/Select";
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-sono",
@@ -28,7 +29,13 @@ export default function Categories() {
     interface Category {
         id: number;
         name: string;
+        type: string;
     }
+
+    const typeOptions = [
+        { label: "income", value: "income" },
+        { label: "expense", value: "expense" }
+    ]
 
     const { profile } = useProfile()
     const [loading, setLoading] = useState(false);
@@ -90,7 +97,8 @@ export default function Categories() {
         if (found) {
             setSelectedCategory({
                 id: found.id,
-                name: found.name
+                name: found.name,
+                type: found.type
             });
         }
         setOpenModalForm(true)
@@ -101,7 +109,8 @@ export default function Categories() {
     const openModalCreate = () => {
         setSelectedCategory({
             id: 0,
-            name: ""
+            name: "",
+            type: "",
         });
         setIsCreateMode(true);
         setOpenModalForm(true);
@@ -145,7 +154,8 @@ export default function Categories() {
                 method: "POST",
                 body: JSON.stringify({
                     user_id: profile?.id,
-                    name: selectedCategory?.name
+                    name: selectedCategory?.name,
+                    type: selectedCategory?.type
                 }),
             });
             const data = await res.json();
@@ -186,7 +196,8 @@ export default function Categories() {
                 body: JSON.stringify({
                     id: selectedCategory.id,
                     user_id: profile?.id,
-                    name: selectedCategory.name
+                    name: selectedCategory.name,
+                    type: selectedCategory.type
                 }),
             });
             const data = await res.json();
@@ -265,6 +276,7 @@ export default function Categories() {
                             <Card
                                 key={c.name}
                                 title={c.name}
+                                desc={`type: ${c.type}`}
                                 className="min-w-[400px] outline-gray-400 hover:bg-pink-400 cursor-pointer mt-6"
                                 onClick={() => { handleClickEdit(c.id) }}
                             >
@@ -282,7 +294,7 @@ export default function Categories() {
                 <FormModal
                     isOpen={openModalForm}
                     onClose={closeModalForm}
-                    title="add new category"
+                    title={`${isCreateMode ? "create new" : "update"} category`}
                 >
                     <form>
                         <div className="flex gap-4 items-center space-y-4">
@@ -290,8 +302,26 @@ export default function Categories() {
                                 name
                             </div>
                             <div className="flex-1">
-                                <Input name="name" type="text" placeholder="enter category name..." className={`flex ${geistMono.className} text-s w-full`}
+                                <Input
+                                    name="name"
+                                    type="text"
+                                    placeholder="enter category name..."
+                                    defaultValue={selectedCategory?.name}
+                                    className={`flex ${geistMono.className} text-s w-full`}
                                     onChange={(e) => setSelectedCategory((prev) => prev ? { ...prev, name: e.target.value } : prev)} />
+                            </div>
+                        </div>
+                        <div className="flex gap-4 items-center space-y-4">
+                            <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
+                                type
+                            </div>
+                            <div className="flex-1">
+                                <Select
+                                    options={typeOptions}
+                                    placeholder="select type..."
+                                    defaultValue={selectedCategory?.type ? String(selectedCategory?.type) : ""}
+                                    onChange={(val: string) => setSelectedCategory((prev) => prev ? { ...prev, type: val } : prev)}
+                                />
                             </div>
                         </div>
                         <div className="flex items-center justify-center py-6">

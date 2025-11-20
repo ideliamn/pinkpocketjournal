@@ -10,6 +10,9 @@ const supabase = createClient(
 export async function GET(request: Request) {
     let code = 1
     let message = "OK"
+    let total = 0
+    let currentPage = 0
+    let totalPages = 0
     let httpStatus = 200
     let data: any[] = []
 
@@ -17,31 +20,44 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
         const userId = searchParams.get("userId");
+        const planId = searchParams.get("planId");
+        const categoryId = searchParams.get("categoryId");
+        const sourceId = searchParams.get("sourceId");
         const search = searchParams.get("search");
-        const type = searchParams.get("type");
+        const page = Number(searchParams.get("page"));
+        const limit = Number(searchParams.get("limit"));
 
-        let query = supabase.from("categories").select("*");
+        const offset = (page - 1) * limit;
 
+        let query = supabase.from("incomes").select("*, plans(id, name, start_date, end_date), categories(id, name), sources(id, name)", { count: "exact" })
+
+        if (planId) query = query.eq("plan_id", planId);
+        if (categoryId) query = query.eq("category_id", categoryId);
         if (id) query = query.eq("id", id);
         if (userId) query = query.eq("user_id", userId);
-        if (search) query = query.ilike("name", `%${search}%`);
-        if (type) query = query.eq("type", type);
+        if (sourceId) query = query.eq("source_id", sourceId);
+        if (search) query = query.ilike("description", `%${search}%`);
 
-        const { data: result, error } = await query.order("name", { ascending: true });
+        const { data: result, error, count } = await query.range(offset, offset + limit - 1).order("income_date", { ascending: false });
+
+        console.log("result: ", result)
 
         if (error) {
             throw new Error(error.message)
         }
 
-        if (!result || result.length < 1) {
+        if (!result || result.length < 1 || !count || count < 1) {
             code = 0
-            message = userId ? "No category is set for this user" : "Category not found"
+            message = "Income not found"
             httpStatus = 404
         } else {
+            total = count;
+            currentPage = page;
+            totalPages = Math.ceil(count / limit);
             data = result
         }
 
-        return NextResponse.json({ code, message, data }, { status: httpStatus })
+        return NextResponse.json({ code, message, total, currentPage, totalPages, data }, { status: httpStatus })
     }
     catch (err: any) {
         code = 0
@@ -56,39 +72,29 @@ export async function POST(req: Request) {
     let message = "OK"
     let httpStatus = 201
     let data: any[] = []
-
     try {
         const body = await req.json();
 
-        if (!body.user_id || !body.name) {
+        if (!body.user_id || !body.plan_id || !body.category_id || !body.description || !body.amount || !body.source_id || !body.income_date) {
             code = 0
             message = "Please input all required fields!"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: searchExisting, error: errorSearchExisting } = await supabase
-            .from("categories")
-            .select("*")
-            .match({ user_id: body.user_id })
-            .ilike("name", body.name)
-            .single();
-
-        if (searchExisting) {
-            code = 0
-            message = `Category ${body.name} already exists!`
-            httpStatus = 400
-            return NextResponse.json({ code, message, data }, { status: httpStatus });
-        }
-
-        const insertCategory = {
+        const insertIncome = {
             user_id: body.user_id,
-            name: body.name
+            plan_id: body.plan_id,
+            category_id: body.category_id,
+            description: body.description,
+            amount: body.amount,
+            source_id: body.source_id,
+            income_date: body.income_date
         }
 
         const { data: insertedData, error } = await supabase
-            .from("categories")
-            .insert([insertCategory])
+            .from("incomes")
+            .insert([insertIncome])
             .select();
 
         if (error) {
@@ -111,40 +117,30 @@ export async function PUT(req: Request) {
     let message = "OK"
     let httpStatus = 200
     let data: any[] = []
-
     try {
         const body = await req.json();
 
-        if (!body.id || !body.user_id || !body.name) {
+        if (!body.id || !body.user_id || !body.plan_id || !body.category_id || !body.description || !body.amount || !body.source_id || !body.income_date) {
             code = 0
             message = "Please input all required fields!"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: searchExisting, error: errorSearchExisting } = await supabase
-            .from("categories")
-            .select("*")
-            .match({ user_id: body.user_id })
-            .ilike("name", body.name)
-            .single();
-
-        if (searchExisting) {
-            code = 0
-            message = `Category ${body.name} already exists!`
-            httpStatus = 400
-            return NextResponse.json({ code, message, data }, { status: httpStatus });
-        }
-
-        const updateCategory = {
+        const updateIncome = {
             user_id: body.user_id,
-            name: body.name,
+            plan_id: body.plan_id,
+            category_id: body.category_id,
+            description: body.description,
+            amount: body.amount,
+            source_id: body.source_id,
+            income_date: body.income_date,
             updated_at: dateTimeNow()
         }
 
         const { data: updatedData, error } = await supabase
-            .from("categories")
-            .update([updateCategory])
+            .from("incomes")
+            .update(updateIncome)
             .eq("id", body.id)
             .select();
 
@@ -180,16 +176,16 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: checkData, error: checkDataError } = await supabase.from("categories").select("*").eq("id", id);
+        const { data: checkData, error: checkDataError } = await supabase.from("incomes").select("*").eq("id", id);
 
         if (!checkData || checkData.length < 1) {
             code = 0
-            message = "Category not found!"
+            message = "Income not found!"
             httpStatus = 400
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: deletedData, error } = await supabase.from("categories").delete().eq("id", id).single();
+        const { data: deletedData, error } = await supabase.from("incomes").delete().eq("id", id).single();
 
         if (error) {
             throw new Error(error.message)
@@ -205,5 +201,4 @@ export async function DELETE(request: Request) {
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
 }
-
 
