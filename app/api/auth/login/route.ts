@@ -49,9 +49,13 @@ export async function POST(req: Request) {
     }
 
     return res;
-  } catch (err: any) {
+  } catch (err: unknown) {
     code = 0;
-    message = err.message;
+    if (err instanceof Error) {
+      message = err.message;
+    } else {
+      message = "Something went wrong";
+    };
     httpStatus = 500;
     return NextResponse.json({ code, message, data }, { status: httpStatus });
   }

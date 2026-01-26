@@ -1,13 +1,9 @@
 "use client"
 import { Geist_Mono, Pixelify_Sans } from "next/font/google";
-import Link from "next/link";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/tables";
 import Card from "../../components/card/Card";
-import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import Loading from "../../components/common/Loading";
-import moment from "moment";
 import Button from "../../components/ui/button/Button";
 import FormModal from "../../components/modals/FormModal";
 import Input from "../../components/form/input/InputField";
@@ -42,11 +38,10 @@ export default function Sources() {
     const [confirmMessage, setConfirmMessage] = useState("");
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
-    const [selectedIdEditSource, setSelectedIdEditSource] = useState<number | null>(null);
     const [source, setSource] = useState<Source[]>([])
     const [selectedSource, setSelectedSource] = useState<Source | null>(null);
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const [page] = useState(1);
+    const [totalPages] = useState(1);
 
     const getSource = async (pageNum = 1) => {
         setLoading(true)
@@ -88,7 +83,6 @@ export default function Sources() {
     const handleClickEditSource = async (id: number) => {
         console.log("id: ", id)
         setLoading(true)
-        setSelectedIdEditSource(id)
         const found = source.find((s) => s.id === id);
         console.log("found: ", JSON.stringify(found))
         if (found) {
@@ -99,7 +93,6 @@ export default function Sources() {
         }
         setOpenModalForm(true)
         setLoading(false)
-        setSelectedIdEditSource(id);
     }
 
     const openModalCreate = () => {
@@ -114,7 +107,6 @@ export default function Sources() {
     const closeModalForm = () => {
         getSource();
         setOpenModalForm(false);
-        setSelectedIdEditSource(null)
         setIsCreateMode(false);
     }
 
@@ -161,8 +153,12 @@ export default function Sources() {
                 setFailedMessage(data.message);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
-            setFailedMessage(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setFailedMessage(err.message);
+            } else {
+                setFailedMessage("Something went wrong");
+            }
             setLoading(false);
             setOpenModalFailed(true);
         } finally {
@@ -203,7 +199,7 @@ export default function Sources() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalForm();
@@ -233,7 +229,7 @@ export default function Sources() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalForm();

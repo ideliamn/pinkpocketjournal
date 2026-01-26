@@ -39,9 +39,13 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ code, message, data }, { status: httpStatus })
     }
-    catch (err: any) {
+    catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        };
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
@@ -51,7 +55,7 @@ export async function PUT(request: Request) {
     let code = 1
     let message = "OK"
     let httpStatus = 200
-    let data: any[] = []
+    const data: any[] = []
 
     try {
         const body = await request.json();
@@ -62,15 +66,13 @@ export async function PUT(request: Request) {
         const password = body.password;
         const idAuth = body.idAuth;
 
-        const { data: checkEmail, error: checkEmailError } =
-            await supabase.from("users").select("*").eq("email", email).neq("id_auth", idAuth);
+        const { data: checkEmail } = await supabase.from("users").select("*").eq("email", email).neq("id_auth", idAuth);
 
         if (checkEmail && checkEmail.length > 0) {
             return NextResponse.json({ error: "Email already exist" }, { status: 400 });
         }
 
-        const { data: checkUsername, error: checkUsernameError } =
-            await supabase.from("users").select("*").eq("username", username).neq("id_auth", idAuth);
+        const { data: checkUsername } = await supabase.from("users").select("*").eq("username", username).neq("id_auth", idAuth);
 
         if (checkUsername && checkUsername.length > 0) {
             return NextResponse.json({ error: "Username already exist" }, { status: 400 });
@@ -128,9 +130,13 @@ export async function PUT(request: Request) {
 
         return NextResponse.json({ code, message, data }, { status: httpStatus })
     }
-    catch (err: any) {
+    catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        };
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }

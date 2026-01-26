@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
         console.log("planId: ", planId)
 
-        const { data: dataSummary, error: errorSummary } = await supabase
+        const { data: dataSummary } = await supabase
             .rpc("summary_expense_category", { p_plan_id: Number(planId) })
 
         console.log("dataSummary: " + JSON.stringify(dataSummary))
@@ -33,9 +33,13 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ code, message, data }, { status: httpStatus })
     }
-    catch (err: any) {
+    catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        }
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }

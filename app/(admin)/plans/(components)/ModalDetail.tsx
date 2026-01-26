@@ -1,6 +1,6 @@
 "use client";
 
-import { Geist_Mono, Pixelify_Sans } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import Button from "../../../components/ui/button/Button";
 import { Modal } from "../../../components/modals";
 import { useEffect, useState } from "react";
@@ -17,11 +17,6 @@ interface ModalDetailProps {
     isOpen: boolean;
     onClose: () => void;
 }
-
-const pixelify = Pixelify_Sans({
-    subsets: ["latin"],
-    weight: ["400"],
-});
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-sono",
@@ -102,8 +97,8 @@ export default function ModalDetail({
         return days > 0 ? `${days} days left until plan's period ends` : "plan's period has ended";
     };
 
-    let totalAllocated = plan?.category_plans.reduce((sum, cat) => sum + cat.amount, 0) ?? 0;
-    let remaining = plan?.max_expense ? plan?.max_expense - totalAllocated : 0
+    const totalAllocated = plan?.category_plans.reduce((sum, cat) => sum + cat.amount, 0) ?? 0;
+    const remaining = plan?.max_expense ? plan?.max_expense - totalAllocated : 0
 
     interface PlanCategories {
         id: number,
@@ -116,7 +111,6 @@ export default function ModalDetail({
         name: string;
     }
 
-    const [selectedIdEditCP, setSelectedIdEditCP] = useState<number | null>(null);
     const [openModalEditCP, setOpenModalEditCP] = useState(false);
     const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
     const [selectedCP, setSelectedCP] = useState<PlanCategories | null>(null);
@@ -135,7 +129,6 @@ export default function ModalDetail({
     const handleClickEditCP = async (idCP: number) => {
         console.log("id: ", idCP)
         setLoading(true)
-        setSelectedIdEditCP(idCP)
         const foundCP = plan?.category_plans.find((cp) => cp.id === idCP);
         if (foundCP) {
             setSelectedCP({
@@ -149,7 +142,6 @@ export default function ModalDetail({
         }
         setOpenModalEditCP(true)
         setLoading(false)
-        setSelectedIdEditCP(idCP);
     }
 
     const handleOpenConfirmEdit = () => {
@@ -185,7 +177,6 @@ export default function ModalDetail({
     const closeModalEditCP = () => {
         getPlanDetail()
         setOpenModalEditCP(false);
-        setSelectedIdEditCP(null)
         setIsCreateMode(false);
     }
 
@@ -218,7 +209,7 @@ export default function ModalDetail({
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalEditCP();
@@ -249,7 +240,7 @@ export default function ModalDetail({
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalEditCP();

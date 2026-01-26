@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { supabase } from "../../../../lib/supabaseClient";
 
 export async function POST() {
   let code = 1
   let message = "OK"
   let httpStatus = 200
-  let data: any = {}
+  const data: any = {}
   try {
     await supabase.auth.signOut();
 
@@ -17,9 +16,17 @@ export async function POST() {
     res.cookies.set("sb-refresh-token", "", { maxAge: 0, path: "/" });
 
     return res;
-  } catch (err: any) {
+  } catch (err: unknown) {
     code = 0;
-    message = err.message;
+    if (err instanceof Error) {
+      if (err instanceof Error) {
+        message = err.message;
+      } else {
+        message = "Something went wrong";
+      };
+    } else {
+      message = "Something went wrong";
+    }
     httpStatus = 500;
     return NextResponse.json({ code, message, data }, { status: httpStatus });
   }

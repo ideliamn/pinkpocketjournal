@@ -11,7 +11,6 @@ import FormModal from "../../components/modals/FormModal";
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/ui/select/Select";
 import SimpleModal from "../../components/modals/SimpleModal";
-import { checkExistingPeriod } from "../../../lib/helpers/period";
 import { checkCurrentPeriod, checkExpense } from "../../../lib/helpers/expense";
 
 const geistMono = Geist_Mono({
@@ -89,10 +88,8 @@ export default function Expenses() {
     const [confirmExceedingPlan, setConfirmExceedingPlan] = useState(false);
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
-    const [selectedIdEditExpense, setSelectedIdEditExpense] = useState<number | null>(null);
     const [currentPlanId, setCurrentPlanId] = useState(0);
     const [summary, setSummary] = useState<Summary[]>([]);
-    const [expenses, setExpenses] = useState([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
@@ -114,7 +111,6 @@ export default function Expenses() {
         getExpenses();
         fetchSummary();
         setOpenModalForm(false);
-        setSelectedIdEditExpense(null);
         setIsCreateMode(false);
     }
 
@@ -144,7 +140,6 @@ export default function Expenses() {
     const handleClickEditExpense = async (id: number) => {
         console.log("id edit: ", id)
         setLoading(true)
-        setSelectedIdEditExpense(id)
         const foundExpense = expense.find((e) => e.id === id);
         console.log("foundExpense: ", JSON.stringify(foundExpense))
         if (foundExpense) {
@@ -172,7 +167,6 @@ export default function Expenses() {
         }
         setOpenModalForm(true);
         setLoading(false);
-        setSelectedIdEditExpense(id);
     }
 
     // FETCH INITIAL DATA //
@@ -187,7 +181,6 @@ export default function Expenses() {
             if (res.data) {
                 console.log("res.data: ", JSON.stringify(res.data))
                 setExpense(res.data)
-                setExpenses(res.data);
                 setPage(res.currentPage);
                 setTotalPages(res.totalPages);
             }
@@ -365,7 +358,7 @@ export default function Expenses() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalForm();
@@ -395,7 +388,7 @@ export default function Expenses() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalForm();
@@ -429,8 +422,8 @@ export default function Expenses() {
                     <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} px-3 py-2 my-2 border shadow-xs max-w-[300px] sm:w-auto`}>
                         <h3 className="text-sm font-semibold py-1">{s.category_name}</h3>
                         <p className="text-xs py-2">Rp {s.sum_amount.toLocaleString("id-ID")}</p>
-                        <p className="text-xs">{s.percentage_max_expense}% of plan's max expense</p>
-                        {s.bc_limit && (<p className="text-xs">{s.percentage_bc_limit}% of category's plan</p>)}
+                        <p className="text-xs">{s.percentage_max_expense}% of plan&apos;s max expense</p>
+                        {s.bc_limit && (<p className="text-xs">{s.percentage_bc_limit}% of category&apos;s plan</p>)}
                     </div>
                 ))}
             </div>
@@ -569,7 +562,6 @@ export default function Expenses() {
                                         placeholder="select plan..."
                                         defaultValue={selectedExpense && selectedExpense?.plan_id >= 0 ? String(selectedExpense?.plan_id) : ""}
                                         onChange={(val: string) => {
-                                            const selectedLabel = planOptions.find((opt) => opt.value === val)?.label || "";
                                             setSelectedExpense((prev) =>
                                                 prev ? { ...prev, plan_id: Number(val), plans: { ...prev.plans, id: Number(val) } } : prev
                                             );

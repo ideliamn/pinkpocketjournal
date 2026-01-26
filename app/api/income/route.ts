@@ -59,9 +59,13 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ code, message, total, currentPage, totalPages, data }, { status: httpStatus })
     }
-    catch (err: any) {
+    catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        }
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
@@ -104,9 +108,13 @@ export async function POST(req: Request) {
         data = insertedData
 
         return NextResponse.json({ code, message, data }, { status: httpStatus });
-    } catch (err: any) {
+    } catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        }
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
@@ -151,9 +159,13 @@ export async function PUT(req: Request) {
         data = updatedData
 
         return NextResponse.json({ code, message, data }, { status: httpStatus });
-    } catch (err: any) {
+    } catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        }
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
@@ -176,7 +188,7 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: checkData, error: checkDataError } = await supabase.from("incomes").select("*").eq("id", id);
+        const { data: checkData } = await supabase.from("incomes").select("*").eq("id", id);
 
         if (!checkData || checkData.length < 1) {
             code = 0
@@ -194,9 +206,13 @@ export async function DELETE(request: Request) {
         data = deletedData
 
         return NextResponse.json({ code, message, data }, { status: httpStatus });
-    } catch (err: any) {
+    } catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        }
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }

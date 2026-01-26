@@ -1,21 +1,13 @@
 "use client"
 
-import { Geist_Mono, Pixelify_Sans } from "next/font/google";
-import Link from "next/link";
+import { Geist_Mono } from "next/font/google";
 import { useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
-import { checkExistingPeriod } from "../../../lib/helpers/period";
 import { checkCurrentPeriod } from "../../../lib/helpers/expense";
-import moment from "moment";
-import { Area, AreaChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatRupiah } from "../../../lib/helpers/format";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/tables";
 import { AlertTriangle, Clock, CreditCard, Receipt, TrendingUp, Wallet } from "lucide-react";
-
-const pixelify = Pixelify_Sans({
-    subsets: ["latin"],
-    weight: ["400"],
-});
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-sono",
@@ -25,9 +17,6 @@ const geistMono = Geist_Mono({
 export default function Dashboard() {
     // TYPES //
     type billStatus = "pending" | "overdue" | "done";
-
-    // VARIABLES //
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', "#FF99C8", "#FFC9DE", "#FFD6A5", "#B9FBC0", "#A0C4FF"];
 
     //  INTERFACES //
     interface CurrentPeriod {
@@ -86,7 +75,6 @@ export default function Dashboard() {
     const [currentPeriod, setCurrentPeriod] = useState<CurrentPeriod | null>(null);
     const [dailyExpenseChart, setDailyExpenseChart] = useState<DailyExpenseChart[] | []>([])
     const [spendingByCategoryChart, setSpendingByCategoryChart] = useState<SpendingByCategoryChart[] | []>([])
-    const [spendingBySourceChart, setSpendingBySourceChart] = useState<SpendingBySourceChart[] | []>([])
     const [summaryExpense, setSummaryExpense] = useState<SummaryExpense | null>(null)
     const [recentExpense, setRecentExpense] = useState<RecentExpense[] | []>([])
     const [bill, setBill] = useState<Bill[]>([])
@@ -127,7 +115,7 @@ export default function Dashboard() {
         if (res.data) {
             const dataPlan: SpendingBySourceChart[] = res.data
             console.log("dataPlan: ", dataPlan)
-            setSpendingBySourceChart(dataPlan);
+            // setSpendingBySourceChart(dataPlan);
         }
     }
     const fetchSummaryExpense = async () => {

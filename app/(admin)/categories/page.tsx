@@ -1,13 +1,9 @@
 "use client"
 import { Geist_Mono, Pixelify_Sans } from "next/font/google";
-import Link from "next/link";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/tables";
 import Card from "../../components/card/Card";
-import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import Loading from "../../components/common/Loading";
-import moment from "moment";
 import Button from "../../components/ui/button/Button";
 import FormModal from "../../components/modals/FormModal";
 import Input from "../../components/form/input/InputField";
@@ -49,7 +45,6 @@ export default function Categories() {
     const [confirmMessage, setConfirmMessage] = useState("");
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
-    const [selectedIdEditCategory, setSelectedIdEditCategory] = useState<number | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
     const [category, setCategory] = useState<Category[]>([]);
     const [page, setPage] = useState(1);
@@ -97,7 +92,6 @@ export default function Categories() {
     const handleClickEdit = async (id: number) => {
         console.log("id: ", id)
         setLoading(true)
-        setSelectedIdEditCategory(id)
         const found = category.find((c) => c.id === id);
         console.log("found: ", JSON.stringify(found))
         if (found) {
@@ -109,7 +103,6 @@ export default function Categories() {
         }
         setOpenModalForm(true)
         setLoading(false)
-        setSelectedIdEditCategory(id);
     }
 
     const openModalCreate = () => {
@@ -125,7 +118,6 @@ export default function Categories() {
     const closeModalForm = () => {
         getCategories();
         setOpenModalForm(false);
-        setSelectedIdEditCategory(null)
         setIsCreateMode(false);
     }
 
@@ -173,8 +165,12 @@ export default function Categories() {
                 setFailedMessage(data.message);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
-            setFailedMessage(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setFailedMessage(err.message);
+            } else {
+                setFailedMessage("Something went wrong");
+            }
             setLoading(false);
             setOpenModalFailed(true);
         } finally {
@@ -216,7 +212,7 @@ export default function Categories() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalForm();
@@ -246,7 +242,7 @@ export default function Categories() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalForm();

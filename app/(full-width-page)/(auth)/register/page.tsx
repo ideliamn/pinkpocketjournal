@@ -43,7 +43,7 @@ export default function Register() {
             return;
         }
 
-        let request = { name, email, password }
+        const request = { name, email, password }
 
         try {
             const res = await fetch("/api/auth/register", {

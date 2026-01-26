@@ -4,7 +4,6 @@ import Card from "../../components/card/Card";
 import { useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import Loading from "../../components/common/Loading";
-import moment from "moment";
 import Button from "../../components/ui/button/Button";
 import FormModal from "../../components/modals/FormModal";
 import Input from "../../components/form/input/InputField";
@@ -71,12 +70,10 @@ export default function PlanCategories() {
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
     const [confirmMessage, setConfirmMessage] = useState("");
     const [isCreateMode, setIsCreateMode] = useState(false);
-    const [selectedIdEditCP, setSelectedIdEditCP] = useState<number | null>(null);
 
     const handleClickEditCP = async (idCP: number) => {
         console.log("id: ", idCP)
         setLoading(true)
-        setSelectedIdEditCP(idCP)
         const foundCP = categoryPlans.find((bc) => bc.id === idCP);
         console.log("foundCP: ", JSON.stringify(foundCP))
         if (foundCP) {
@@ -100,7 +97,6 @@ export default function PlanCategories() {
         }
         setOpenModalForm(true)
         setLoading(false)
-        setSelectedIdEditCP(idCP);
     }
 
     const getPlanCategories = async () => {
@@ -177,7 +173,6 @@ export default function PlanCategories() {
     const closeModalForm = () => {
         getPlanCategories();
         setOpenModalForm(false);
-        setSelectedIdEditCP(null)
         setIsCreateMode(false);
     }
 
@@ -241,7 +236,7 @@ export default function PlanCategories() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalForm();
@@ -272,7 +267,7 @@ export default function PlanCategories() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalForm();

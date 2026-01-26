@@ -25,8 +25,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: checkEmail, error: checkEmailError } =
-            await supabase.from("users").select("*").eq("email", email);
+        const { data: checkEmail } = await supabase.from("users").select("*").eq("email", email);
 
         if (checkEmail && checkEmail.length > 0) {
             code = 0;

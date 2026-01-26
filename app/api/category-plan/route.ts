@@ -45,9 +45,13 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ code, message, data }, { status: httpStatus })
     }
-    catch (err: any) {
+    catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        }
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
@@ -69,7 +73,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: checkExistingBC, error: errorCheckExistingBC } = await supabase.from("category_plans").select("*").eq("plan_id", body.plan_id).eq("category_id", body.category_id);
+        const { data: checkExistingBC } = await supabase.from("category_plans").select("*").eq("plan_id", body.plan_id).eq("category_id", body.category_id);
         if (checkExistingBC && checkExistingBC.length > 0) {
             code = 0
             message = "This category already have budget set for this period"
@@ -95,9 +99,13 @@ export async function POST(req: Request) {
         data = insertedData
 
         return NextResponse.json({ code, message, data }, { status: httpStatus });
-    } catch (err: any) {
+    } catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        }
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
@@ -119,7 +127,7 @@ export async function PUT(req: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: checkExistingBC, error: errorCheckExistingBC } = await supabase.from("category_plans").select("*").eq("plan_id", body.budget_id).eq("category_id", body.category_id);
+        const { data: checkExistingBC } = await supabase.from("category_plans").select("*").eq("plan_id", body.budget_id).eq("category_id", body.category_id);
         if (checkExistingBC && checkExistingBC.length > 0) {
             code = 0
             message = "This category already have plan set"
@@ -150,9 +158,13 @@ export async function PUT(req: Request) {
         data = updatedData
 
         return NextResponse.json({ code, message, data }, { status: httpStatus });
-    } catch (err: any) {
+    } catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        }
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
@@ -175,7 +187,7 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ code, message, data }, { status: httpStatus });
         }
 
-        const { data: checkData, error: checkDataError } = await supabase.from("category_plans").select("*").eq("id", id);
+        const { data: checkData } = await supabase.from("category_plans").select("*").eq("id", id);
 
         if (!checkData || checkData.length < 1) {
             code = 0
@@ -193,9 +205,13 @@ export async function DELETE(request: Request) {
         data = deletedData
 
         return NextResponse.json({ code, message, data }, { status: httpStatus });
-    } catch (err: any) {
+    } catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        }
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }

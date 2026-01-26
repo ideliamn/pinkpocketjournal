@@ -1,5 +1,5 @@
 "use client"
-import { Geist_Mono, Pixelify_Sans } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import Card from "../../components/card/Card";
 import { useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
@@ -11,19 +11,13 @@ import FormModal from "../../components/modals/FormModal";
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/ui/select/Select";
 import SimpleModal from "../../components/modals/SimpleModal";
-import { checkExistingPeriod } from "../../../lib/helpers/period";
-import { checkCurrentPeriod, checkExpense } from "../../../lib/helpers/expense";
+import { checkExpense } from "../../../lib/helpers/expense";
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-sono",
     subsets: ["latin"],
     weight: ["200", "400"]
 })
-
-const pixelify = Pixelify_Sans({
-    subsets: ["latin"],
-    weight: ["400"],
-});
 
 export default function Bills() {
     // TYPES //
@@ -97,7 +91,6 @@ export default function Bills() {
     const [confirmExceedingPlan, setConfirmExceedingPlan] = useState(false);
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | "pay" | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
-    const [selectedIdEditBill, setSelectedIdEditBill] = useState<number | null>(null);
     const [idPay, setIdPay] = useState(0);
 
     // HANDLE CLICK CONFIRM
@@ -122,7 +115,6 @@ export default function Bills() {
     const closeModalForm = () => {
         getBills();
         setOpenModalForm(false);
-        setSelectedIdEditBill(null);
         setIsCreateMode(false);
     }
 
@@ -149,7 +141,6 @@ export default function Bills() {
     const handleClickEditBill = async (id: number) => {
         console.log("id edit: ", id)
         setLoading(true)
-        setSelectedIdEditBill(id)
         const foundBill = bill.find((b) => b.id === id);
         console.log("foundBill: ", JSON.stringify(foundBill))
         if (foundBill) {
@@ -180,7 +171,6 @@ export default function Bills() {
         }
         setOpenModalForm(true);
         setLoading(false);
-        setSelectedIdEditBill(id);
     }
     const handleClickPayBill = async (id: number) => {
         console.log("id edit: ", id)
@@ -229,7 +219,7 @@ export default function Bills() {
         if (res.data) {
             const dataPlan: Plan[] = res.data
             console.log("dataPlan: ", dataPlan)
-            let formattedOptions = dataPlan.map((k) => ({
+            const formattedOptions = dataPlan.map((k) => ({
                 value: String(k.id),
                 label: k?.name,
             })).sort((a, b) => a.label.localeCompare(b.label));
@@ -412,7 +402,7 @@ export default function Bills() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalForm();
@@ -442,7 +432,7 @@ export default function Bills() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             setPendingAction(null);
@@ -672,7 +662,7 @@ export default function Bills() {
                                         placeholder="enter the due date of bills..."
                                         defaultValue={selectedBill?.due_date ?? today}
                                         onChange={(e) => setSelectedBill((prev) =>
-                                            prev ? { ...prev, bills_date: e.target.value } : prev
+                                            prev ? { ...prev, due_date: e.target.value } : prev
                                         )}>
                                     </Input>
                                 </div>

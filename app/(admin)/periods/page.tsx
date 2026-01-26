@@ -1,9 +1,6 @@
 "use client"
 import { Geist_Mono, Pixelify_Sans } from "next/font/google";
-import Link from "next/link";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/tables";
 import Card from "../../components/card/Card";
-import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import Loading from "../../components/common/Loading";
@@ -123,8 +120,12 @@ export default function Periods() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
-            setFailedMessage(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setFailedMessage(err.message);
+            } else {
+                setFailedMessage("Something went wrong");
+            }
             setLoading(false);
             setOpenModalFailed(true);
         } finally {

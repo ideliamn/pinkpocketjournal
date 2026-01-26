@@ -8,7 +8,7 @@ const supabase = createClient(
 export async function checkExpense(userId: number, planId: number, amount: number, categoryId?: number) {
     console.log("amount", amount)
 
-    let response = {
+    const response = {
         isExceeding: false,
         message: "OK"
     }
@@ -21,7 +21,7 @@ export async function checkExpense(userId: number, planId: number, amount: numbe
 
     if (categoryId) { query = query.eq("category_id", categoryId); }
 
-    const { data: dataTotalExpense, error: errorTotalExpense } = await query;
+    const { data: dataTotalExpense } = await query;
 
     const totalExpense = dataTotalExpense?.reduce(
         (acc, curr) => acc + Number(curr.amount || 0),
@@ -31,7 +31,7 @@ export async function checkExpense(userId: number, planId: number, amount: numbe
     console.log("totalExpense", totalExpense)
 
     if (categoryId) {
-        const { data: checkCategoryPlans, error: errorCheckCategory } = await supabase
+        const { data: checkCategoryPlans } = await supabase
             .from("category_plans")
             .select("amount")
             .eq("plan_id", planId)
@@ -53,7 +53,7 @@ export async function checkExpense(userId: number, planId: number, amount: numbe
         }
     }
 
-    const { data: checkBudget, error: errorCheckBudget } = await supabase
+    const { data: checkBudget } = await supabase
         .from("budgets")
         .select("max_expense")
         .eq("id", planId)
@@ -85,14 +85,14 @@ export async function checkCurrentPeriod(userId: number) {
         end_date: string;
     };
 
-    let response = {
+    const response = {
         isExist: false,
         data: {
             plan_id: 0,
             user_id: 0
         }
     }
-    const { data: checkPeriod, error: errorCheckPeriod } = await supabase
+    const { data: checkPeriod } = await supabase
         .rpc("get_current_period", { p_user_id: userId })
         .single() as { data: CurrentPeriod | null, error: any }
 

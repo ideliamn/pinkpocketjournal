@@ -148,7 +148,7 @@ export default function Plans() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             setFailedMessage(err.message);
             setLoading(false);
             setOpenModalFailed(true);

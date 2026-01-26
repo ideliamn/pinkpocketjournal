@@ -11,7 +11,6 @@ import FormModal from "../../components/modals/FormModal";
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/ui/select/Select";
 import SimpleModal from "../../components/modals/SimpleModal";
-import { checkExistingPeriod } from "../../../lib/helpers/period";
 import { checkCurrentPeriod, checkExpense } from "../../../lib/helpers/expense";
 
 const geistMono = Geist_Mono({
@@ -56,14 +55,6 @@ export default function Incomes() {
         id: number,
         name: string;
     }
-    interface Summary {
-        sum_amount: number,
-        category_name: string,
-        bc_limit: number,
-        max_income: number,
-        percentage_bc_limit: number,
-        percentage_max_income: number
-    }
 
     // CONST //
     const now = new Date();
@@ -89,10 +80,7 @@ export default function Incomes() {
     const [confirmExceedingPlan, setConfirmExceedingPlan] = useState(false);
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
-    const [selectedIdEditIncome, setSelectedIdEditIncome] = useState<number | null>(null);
     const [currentPlanId, setCurrentPlanId] = useState(0);
-    const [summary, setSummary] = useState<Summary[]>([]);
-    const [incomes, setIncomes] = useState([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
@@ -112,9 +100,7 @@ export default function Incomes() {
     // HANDLE CLOSE MODAL FORM
     const closeModalForm = () => {
         getIncomes();
-        fetchSummary();
         setOpenModalForm(false);
-        setSelectedIdEditIncome(null);
         setIsCreateMode(false);
     }
 
@@ -144,7 +130,6 @@ export default function Incomes() {
     const handleClickEditIncome = async (id: number) => {
         console.log("id edit: ", id)
         setLoading(true)
-        setSelectedIdEditIncome(id)
         const foundIncome = income.find((e) => e.id === id);
         console.log("foundIncome: ", JSON.stringify(foundIncome))
         if (foundIncome) {
@@ -172,7 +157,6 @@ export default function Incomes() {
         }
         setOpenModalForm(true);
         setLoading(false);
-        setSelectedIdEditIncome(id);
     }
 
     // FETCH INITIAL DATA //
@@ -187,7 +171,6 @@ export default function Incomes() {
             if (res.data) {
                 console.log("res.data: ", JSON.stringify(res.data))
                 setIncome(res.data)
-                setIncomes(res.data);
                 setPage(res.currentPage);
                 setTotalPages(res.totalPages);
             }
@@ -232,14 +215,6 @@ export default function Incomes() {
                 label: k.name,
             })).sort((a, b) => a.label.localeCompare(b.label));
             setSourceOptions(formattedOptions);
-        }
-    }
-    const fetchSummary = async () => {
-        const getSummary = await fetch(`/api/income/summary?planId=${currentPlanId}`);
-        const res = await getSummary.json();
-        if (res.data) {
-            const dataSummary: Summary[] = res.data
-            setSummary(dataSummary)
         }
     }
 
@@ -365,7 +340,7 @@ export default function Incomes() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalForm();
@@ -395,7 +370,7 @@ export default function Incomes() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
         } finally {
             closeModalForm();
@@ -559,7 +534,6 @@ export default function Incomes() {
                                         placeholder="select plan..."
                                         defaultValue={selectedIncome && selectedIncome?.plan_id >= 0 ? String(selectedIncome?.plan_id) : ""}
                                         onChange={(val: string) => {
-                                            const selectedLabel = planOptions.find((opt) => opt.value === val)?.label || "";
                                             setSelectedIncome((prev) =>
                                                 prev ? { ...prev, plan_id: Number(val), plans: { ...prev.plans, id: Number(val) } } : prev
                                             );

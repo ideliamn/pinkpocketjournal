@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { dateTimeNow } from "../../../../lib/helpers/dateTimeNow";
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,7 +16,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const planId = searchParams.get("planId")
 
-        const { data: dataExpenses, error: errorExpenses } = await supabase
+        const { data: dataExpenses } = await supabase
             .from("expenses")
             .select("description, expense_date, amount, categories(name)")
             .eq("plan_id", planId)
@@ -36,9 +35,13 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ code, message, data }, { status: httpStatus })
     }
-    catch (err: any) {
+    catch (err: unknown) {
         code = 0
-        message = err.message
+        if (err instanceof Error) {
+            message = err.message;
+        } else {
+            message = "Something went wrong";
+        }
         httpStatus = 500
         return NextResponse.json({ code, message, data }, { status: httpStatus });
     }
