@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   let code = 1
   let message = "OK"
   let httpStatus = 200
-  let data: any = {}
+  let data: unknown = null
   try {
     const { email, password } = await req.json();
 

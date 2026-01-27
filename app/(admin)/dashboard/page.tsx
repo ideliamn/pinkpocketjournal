@@ -1,7 +1,7 @@
 "use client"
 
 import { Geist_Mono } from "next/font/google";
-import { useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import { checkCurrentPeriod } from "../../../lib/helpers/expense";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -17,6 +17,18 @@ const geistMono = Geist_Mono({
 export default function Dashboard() {
     // TYPES //
     type billStatus = "pending" | "overdue" | "done";
+
+    type SummaryCardProps = {
+        icon: ReactNode;
+        label: string;
+        value: string | number;
+        color: "green" | "red" | "blue" | "gray";
+    };
+
+    type ChartCardProps = {
+        title: string;
+        children: ReactNode;
+    };
 
     //  INTERFACES //
     interface CurrentPeriod {
@@ -80,11 +92,12 @@ export default function Dashboard() {
     const [bill, setBill] = useState<Bill[]>([])
 
     // FUNCTIONS //
-    const getCurrentPeriod = async () => {
+    const getCurrentPeriod = useCallback(async () => {
         const cp = await checkCurrentPeriod(Number(profile?.id)) as CurrentPeriod
         if (cp.isExist) { setCurrentPeriod(cp) }
-    }
-    const fetchDailyExpenseChart = async () => {
+    }, [profile]);
+
+    const fetchDailyExpenseChart = useCallback(async () => {
         const getDataChart = await fetch(`/api/dashboard/daily-expense-chart?planId=${currentPeriod?.data?.plan_id}`);
         const res = await getDataChart.json();
         if (res.data) {
@@ -99,8 +112,9 @@ export default function Dashboard() {
             }));
             setDailyExpenseChart(dataPlan);
         }
-    }
-    const fetchSpendingByCategoryChart = async () => {
+    }, [currentPeriod?.data?.plan_id]);
+
+    const fetchSpendingByCategoryChart = useCallback(async () => {
         const getDataChart = await fetch(`/api/dashboard/spending-by-category-chart?planId=${currentPeriod?.data?.plan_id}`)
         const res = await getDataChart.json();
         if (res.data) {
@@ -108,8 +122,9 @@ export default function Dashboard() {
             console.log("dataPlan: ", dataPlan)
             setSpendingByCategoryChart(dataPlan);
         }
-    }
-    const fetchSpendingBySourceChart = async () => {
+    }, [currentPeriod?.data?.plan_id]);
+
+    const fetchSpendingBySourceChart = useCallback(async () => {
         const getDataChart = await fetch(`/api/dashboard/spending-by-source-chart?planId=${currentPeriod?.data?.plan_id}`)
         const res = await getDataChart.json();
         if (res.data) {
@@ -117,8 +132,9 @@ export default function Dashboard() {
             console.log("dataPlan: ", dataPlan)
             // setSpendingBySourceChart(dataPlan);
         }
-    }
-    const fetchSummaryExpense = async () => {
+    }, [currentPeriod?.data?.plan_id]);
+
+    const fetchSummaryExpense = useCallback(async () => {
         const getDataChart = await fetch(`/api/dashboard/summary-expense?planId=${currentPeriod?.data?.plan_id}`)
         const res = await getDataChart.json();
         if (res.data) {
@@ -126,8 +142,9 @@ export default function Dashboard() {
             console.log("summary expense: ", dataPlan[0])
             setSummaryExpense(dataPlan[0]);
         }
-    }
-    const fetchRecentExpense = async () => {
+    }, [currentPeriod?.data?.plan_id]);
+
+    const fetchRecentExpense = useCallback(async () => {
         const getDataChart = await fetch(`/api/dashboard/recent-expense?planId=${currentPeriod?.data?.plan_id}`)
         const res = await getDataChart.json();
         if (res.data) {
@@ -135,8 +152,9 @@ export default function Dashboard() {
             console.log("recent expense: ", dataHistory)
             setRecentExpense(dataHistory);
         }
-    }
-    const fetchBills = async () => {
+    }, [currentPeriod?.data?.plan_id]);
+
+    const fetchBills = useCallback(async () => {
         const getDataBills = await fetch(`/api/dashboard/bills?userId=${profile?.id}`)
         const res = await getDataBills.json();
         if (res.data) {
@@ -144,7 +162,7 @@ export default function Dashboard() {
             console.log("summary bills: ", bills)
             setBill(bills);
         }
-    }
+    }, [profile]);
 
     // USE EFFECTS //
     useEffect(() => {
@@ -152,7 +170,7 @@ export default function Dashboard() {
             getCurrentPeriod()
             fetchBills()
         }
-    }, [profile])
+    }, [profile, getCurrentPeriod, fetchBills])
     useEffect(() => {
         if (currentPeriod?.data?.plan_id) {
             fetchDailyExpenseChart();
@@ -161,7 +179,7 @@ export default function Dashboard() {
             fetchSummaryExpense();
             fetchRecentExpense();
         }
-    }, [currentPeriod?.data?.plan_id])
+    }, [currentPeriod?.data?.plan_id, fetchDailyExpenseChart, fetchSpendingByCategoryChart, fetchSpendingBySourceChart, fetchSummaryExpense, fetchRecentExpense])
 
     return (
         <main className="min-h-screen w-full bg-pink-50 p-6 space-y-8">
@@ -172,9 +190,9 @@ export default function Dashboard() {
 
             {/* Summary Cards */}
             <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${geistMono.className}`}>
-                <SummaryCard icon={<Wallet className="text-green-500 w-6 h-6 mr-3" />} label="Total Plan" value={summaryExpense?.max_expense} color="green" />
-                <SummaryCard icon={<CreditCard className="text-red-500 w-6 h-6 mr-3" />} label="Total Expense" value={summaryExpense?.total_expense} color="red" />
-                <SummaryCard icon={<TrendingUp className="text-blue-500 w-6 h-6 mr-3" />} label="Remaining" value={summaryExpense?.remaining} color="blue" />
+                <SummaryCard icon={<Wallet className="text-green-500 w-6 h-6 mr-3" />} label="Total Plan" value={summaryExpense?.max_expense ?? 0} color="green" />
+                <SummaryCard icon={<CreditCard className="text-red-500 w-6 h-6 mr-3" />} label="Total Expense" value={summaryExpense?.total_expense ?? 0} color="red" />
+                <SummaryCard icon={<TrendingUp className="text-blue-500 w-6 h-6 mr-3" />} label="Remaining" value={summaryExpense?.remaining ?? 0} color="blue" />
             </div>
 
             {/* daily expense chart */}
@@ -299,11 +317,12 @@ export default function Dashboard() {
         </main >
     );
 
-    function SummaryCard({ icon, label, value, color }) {
+    function SummaryCard({ icon, label, value, color }: SummaryCardProps) {
         const colorMap = {
             green: "text-green-600",
             red: "text-red-600",
             blue: "text-blue-600",
+            gray: "text-gray-600",
         };
         return (
             <div className={`bg-white p-5 rounded-2xl shadow flex items-center gap ${geistMono.className}`}>
@@ -316,7 +335,7 @@ export default function Dashboard() {
         );
     }
 
-    function ChartCard({ title, children }) {
+    function ChartCard({ title, children }: ChartCardProps) {
         return (
             <div className={`bg-white rounded-2xl p-5 shadow ${geistMono.className}`}>
                 <h2 className="text-pink-600 font-semibold mb-4">{title}</h2>

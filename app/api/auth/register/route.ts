@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     let code = 1
     let message = "OK"
     let httpStatus = 201
-    let data: any = {}
+    let data: unknown = null
     try {
         const body = await req.json();
 

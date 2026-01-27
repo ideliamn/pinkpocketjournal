@@ -1,7 +1,7 @@
 "use client"
 import { Geist_Mono, Pixelify_Sans } from "next/font/google";
 import Card from "../../components/card/Card";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import Loading from "../../components/common/Loading";
 import moment from "moment";
@@ -115,10 +115,12 @@ export default function Expenses() {
     }
 
     // GET CURRENT PERIOD
-    const getCurrentPeriod = async () => {
+    const getCurrentPeriod = useCallback(async () => {
         const cp = await checkCurrentPeriod(Number(profile?.id))
-        if (cp) { setCurrentPlanId(cp.data.plan_id) }
-    }
+        if (cp) {
+            setCurrentPlanId(cp.data.plan_id)
+        }
+    }, [profile]);
 
     // HANDLE OPEN MODAL CREATE / EDIT
     const openModalCreate = () => {
@@ -170,7 +172,7 @@ export default function Expenses() {
     }
 
     // FETCH INITIAL DATA //
-    const getExpenses = async (pageNum = 1) => {
+    const getExpenses = useCallback(async (pageNum = 1) => {
         setLoading(true);
         try {
             if (!profile?.id) return;
@@ -185,13 +187,18 @@ export default function Expenses() {
                 setTotalPages(res.totalPages);
             }
             setLoading(false)
-        } catch (err) {
-            console.error(err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
         } finally {
             setLoading(false);
         }
-    }
-    const fetchCategory = async () => {
+    }, [profile]);
+
+    const fetchCategory = useCallback(async () => {
         const getCategory = await fetch(`/api/category?userId=${profile?.id}&type=expense`);
         const res = await getCategory.json();
         if (res.data) {
@@ -202,8 +209,9 @@ export default function Expenses() {
             })).sort((a, b) => a.label.localeCompare(b.label));
             setCategoryOptions(formattedOptions);
         }
-    }
-    const fetchPlan = async () => {
+    }, [profile]);
+
+    const fetchPlan = useCallback(async () => {
         const getPlan = await fetch(`/api/plan?userId=${profile?.id}`);
         const res = await getPlan.json();
         if (res.data) {
@@ -214,8 +222,9 @@ export default function Expenses() {
             })).sort((a, b) => a.label.localeCompare(b.label));
             setPlanOptions(formattedOptions);
         }
-    }
-    const fetchSource = async () => {
+    }, [profile]);
+
+    const fetchSource = useCallback(async () => {
         const getSource = await fetch(`/api/source?userId=${profile?.id}`);
         const res = await getSource.json();
         if (res.data) {
@@ -226,15 +235,16 @@ export default function Expenses() {
             })).sort((a, b) => a.label.localeCompare(b.label));
             setSourceOptions(formattedOptions);
         }
-    }
-    const fetchSummary = async () => {
+    }, [profile]);
+
+    const fetchSummary = useCallback(async () => {
         const getSummary = await fetch(`/api/expense/summary?planId=${currentPlanId}`);
         const res = await getSummary.json();
         if (res.data) {
             const dataSummary: Summary[] = res.data
             setSummary(dataSummary)
         }
-    }
+    }, [currentPlanId]);
 
     // HANDLE CONFIRM FOR EACH ACTION
     const handleOpenConfirmCreate = () => {
@@ -406,10 +416,12 @@ export default function Expenses() {
             fetchSource();
             getCurrentPeriod();
         }
-    }, [profile])
+    }, [profile, getExpenses, fetchCategory, fetchPlan, fetchSource, getCurrentPeriod])
     useEffect(() => {
-        if (currentPlanId > 0) { fetchSummary() }
-    }, [currentPlanId > 0])
+        if (currentPlanId > 0) {
+            fetchSummary()
+        }
+    }, [currentPlanId, fetchSummary])
 
     return (
         <main className="flex flex-col items-center min-h-screen pt-20 gap-10">

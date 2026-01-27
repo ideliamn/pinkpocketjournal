@@ -1,7 +1,7 @@
 "use client"
 import { Geist_Mono, Pixelify_Sans } from "next/font/google";
 import Card from "../../components/card/Card";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import Loading from "../../components/common/Loading";
 import Button from "../../components/ui/button/Button";
@@ -50,7 +50,7 @@ export default function Categories() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
-    const getCategories = async (pageNum = 1) => {
+    const getCategories = useCallback(async (pageNum = 1) => {
         setLoading(true);
         try {
             if (!profile?.id) return;
@@ -64,12 +64,16 @@ export default function Categories() {
                 setTotalPages(res.totalPages);
             }
             setLoading(false)
-        } catch (err) {
-            console.error(err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
         } finally {
             setLoading(false)
         }
-    }
+    }, [profile]);
 
     const handleOpenConfirmCreate = () => {
         setConfirmMessage("are you sure you want to create this category?");
@@ -255,7 +259,7 @@ export default function Categories() {
         if (profile?.id) {
             getCategories()
         }
-    }, [profile])
+    }, [profile, getCategories])
 
     return (
         <main className="flex flex-col items-center min-h-screen pt-20 gap-10">

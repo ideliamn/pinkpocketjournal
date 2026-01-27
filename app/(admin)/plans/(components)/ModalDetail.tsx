@@ -3,7 +3,7 @@
 import { Geist_Mono } from "next/font/google";
 import Button from "../../../components/ui/button/Button";
 import { Modal } from "../../../components/modals";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Loading from "../../../components/common/Loading";
 import moment from "moment";
 import { formatRupiah } from "../../../../lib/helpers/format";
@@ -50,7 +50,7 @@ export default function ModalDetail({
     const [loading, setLoading] = useState(false);
     const [plan, setPlan] = useState<Plan | null>(null);
 
-    const getPlanDetail = async () => {
+    const getPlanDetail = useCallback(async () => {
         try {
             if (!id) return;
             setLoading(true)
@@ -61,33 +61,40 @@ export default function ModalDetail({
             if (res.data) {
                 setPlan(res.data[0])
             }
-        } catch (err) {
-            console.error(err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
         } finally {
             setLoading(false)
         }
-    }
+    }, [id]);
 
-    useEffect(() => {
-        const fetchCategory = async () => {
-            const getCategory = await fetch(`/api/category?userId=${id}`);
-            console.log("getCategory: ", JSON.stringify(getCategory))
-            const res = await getCategory.json();
-            if (res.data) {
-                const dataCategory: Categories[] = res.data
-                const formattedOptions = dataCategory.map((k) => ({
-                    value: String(k.id),
-                    label: k.name,
-                })).sort((a, b) => a.label.localeCompare(b.label));
-                setCategoryOptions(formattedOptions);
-            }
+    const fetchCategory = useCallback(async () => {
+        const getCategory = await fetch(`/api/category?userId=${id}`);
+        console.log("getCategory: ", JSON.stringify(getCategory))
+        const res = await getCategory.json();
+        if (res.data) {
+            const dataCategory: Categories[] = res.data
+            const formattedOptions = dataCategory.map((k) => ({
+                value: String(k.id),
+                label: k.name,
+            })).sort((a, b) => a.label.localeCompare(b.label));
+            setCategoryOptions(formattedOptions);
         }
-        fetchCategory();
-    }, [])
+    }, [id])
 
     useEffect(() => {
-        if (id) getPlanDetail()
-    }, [id])
+        fetchCategory();
+    }, [fetchCategory])
+
+    useEffect(() => {
+        if (id) {
+            getPlanDetail()
+        }
+    }, [id, getPlanDetail])
 
     const getRemainingDays = (endDate: string) => {
         const today = new Date();
@@ -279,8 +286,12 @@ export default function ModalDetail({
                 setFailedMessage(data.message);
                 setOpenModalFailed(true);
             }
-        } catch (err) {
-            console.error(err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
         } finally {
             closeModalEditCP();
             setLoading(false);

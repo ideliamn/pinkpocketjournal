@@ -1,7 +1,7 @@
 "use client"
 import { Geist_Mono } from "next/font/google";
 import Card from "../../components/card/Card";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import Loading from "../../components/common/Loading";
 import moment from "moment";
@@ -183,7 +183,7 @@ export default function Bills() {
     }
 
     // FETCH INITIAL DATA //
-    const getBills = async () => {
+    const getBills = useCallback(async () => {
         try {
             if (!profile?.id) return;
             const getBill = await fetch(`/api/bills?userId=${profile?.id}`, {
@@ -195,13 +195,16 @@ export default function Bills() {
                 setBill(res.data)
             }
             setLoading(false)
-        } catch (err) {
-            console.error(err);
-        } finally {
-            console.log("bill setelah setbill: ", bill)
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
         }
-    }
-    const fetchCategory = async () => {
+    }, [profile?.id]);
+
+    const fetchCategory = useCallback(async () => {
         const getCategory = await fetch(`/api/category?userId=${profile?.id}`);
         const res = await getCategory.json();
         if (res.data) {
@@ -212,8 +215,9 @@ export default function Bills() {
             })).sort((a, b) => a.label.localeCompare(b.label));
             setCategoryOptions(formattedOptions);
         }
-    }
-    const fetchPlan = async () => {
+    }, [profile?.id]);
+
+    const fetchPlan = useCallback(async () => {
         const getPlan = await fetch(`/api/plan?userId=${profile?.id}`);
         const res = await getPlan.json();
         if (res.data) {
@@ -230,8 +234,9 @@ export default function Bills() {
             })
             setPlanOptions(formattedOptions);
         }
-    }
-    const fetchSource = async () => {
+    }, [profile?.id]);
+
+    const fetchSource = useCallback(async () => {
         const getSource = await fetch(`/api/source?userId=${profile?.id}`);
         const res = await getSource.json();
         if (res.data) {
@@ -242,7 +247,7 @@ export default function Bills() {
             })).sort((a, b) => a.label.localeCompare(b.label));
             setSourceOptions(formattedOptions);
         }
-    }
+    }, [profile?.id]);
 
     // HANDLE CONFIRM FOR EACH ACTION //
     const handleOpenConfirmCreate = () => {
@@ -444,14 +449,17 @@ export default function Bills() {
 
     // USE EFFECTS //
     useEffect(() => {
-        setLoading(true)
-        if (profile?.id) {
-            getBills();
-            fetchCategory();
-            fetchPlan();
-            fetchSource();
+        if (!profile?.id) {
+            return
         }
-    }, [profile])
+
+        setLoading(true);
+        getBills();
+        fetchCategory();
+        fetchPlan();
+        fetchSource();
+    }, [profile?.id, getBills, fetchCategory, fetchPlan, fetchSource]);
+
 
     return (
         <main className="flex flex-col items-center min-h-screen pt-20 gap-10">

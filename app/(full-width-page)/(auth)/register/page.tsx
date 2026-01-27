@@ -62,8 +62,12 @@ export default function Register() {
                 setLoading(false);
                 setOpenModalFailed(true);
             }
-        } catch (err) {
-            console.error(err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
             setFailedMessage("Gagal mendaftarkan akun. Error: " + err);
             setLoading(false);
             setOpenModalFailed(true);

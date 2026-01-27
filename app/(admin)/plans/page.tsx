@@ -1,7 +1,7 @@
 "use client"
 import { Geist_Mono, Pixelify_Sans } from "next/font/google";
 import Card from "../../components/card/Card";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import Loading from "../../components/common/Loading";
 import moment from "moment";
@@ -65,7 +65,7 @@ export default function Plans() {
         max_expense: 0
     });
 
-    const getPlan = async () => {
+    const getPlan = useCallback(async () => {
         try {
             if (!profile?.id) return;
             const getPlan = await fetch(`/api/plan?userId=${profile?.id}`, {
@@ -76,11 +76,15 @@ export default function Plans() {
                 setPlan(res.data)
             }
             setLoading(false)
-        } catch (err) {
-            console.error(err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
         } finally {
         }
-    }
+    }, [profile])
 
     useEffect(() => {
         setLoading(true)
@@ -88,7 +92,7 @@ export default function Plans() {
             getPlan()
             setFormPlan((prev) => ({ ...prev, user_id: Number(profile?.id) }))
         }
-    }, [profile])
+    }, [profile, getPlan])
 
     const closeModalAdd = () => {
         setOpenModalAdd(false);
@@ -149,7 +153,11 @@ export default function Plans() {
                 setOpenModalFailed(true);
             }
         } catch (err: unknown) {
-            setFailedMessage(err.message);
+            if (err instanceof Error) {
+                setFailedMessage(err.message);
+            } else {
+                setFailedMessage("Something went wrong")
+            }
             setLoading(false);
             setOpenModalFailed(true);
         } finally {

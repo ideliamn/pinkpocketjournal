@@ -1,7 +1,7 @@
 "use client"
 import { Geist_Mono, Pixelify_Sans } from "next/font/google";
 import Card from "../../components/card/Card";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import Loading from "../../components/common/Loading";
 import moment from "moment";
@@ -51,7 +51,7 @@ export default function Periods() {
         end_date: ""
     });
 
-    const getMenu = async () => {
+    const getMenu = useCallback(async () => {
         try {
             if (!profile?.id) return;
             const getPeriod = await fetch(`/api/period?userId=${profile?.id}`, {
@@ -62,11 +62,15 @@ export default function Periods() {
                 setPeriod(res.data)
             }
             setLoading(false)
-        } catch (err) {
-            console.error(err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
         } finally {
         }
-    }
+    }, [profile]);
 
     useEffect(() => {
         setLoading(true)
@@ -74,7 +78,7 @@ export default function Periods() {
             getMenu()
             setFormPeriod((prev) => ({ ...prev, user_id: Number(profile?.id) }))
         }
-    }, [profile])
+    }, [profile, getMenu])
 
     const closeModalAdd = () => {
         setOpenModalAdd(false);

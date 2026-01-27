@@ -5,7 +5,7 @@ export async function POST() {
   let code = 1
   let message = "OK"
   let httpStatus = 200
-  const data: any = {}
+  const data: unknown = null
   try {
     await supabase.auth.signOut();
 

@@ -1,7 +1,7 @@
 "use client"
 import { Geist_Mono, Pixelify_Sans } from "next/font/google";
 import Card from "../../components/card/Card";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import Loading from "../../components/common/Loading";
 import Button from "../../components/ui/button/Button";
@@ -99,7 +99,7 @@ export default function PlanCategories() {
         setLoading(false)
     }
 
-    const getPlanCategories = async () => {
+    const getPlanCategories = useCallback(async () => {
         try {
             if (!profile?.id) return;
             const getPlanCategories = await fetch(`/api/category-plan?userId=${profile?.id}`, {
@@ -110,13 +110,18 @@ export default function PlanCategories() {
                 setPlanCategories(res.data)
             }
             setLoading(false)
-        } catch (err) {
-            console.error(err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
         } finally {
         }
-    }
+    }, [profile]);
 
-    const fetchPlan = async () => {
+
+    const fetchPlan = useCallback(async () => {
         const getPlan = await fetch(`/api/plan?userId=${profile?.id}`);
         const res = await getPlan.json();
         if (res.data) {
@@ -131,9 +136,9 @@ export default function PlanCategories() {
                 })).sort((a, b) => a.label.localeCompare(b.label));
             setPlanOptions(formattedOptions);
         }
-    }
+    }, [profile]);
 
-    const fetchCategory = async () => {
+    const fetchCategory = useCallback(async () => {
         const getCategory = await fetch(`/api/category?userId=${profile?.id}`);
         const res = await getCategory.json();
         if (res.data) {
@@ -144,7 +149,7 @@ export default function PlanCategories() {
             })).sort((a, b) => a.label.localeCompare(b.label));
             setCategoryOptions(formattedOptions);
         }
-    }
+    }, [profile]);
 
     const openModalCreate = () => {
         const firstPlan = planOptions.length > 0 ? planOptions[0] : null;
@@ -306,8 +311,12 @@ export default function PlanCategories() {
                 setFailedMessage(data.message);
                 setOpenModalFailed(true);
             }
-        } catch (err) {
-            console.error(err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
         } finally {
             closeModalForm();
             setLoading(false);
@@ -322,7 +331,7 @@ export default function PlanCategories() {
             fetchCategory();
             fetchPlan();
         }
-    }, [profile])
+    }, [profile, getPlanCategories, fetchCategory, fetchPlan])
 
     return (
         <main className="flex flex-col items-center min-h-screen pt-20">

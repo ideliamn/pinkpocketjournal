@@ -33,8 +33,12 @@ export default function Menu() {
             const res = await fetch("/api/menu");
             const data = await res.json();
             if (res.ok) setMenu(data.data);
-        } catch (err) {
-            console.error(err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
         }
     };
 

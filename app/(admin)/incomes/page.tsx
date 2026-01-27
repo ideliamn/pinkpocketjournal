@@ -1,7 +1,7 @@
 "use client"
 import { Geist_Mono, Pixelify_Sans } from "next/font/google";
 import Card from "../../components/card/Card";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import Loading from "../../components/common/Loading";
 import moment from "moment";
@@ -11,7 +11,7 @@ import FormModal from "../../components/modals/FormModal";
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/ui/select/Select";
 import SimpleModal from "../../components/modals/SimpleModal";
-import { checkCurrentPeriod, checkExpense } from "../../../lib/helpers/expense";
+import { checkExpense } from "../../../lib/helpers/expense";
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-sono",
@@ -80,7 +80,6 @@ export default function Incomes() {
     const [confirmExceedingPlan, setConfirmExceedingPlan] = useState(false);
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
-    const [currentPlanId, setCurrentPlanId] = useState(0);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
@@ -105,10 +104,6 @@ export default function Incomes() {
     }
 
     // GET CURRENT PERIOD
-    const getCurrentPeriod = async () => {
-        const cp = await checkCurrentPeriod(Number(profile?.id))
-        if (cp) { setCurrentPlanId(cp.data.plan_id) }
-    }
 
     // HANDLE OPEN MODAL CREATE / EDIT
     const openModalCreate = () => {
@@ -160,7 +155,7 @@ export default function Incomes() {
     }
 
     // FETCH INITIAL DATA //
-    const getIncomes = async (pageNum = 1) => {
+    const getIncomes = useCallback(async (pageNum = 1) => {
         setLoading(true);
         try {
             if (!profile?.id) return;
@@ -175,13 +170,18 @@ export default function Incomes() {
                 setTotalPages(res.totalPages);
             }
             setLoading(false)
-        } catch (err) {
-            console.error(err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(err.message);
+            } else {
+                console.error("Something went wrong");
+            }
         } finally {
             setLoading(false);
         }
-    }
-    const fetchCategory = async () => {
+    }, [profile]);
+
+    const fetchCategory = useCallback(async () => {
         const getCategory = await fetch(`/api/category?userId=${profile?.id}&type=income`);
         const res = await getCategory.json();
         if (res.data) {
@@ -192,8 +192,9 @@ export default function Incomes() {
             })).sort((a, b) => a.label.localeCompare(b.label));
             setCategoryOptions(formattedOptions);
         }
-    }
-    const fetchPlan = async () => {
+    }, [profile])
+
+    const fetchPlan = useCallback(async () => {
         const getPlan = await fetch(`/api/plan?userId=${profile?.id}`);
         const res = await getPlan.json();
         if (res.data) {
@@ -204,8 +205,9 @@ export default function Incomes() {
             })).sort((a, b) => a.label.localeCompare(b.label));
             setPlanOptions(formattedOptions);
         }
-    }
-    const fetchSource = async () => {
+    }, [profile]);
+
+    const fetchSource = useCallback(async () => {
         const getSource = await fetch(`/api/source?userId=${profile?.id}`);
         const res = await getSource.json();
         if (res.data) {
@@ -216,7 +218,7 @@ export default function Incomes() {
             })).sort((a, b) => a.label.localeCompare(b.label));
             setSourceOptions(formattedOptions);
         }
-    }
+    }, [profile]);
 
     // HANDLE CONFIRM FOR EACH ACTION
     const handleOpenConfirmCreate = () => {
@@ -386,12 +388,8 @@ export default function Incomes() {
             fetchCategory();
             fetchPlan();
             fetchSource();
-            getCurrentPeriod();
         }
-    }, [profile])
-    useEffect(() => {
-        if (currentPlanId > 0) { fetchSummary() }
-    }, [currentPlanId > 0])
+    }, [profile, getIncomes, fetchCategory, fetchPlan, fetchSource])
 
     return (
         <main className="flex flex-col items-center min-h-screen pt-20 gap-10">
