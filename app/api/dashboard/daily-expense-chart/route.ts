@@ -19,8 +19,6 @@ export async function GET(request: Request) {
         const { data: dataChart } = await supabase
             .rpc("daily_expense_chart", { p_plan_id: Number(planId) })
 
-
-
         if (!dataChart && dataChart.length < 1) {
             code = 0
             message = "Expense not found"

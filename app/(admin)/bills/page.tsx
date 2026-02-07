@@ -255,6 +255,7 @@ export default function Bills() {
             return;
         }
         setConfirmMessage("are you sure you want to create this bill?");
+        setPendingAction("create");
         setOpenModalConfirm(true);
     };
     const handleOpenConfirmEdit = () => {
@@ -300,7 +301,8 @@ export default function Bills() {
                     description: selectedBill?.description,
                     amount: selectedBill?.amount,
                     due_date: selectedBill?.due_date,
-                    source_id: selectedBill?.source_id
+                    source_id: selectedBill?.source_id,
+                    recurrence_interval: selectedBill?.recurrence_interval
                 })
             })
             const data = await res.json();
