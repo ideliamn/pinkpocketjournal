@@ -6,8 +6,6 @@ const supabase = createClient(
 );
 
 export async function checkExpense(userId: number, planId: number, amount: number, categoryId?: number) {
-
-
     const response = {
         isExceeding: false,
         message: "OK"
@@ -22,13 +20,10 @@ export async function checkExpense(userId: number, planId: number, amount: numbe
     if (categoryId) { query = query.eq("category_id", categoryId); }
 
     const { data: dataTotalExpense } = await query;
-
     const totalExpense = dataTotalExpense?.reduce(
         (acc, curr) => acc + Number(curr.amount || 0),
         0
     ) ?? 0;
-
-
 
     if (categoryId) {
         const { data: checkCategoryPlans } = await supabase
@@ -36,43 +31,33 @@ export async function checkExpense(userId: number, planId: number, amount: numbe
             .select("amount")
             .eq("plan_id", planId)
             .eq("category_id", categoryId)
-            .single();
+            .maybeSingle();
 
-        const categoryLimit = checkCategoryPlans?.amount || 0;
-
-
-
-        if (categoryLimit > 0 && totalExpense + amount >= categoryLimit) {
-            response.isExceeding = true;
-            response.message = "Budget for this category has exceed!"
-
-            return response;
-        }
-        else {
-
+        if (checkCategoryPlans != null) {
+            if (checkCategoryPlans?.amount && totalExpense + amount >= checkCategoryPlans.amount) {
+                response.isExceeding = true;
+                response.message = "Budget for this category has exceed!"
+                return response;
+            }
         }
     }
 
     const { data: checkBudget } = await supabase
-        .from("budgets")
+        .from("plans")
         .select("max_expense")
         .eq("id", planId)
         .single();
 
     const maxExpense = checkBudget?.max_expense || 0;
 
-
-
     if (totalExpense + amount >= maxExpense) {
         response.isExceeding = true;
         response.message = "Budget has exceed!"
-
         return response;
     }
     else {
 
     }
-
     return response;
 }
 
@@ -84,7 +69,6 @@ export async function checkCurrentPeriod(userId: number) {
         start_date: string;
         end_date: string;
     };
-
     const response = {
         isExist: false,
         data: {
@@ -96,12 +80,9 @@ export async function checkCurrentPeriod(userId: number) {
         .rpc("get_current_period", { p_user_id: userId })
         .single() as { data: CurrentPeriod | null, error: any }
 
-
-
     if (checkPeriod) {
         response.isExist = true;
         response.data = checkPeriod
     }
-
     return response;
 }

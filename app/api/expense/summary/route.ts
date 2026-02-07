@@ -16,12 +16,8 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const planId = searchParams.get("planId");
 
-
-
         const { data: dataSummary } = await supabase
             .rpc("summary_expense_category", { p_plan_id: Number(planId) })
-
-
 
         if (!dataSummary && dataSummary.length < 1) {
             code = 0

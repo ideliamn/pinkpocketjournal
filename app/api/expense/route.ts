@@ -42,7 +42,8 @@ export async function GET(request: Request) {
 
         const { data: result, error, count } = await query
             .range(offset, offset + limit - 1)
-            .order("expense_date", { ascending: false });
+            .order("expense_date", { ascending: false })
+            .order("created_at", { ascending: false })
 
         if (error) {
             throw new Error(error.message)

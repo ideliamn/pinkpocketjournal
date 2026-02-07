@@ -58,9 +58,9 @@ export default function Expenses() {
     interface Summary {
         sum_amount: number,
         category_name: string,
-        bc_limit: number,
+        cp_limit: number,
         max_expense: number,
-        percentage_bc_limit: number,
+        percentage_cp_limit: number,
         percentage_max_expense: number
     }
 
@@ -85,7 +85,6 @@ export default function Expenses() {
     const [confirmMessage, setConfirmMessage] = useState("");
     const [openModalWarning, setOpenModalWarning] = useState(false);
     const [warningMessage, setWarningMessage] = useState("");
-    const [confirmExceedingPlan, setConfirmExceedingPlan] = useState(false);
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | "create" | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
     const [currentPlanId, setCurrentPlanId] = useState(0);
@@ -95,15 +94,15 @@ export default function Expenses() {
 
     // HANDLE CLICK CONFIRM
     const handleConfirmAction = async () => {
-        if (pendingAction === "edit") {
-            await handleSubmitEditExpense();
-        } else if (pendingAction === "delete") {
-            await handleDeleteExpense(selectedExpense?.id ?? 0);
-        } else if (pendingAction === "create") {
-            await handleSubmitCreateExpense();
-        }
         setOpenModalConfirm(false);
-        setPendingAction(null);
+        if (pendingAction === "create" || pendingAction === "edit") {
+            await submitExpense(pendingAction, false);
+            return;
+        }
+        if (pendingAction === "delete") {
+            await handleDeleteExpense(selectedExpense?.id ?? 0);
+            setPendingAction(null);
+        }
     };
 
     // HANDLE CLOSE MODAL FORM
@@ -113,6 +112,15 @@ export default function Expenses() {
         setOpenModalForm(false);
         setIsCreateMode(false);
     }
+
+    // HANDLE YES ON WARNING
+    const handleWarningYes = async () => {
+        setOpenModalWarning(false);
+        if (pendingAction === "create" || pendingAction === "edit") {
+            await submitExpense(pendingAction, true);
+        }
+        setPendingAction(null);
+    };
 
     // GET CURRENT PERIOD
     const getCurrentPeriod = useCallback(async () => {
@@ -129,8 +137,8 @@ export default function Expenses() {
             description: "",
             amount: 0,
             expense_date: today,
-            plan_id: -1,
-            plans: { id: -1, name: "" },
+            plan_id: currentPlanId > 0 ? currentPlanId : -1,
+            plans: { id: currentPlanId > 0 ? currentPlanId : -1, name: "" },
             category_id: -1,
             categories: { id: -1, name: "" },
             source_id: -1,
@@ -140,10 +148,8 @@ export default function Expenses() {
         setOpenModalForm(true)
     }
     const handleClickEditExpense = async (id: number) => {
-
         setLoading(true)
         const foundExpense = expense.find((e) => e.id === id);
-
         if (foundExpense) {
             setSelectedExpense({
                 id: id,
@@ -197,7 +203,6 @@ export default function Expenses() {
             setLoading(false);
         }
     }, [profile]);
-
     const fetchCategory = useCallback(async () => {
         const getCategory = await fetch(`/api/category?userId=${profile?.id}&type=expense`);
         const res = await getCategory.json();
@@ -210,7 +215,6 @@ export default function Expenses() {
             setCategoryOptions(formattedOptions);
         }
     }, [profile]);
-
     const fetchPlan = useCallback(async () => {
         const getPlan = await fetch(`/api/plan?userId=${profile?.id}`);
         const res = await getPlan.json();
@@ -223,7 +227,6 @@ export default function Expenses() {
             setPlanOptions(formattedOptions);
         }
     }, [profile]);
-
     const fetchSource = useCallback(async () => {
         const getSource = await fetch(`/api/source?userId=${profile?.id}`);
         const res = await getSource.json();
@@ -236,7 +239,6 @@ export default function Expenses() {
             setSourceOptions(formattedOptions);
         }
     }, [profile]);
-
     const fetchSummary = useCallback(async () => {
         const getSummary = await fetch(`/api/expense/summary?planId=${currentPlanId}`);
         const res = await getSummary.json();
@@ -276,108 +278,68 @@ export default function Expenses() {
     };
 
     // HANDLE SUBMIT FUNCTIONS
-    const handleSubmitCreateExpense = async () => {
-
+    const submitExpense = async (action: "create" | "edit", force = false) => {
+        if (loading) return;
         setLoading(true);
         try {
-            if (!selectedExpense?.description
-                || selectedExpense?.amount < 0
-                || !selectedExpense?.expense_date
-                || selectedExpense?.plan_id <= 0
-                || selectedExpense?.category_id <= 0
-                || selectedExpense?.source_id <= 0
+            if (
+                !selectedExpense ||
+                !selectedExpense.amount ||
+                !selectedExpense.plan_id ||
+                !selectedExpense.category_id
             ) {
-                setFailedMessage("fill all the required fields!");
+                setFailedMessage("fill all required fields!");
                 setOpenModalFailed(true);
-                setLoading(false);
                 return;
             }
-            if (!confirmExceedingPlan) {
-                const checkExpensePlan = await checkExpense(Number(profile?.id), selectedExpense?.plan_id, selectedExpense?.amount, selectedExpense?.category_id)
-                if (checkExpensePlan.isExceeding) {
-                    setWarningMessage(checkExpensePlan?.message);
+            if (!force) {
+                const check = await checkExpense(
+                    Number(profile!.id),
+                    selectedExpense.plan_id,
+                    selectedExpense.amount,
+                    selectedExpense.category_id
+                );
+                if (check.isExceeding) {
+                    setWarningMessage(check.message);
+                    setPendingAction(action);
                     setOpenModalWarning(true);
+                    return;
                 }
             }
             const res = await fetch("/api/expense", {
-                method: "POST",
+                method: action === "create" ? "POST" : "PUT",
                 body: JSON.stringify({
-                    user_id: profile?.id,
-                    plan_id: selectedExpense?.plan_id,
-                    category_id: selectedExpense?.category_id,
-                    description: selectedExpense?.description,
-                    amount: selectedExpense?.amount,
-                    expense_date: selectedExpense?.expense_date,
-                    source_id: selectedExpense?.source_id
-                })
-            })
-            const data = await res.json();
-            if (res.ok) {
-                setSuccessMessage("success");
-                setOpenModalSuccess(true);
-            } else {
-                setFailedMessage(data.message);
-                setOpenModalFailed(true);
-            }
-        } catch (err) {
-            console.error(err)
-        } finally {
-            setConfirmExceedingPlan(false);
-            closeModalForm();
-            setLoading(false);
-        }
-    }
-    const handleSubmitEditExpense = async (e?: React.FormEvent) => {
-        setLoading(true);
-        e?.preventDefault();
-
-        try {
-            if (!selectedExpense
-                || selectedExpense?.id < 1
-                || !selectedExpense?.description
-                || !selectedExpense?.amount
-                || !selectedExpense?.expense_date
-                || !selectedExpense?.plan_id
-                || !selectedExpense?.category_id
-                || !selectedExpense?.source_id) {
-                setFailedMessage("fill all the required fields!");
-                setOpenModalFailed(true);
-                setLoading(false);
-                return;
-            }
-            const res = await fetch("/api/expense", {
-                method: "PUT",
-                body: JSON.stringify({
-                    id: selectedExpense?.id,
-                    user_id: profile?.id,
-                    plan_id: selectedExpense?.plan_id,
-                    category_id: selectedExpense?.category_id,
-                    description: selectedExpense?.description,
-                    amount: selectedExpense?.amount,
-                    expense_date: selectedExpense?.expense_date,
-                    source_id: selectedExpense?.source_id
+                    id: selectedExpense.id,
+                    user_id: profile!.id,
+                    plan_id: selectedExpense.plan_id,
+                    category_id: selectedExpense.category_id,
+                    description: selectedExpense.description,
+                    amount: selectedExpense.amount,
+                    expense_date: selectedExpense.expense_date,
+                    source_id: selectedExpense.source_id,
                 }),
             });
             const data = await res.json();
-            if (res.ok) {
-                setSuccessMessage("success update expense!");
-                setLoading(false);
-                setOpenModalSuccess(true);
-            } else {
-                setFailedMessage(data.message);
-                setLoading(false);
+            if (!res.ok) {
+                setFailedMessage(data.message || "failed");
                 setOpenModalFailed(true);
+                return;
             }
-        } catch (err: unknown) {
-            console.error(err)
-        } finally {
+            setSuccessMessage(
+                action === "create"
+                    ? "success create expense!"
+                    : "success update expense!"
+            );
+            setOpenModalSuccess(true);
             closeModalForm();
-            setLoading(false)
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
     };
     const handleDeleteExpense = async (id: number) => {
         setLoading(true);
-
         try {
             if (!id || id === 0) {
                 setFailedMessage("fill all the required fields!");
@@ -393,6 +355,7 @@ export default function Expenses() {
                 setSuccessMessage("success delete expense!");
                 setLoading(false);
                 setOpenModalSuccess(true);
+                closeModalForm();
             } else {
                 setFailedMessage(data.message);
                 setLoading(false);
@@ -401,7 +364,6 @@ export default function Expenses() {
         } catch (err: unknown) {
             console.error(err)
         } finally {
-            closeModalForm();
             setLoading(false)
         }
     };
@@ -434,8 +396,8 @@ export default function Expenses() {
                     <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} px-3 py-2 my-2 border shadow-xs max-w-[300px] sm:w-auto`}>
                         <h3 className="text-sm font-semibold py-1">{s.category_name}</h3>
                         <p className="text-xs py-2">Rp {s.sum_amount.toLocaleString("id-ID")}</p>
+                        {s.cp_limit && (<p className="text-xs">{s.percentage_cp_limit}% of category&apos;s plan</p>)}
                         <p className="text-xs">{s.percentage_max_expense}% of plan&apos;s max expense</p>
-                        {s.bc_limit && (<p className="text-xs">{s.percentage_bc_limit}% of category&apos;s plan</p>)}
                     </div>
                 ))}
             </div>
@@ -689,10 +651,10 @@ export default function Expenses() {
                     message={warningMessage}
                     yesButton
                     yesButtonText="yes"
-                    handleYes={() => { setConfirmExceedingPlan(true); handleConfirmAction(); }}
+                    handleYes={handleWarningYes}
                     noButton
                     noButtonText="cancel"
-                    handleNo={() => setOpenModalWarning(false)}
+                    handleNo={() => { setOpenModalWarning(false); setPendingAction(null); }}
                 />
             )}
         </main>
