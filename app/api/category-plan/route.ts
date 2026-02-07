@@ -26,7 +26,7 @@ export async function GET(request: Request) {
         if (categoryId) query = query.eq("category_id", categoryId);
         if (id) query = query.eq("id", id);
 
-        const { data: result, error } = await query.order("created_at", { ascending: false });
+        const { data: result, error } = await query.order("categories(name)", { ascending: true });
 
         let resultFiltered = []
         if (userId && result && result.length > 0) resultFiltered = result.filter(r => r.categories?.user_id == userId);
