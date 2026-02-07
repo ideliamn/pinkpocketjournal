@@ -12,6 +12,8 @@ import Input from "../../components/form/input/InputField";
 import Select from "../../components/ui/select/Select";
 import SimpleModal from "../../components/modals/SimpleModal";
 import { checkCurrentPeriod, checkExpense } from "../../../lib/helpers/expense";
+import BigModal from "../../components/modals/BigModal";
+import { AlertTriangle } from "lucide-react";
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-sono",
@@ -91,6 +93,8 @@ export default function Expenses() {
     const [summary, setSummary] = useState<Summary[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [openBigModal, setOpenBigModal] = useState(false);
+    const closeBigModal = () => { setOpenBigModal(false) };
 
     // HANDLE CLICK CONFIRM
     const handleConfirmAction = async () => {
@@ -391,15 +395,27 @@ export default function Expenses() {
             <h1 className={`${pixelify.className} text-xl`}>
                 expenses
             </h1>
-            <div className="flex flex-wrap justify-center gap-x-3 text-center px-6">
-                {summary.map((s) => (
-                    <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} px-3 py-2 my-2 border shadow-xs max-w-[300px] sm:w-auto`}>
-                        <h3 className="text-sm font-semibold py-1">{s.category_name}</h3>
-                        <p className="text-xs py-2">Rp {s.sum_amount.toLocaleString("id-ID")}</p>
-                        {s.cp_limit && (<p className="text-xs">{s.percentage_cp_limit}% of category&apos;s plan</p>)}
-                        <p className="text-xs">{s.percentage_max_expense}% of plan&apos;s max expense</p>
-                    </div>
-                ))}
+            <div className="items-center justify-center">
+                {summary ? (
+                    <h1 className={`${pixelify.className} text-s flex flex-wrap justify-center gap-x-3 text-center px-6"`}>
+                        top spending categories
+                    </h1>
+                ) : <></>}
+                <div className="flex flex-wrap justify-center gap-x-3 text-center px-6">
+                    {summary.slice(0, 5).map((s) => (
+                        <div key={s.category_name} className={`${geistMono.className} ${geistMono.style} px-3 py-2 my-2 border shadow-xs max-w-[300px] sm:w-auto bg-pink-200`}>
+                            <h3 className="text-sm font-semibold py-1">{s.category_name}</h3>
+                            <p className="text-xs py-2">Rp {s.sum_amount.toLocaleString("id-ID")}</p>
+                            {s.cp_limit > 0 && (<p className="text-xs">{s.percentage_cp_limit}% of category&apos;s plan</p>)}
+                            <p className="text-xs">{s.percentage_max_expense}% of plan&apos;s max expense</p>
+                        </div>
+                    ))}
+                </div>
+                <div className="flex flex-wrap justify-center gap-x-3 text-center px-6">
+                    <Button size="xs" variant="outline" className={`${geistMono.className} justify-center min-w-[100px] cursor-pointer mt-1`} onClick={() => setOpenBigModal(true)}>
+                        see more...
+                    </Button>
+                </div>
             </div>
             <div className="mt-2 items-center justify-center">
                 <Button size="md" variant="outline" className={`${geistMono.className} min-w-[400px] cursor-pointer mt-6`} onClick={() => openModalCreate()}>
@@ -606,57 +622,120 @@ export default function Expenses() {
                         </form>
                     </FormModal>
                 }
+                {openBigModal &&
+                    <BigModal
+                        isOpen={openBigModal}
+                        onClose={closeBigModal}
+                        title={`expense distribution by category`}
+                    >
+                        <div className={`w-full ${geistMono.className} py-2`}>
+                            {summary.map((s) => {
+                                return (
+                                    <div key={s.category_name} className={`py-2`}>
+                                        <div className="flex justify-between">
+                                            <p className="text-md font-medium">{s.category_name}</p>
+                                        </div>
+                                        <div className="relative w-full bg-pink-100 rounded-full h-5 text-xs overflow-hidden my-2">
+                                            <div
+                                                className={`h-full rounded-full bg-pink-500`}
+                                                style={{ width: `${s.percentage_max_expense}%` }}
+                                            />
+                                            <span className="absolute inset-0 flex items-center justify-end pr-2 text-pink-900 font-medium">
+                                                {s.percentage_max_expense}% of plan&apos;s max expense
+                                            </span>
+                                        </div>
+                                        {s.percentage_max_expense > 90 && (
+                                            <div className="flex items-center gap-1 mt-1 text-xs text-red-500">
+                                                <AlertTriangle className="w-4 h-4" /> almost exceeded max expense!
+                                            </div>
+                                        )}
+                                        {s.cp_limit > 0 && (
+                                            <div className="relative w-full bg-pink-100 rounded-full h-5 text-xs overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full bg-pink-500`}
+                                                    style={{ width: `${s.percentage_cp_limit}%` }}
+                                                />
+                                                <span className="absolute inset-0 flex items-center justify-end pr-2 text-pink-900 font-medium">
+                                                    {s.percentage_cp_limit}% of category&apos;s plan
+                                                </span>
+                                            </div>
+                                        )}
+                                        {s.cp_limit > 0 && s.percentage_cp_limit > 90 && (
+                                            <div className="flex items-center gap-1 mt-1 text-xs text-red-500">
+                                                <AlertTriangle className="w-4 h-4" /> almost exceeded category's plan limit!
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+
+                            <div className={`${pixelify.className} mt-4 flex gap-6 items-center justify-center`}>
+                                <Button size="sm" variant="outline" className={`${geistMono.className} text-s cursor-pointer hover:underline hover:text-pink-600`} onClick={closeBigModal}>
+                                    close
+                                </Button>
+                            </div>
+                        </div>
+                    </BigModal>
+                }
             </div>
-            {openModalSuccess && (
-                <SimpleModal
-                    type={"success"}
-                    isOpen={openModalSuccess}
-                    onClose={closeModalSuccess}
-                    message={successMessage}
-                    yesButton
-                    yesButtonText="ok"
-                    handleYes={closeModalSuccess}
-                />
-            )}
-            {openModalFailed && (
-                <SimpleModal
-                    type={"failed"}
-                    isOpen={openModalFailed}
-                    onClose={closeModalFailed}
-                    message={failedMessage}
-                    yesButton
-                    yesButtonText="ok"
-                    handleYes={closeModalFailed}
-                />
-            )}
-            {openModalConfirm && (
-                <SimpleModal
-                    type="confirm"
-                    isOpen={openModalConfirm}
-                    onClose={() => setOpenModalConfirm(false)}
-                    message={confirmMessage}
-                    yesButton
-                    yesButtonText="yes"
-                    handleYes={handleConfirmAction}
-                    noButton
-                    noButtonText="cancel"
-                    handleNo={() => setOpenModalConfirm(false)}
-                />
-            )}
-            {openModalWarning && (
-                <SimpleModal
-                    type={"warning"}
-                    isOpen={openModalWarning}
-                    onClose={() => setOpenModalWarning(false)}
-                    message={warningMessage}
-                    yesButton
-                    yesButtonText="yes"
-                    handleYes={handleWarningYes}
-                    noButton
-                    noButtonText="cancel"
-                    handleNo={() => { setOpenModalWarning(false); setPendingAction(null); }}
-                />
-            )}
-        </main>
+            {
+                openModalSuccess && (
+                    <SimpleModal
+                        type={"success"}
+                        isOpen={openModalSuccess}
+                        onClose={closeModalSuccess}
+                        message={successMessage}
+                        yesButton
+                        yesButtonText="ok"
+                        handleYes={closeModalSuccess}
+                    />
+                )
+            }
+            {
+                openModalFailed && (
+                    <SimpleModal
+                        type={"failed"}
+                        isOpen={openModalFailed}
+                        onClose={closeModalFailed}
+                        message={failedMessage}
+                        yesButton
+                        yesButtonText="ok"
+                        handleYes={closeModalFailed}
+                    />
+                )
+            }
+            {
+                openModalConfirm && (
+                    <SimpleModal
+                        type="confirm"
+                        isOpen={openModalConfirm}
+                        onClose={() => setOpenModalConfirm(false)}
+                        message={confirmMessage}
+                        yesButton
+                        yesButtonText="yes"
+                        handleYes={handleConfirmAction}
+                        noButton
+                        noButtonText="cancel"
+                        handleNo={() => setOpenModalConfirm(false)}
+                    />
+                )
+            }
+            {
+                openModalWarning && (
+                    <SimpleModal
+                        type={"warning"}
+                        isOpen={openModalWarning}
+                        onClose={() => setOpenModalWarning(false)}
+                        message={warningMessage}
+                        yesButton
+                        yesButtonText="yes"
+                        handleYes={handleWarningYes}
+                        noButton
+                        noButtonText="cancel"
+                        handleNo={() => { setOpenModalWarning(false); setPendingAction(null); }}
+                    />
+                )
+            }
+        </main >
     );
 }

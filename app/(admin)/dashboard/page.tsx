@@ -256,8 +256,8 @@ export default function Dashboard() {
             </div>
 
             {/* Progress Bar per Category */}
-            <div className={`bg - white rounded - 2xl p - 6 shadow ${geistMono.className}`}>
-                <h2 className="text-pink-600 font-semibold mb-4">top spending categories</h2>
+            <div className={`bg-white rounded-2xl p-6 shadow ${geistMono.className}`}>
+                <h2 className="text-pink-600 font-semibold mb-4">top 5 spending categories</h2>
                 <div className="space-y-4">
                     {spendingByCategoryChart.map((c) => {
                         const used = Math.min(c.percentage, 100);
@@ -265,14 +265,14 @@ export default function Dashboard() {
                             <div key={c.name}>
                                 <div className="flex justify-between mb-1">
                                     <p className="text-sm font-medium">{c.name}</p>
-                                    <p className="text-sm text-gray-500">{used.toFixed(0)}%</p>
+                                    <p className="text-sm text-gray-500">{used.toFixed(2)}% of total spending</p>
                                 </div>
-                                <div className="w-full bg-pink-100 rounded-full h-2">
-                                    <div className={`h-2 rounded-full ${used > 90 ? "bg-red-400" : "bg-pink-500"}`} style={{ width: `${used}%` }} />
+                                <div className="w-full bg-pink-100 rounded-full h-3">
+                                    <div className={`h-3 rounded-full ${used > 90 ? "bg-red-400" : "bg-pink-500"}`} style={{ width: `${used}%` }} />
                                 </div>
                                 {used > 90 && (
                                     <div className="flex items-center gap-1 mt-1 text-xs text-red-500">
-                                        <AlertTriangle className="w-4 h-4" /> Almost exceeded your limit!
+                                        <AlertTriangle className="w-4 h-4" /> almost exceeded your limit!
                                     </div>
                                 )}
                             </div>
