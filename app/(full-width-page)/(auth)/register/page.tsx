@@ -32,7 +32,7 @@ export default function Register() {
     const [failedMessage, setFailedMessage] = useState("");
 
     const handleRegister = async (e: React.FormEvent) => {
-        console.log("login")
+
         setLoading(true);
         e.preventDefault();
 

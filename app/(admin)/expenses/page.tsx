@@ -140,10 +140,10 @@ export default function Expenses() {
         setOpenModalForm(true)
     }
     const handleClickEditExpense = async (id: number) => {
-        console.log("id edit: ", id)
+
         setLoading(true)
         const foundExpense = expense.find((e) => e.id === id);
-        console.log("foundExpense: ", JSON.stringify(foundExpense))
+
         if (foundExpense) {
             setSelectedExpense({
                 id: id,
@@ -181,7 +181,7 @@ export default function Expenses() {
             });
             const res = await getExpense.json();
             if (res.data) {
-                console.log("res.data: ", JSON.stringify(res.data))
+
                 setExpense(res.data)
                 setPage(res.currentPage);
                 setTotalPages(res.totalPages);
@@ -277,7 +277,7 @@ export default function Expenses() {
 
     // HANDLE SUBMIT FUNCTIONS
     const handleSubmitCreateExpense = async () => {
-        console.log("submit!")
+
         setLoading(true);
         try {
             if (!selectedExpense?.description
@@ -330,7 +330,7 @@ export default function Expenses() {
     const handleSubmitEditExpense = async (e?: React.FormEvent) => {
         setLoading(true);
         e?.preventDefault();
-        console.log("selectedExpense: " + JSON.stringify(selectedExpense))
+
         try {
             if (!selectedExpense
                 || selectedExpense?.id < 1
@@ -377,7 +377,7 @@ export default function Expenses() {
     };
     const handleDeleteExpense = async (id: number) => {
         setLoading(true);
-        console.log("selectedExpense: " + JSON.stringify(selectedExpense))
+
         try {
             if (!id || id === 0) {
                 setFailedMessage("fill all the required fields!");

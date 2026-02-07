@@ -94,10 +94,10 @@ export default function Categories() {
     };
 
     const handleClickEdit = async (id: number) => {
-        console.log("id: ", id)
+
         setLoading(true)
         const found = category.find((c) => c.id === id);
-        console.log("found: ", JSON.stringify(found))
+
         if (found) {
             setSelectedCategory({
                 id: found.id,
@@ -185,7 +185,7 @@ export default function Categories() {
     const handleSubmitEdit = async (e?: React.FormEvent) => {
         setLoading(true);
         e?.preventDefault();
-        console.log("selectedCategory: " + JSON.stringify(selectedCategory))
+
         try {
             if (!selectedCategory || selectedCategory?.id < 1 || !selectedCategory.name) {
                 setFailedMessage("fill all the required fields!");
@@ -193,10 +193,6 @@ export default function Categories() {
                 setLoading(false);
                 return;
             }
-            console.log(JSON.stringify({
-                id: selectedCategory.id,
-                name: selectedCategory.name,
-            }))
             const res = await fetch("/api/category", {
                 method: "PUT",
                 body: JSON.stringify({

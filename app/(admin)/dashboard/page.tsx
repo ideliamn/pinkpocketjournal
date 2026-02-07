@@ -102,7 +102,7 @@ export default function Dashboard() {
         const res = await getDataChart.json();
         if (res.data) {
             let dataPlan: DailyExpenseChart[] = res.data
-            console.log("dataPlan: ", JSON.stringify(dataPlan))
+
             dataPlan = dataPlan.map(d => ({
                 ...d,
                 expense_date: new Date(d.expense_date).toLocaleDateString("id-ID", {
@@ -119,7 +119,7 @@ export default function Dashboard() {
         const res = await getDataChart.json();
         if (res.data) {
             const dataPlan: SpendingByCategoryChart[] = res.data
-            console.log("dataPlan: ", dataPlan)
+
             setSpendingByCategoryChart(dataPlan);
         }
     }, [currentPeriod?.data?.plan_id]);
@@ -129,7 +129,7 @@ export default function Dashboard() {
         const res = await getDataChart.json();
         if (res.data) {
             const dataPlan: SpendingBySourceChart[] = res.data
-            console.log("dataPlan: ", dataPlan)
+
             // setSpendingBySourceChart(dataPlan);
         }
     }, [currentPeriod?.data?.plan_id]);
@@ -139,7 +139,7 @@ export default function Dashboard() {
         const res = await getDataChart.json();
         if (res.data) {
             const dataPlan = res.data
-            console.log("summary expense: ", dataPlan[0])
+
             setSummaryExpense(dataPlan[0]);
         }
     }, [currentPeriod?.data?.plan_id]);
@@ -149,7 +149,7 @@ export default function Dashboard() {
         const res = await getDataChart.json();
         if (res.data) {
             const dataHistory = res.data
-            console.log("recent expense: ", dataHistory)
+
             setRecentExpense(dataHistory);
         }
     }, [currentPeriod?.data?.plan_id]);
@@ -159,7 +159,7 @@ export default function Dashboard() {
         const res = await getDataBills.json();
         if (res.data) {
             const bills = res.data
-            console.log("summary bills: ", bills)
+
             setBill(bills);
         }
     }, [profile]);

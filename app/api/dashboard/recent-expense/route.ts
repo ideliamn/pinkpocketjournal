@@ -23,7 +23,7 @@ export async function GET(request: Request) {
             .order("expense_date", { ascending: false })
             .limit(5)
 
-        console.log("dataExpenses: " + JSON.stringify(dataExpenses))
+
 
         if (!dataExpenses) {
             code = 0

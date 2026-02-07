@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
         const { data: result, error, count } = await query.range(offset, offset + limit - 1).order("income_date", { ascending: false });
 
-        console.log("result: ", result)
+
 
         if (error) {
             throw new Error(error.message)

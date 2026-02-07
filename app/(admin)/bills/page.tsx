@@ -95,9 +95,6 @@ export default function Bills() {
 
     // HANDLE CLICK CONFIRM
     const handleConfirmAction = async () => {
-        console.log("pendingAction: ", pendingAction)
-        console.log("selectedBill?.id", selectedBill?.id)
-        console.log("id pay: ", idPay)
         if (pendingAction === "edit") {
             await handleSubmitEditBill();
         } else if (pendingAction === "delete") {
@@ -139,10 +136,8 @@ export default function Bills() {
         setOpenModalForm(true);
     }
     const handleClickEditBill = async (id: number) => {
-        console.log("id edit: ", id)
         setLoading(true)
         const foundBill = bill.find((b) => b.id === id);
-        console.log("foundBill: ", JSON.stringify(foundBill))
         if (foundBill) {
             setSelectedBill({
                 id: id,
@@ -173,7 +168,6 @@ export default function Bills() {
         setLoading(false);
     }
     const handleClickPayBill = async (id: number) => {
-        console.log("id edit: ", id)
         setLoading(true)
         setIdPay(id)
         setPendingAction("pay");
@@ -191,7 +185,6 @@ export default function Bills() {
             });
             const res = await getBill.json();
             if (res.data) {
-                console.log("res.data: ", JSON.stringify(res.data))
                 setBill(res.data)
             }
             setLoading(false)
@@ -222,12 +215,10 @@ export default function Bills() {
         const res = await getPlan.json();
         if (res.data) {
             const dataPlan: Plan[] = res.data
-            console.log("dataPlan: ", dataPlan)
             const formattedOptions = dataPlan.map((k) => ({
                 value: String(k.id),
                 label: k?.name,
             })).sort((a, b) => a.label.localeCompare(b.label));
-            console.log("formattedOptions plan: ", formattedOptions)
             formattedOptions.unshift({
                 value: "",
                 label: "no plan"
@@ -331,7 +322,6 @@ export default function Bills() {
     const handleSubmitEditBill = async (e?: React.FormEvent) => {
         setLoading(true);
         e?.preventDefault();
-        console.log("selectedBill: " + JSON.stringify(selectedBill))
         try {
             if (!selectedBill
                 || selectedBill?.id < 1
@@ -386,7 +376,7 @@ export default function Bills() {
     }
     const handleDeleteBill = async (id: number) => {
         setLoading(true);
-        console.log("selectedBill: " + JSON.stringify(selectedBill))
+
         try {
             if (!id || id === 0) {
                 setFailedMessage("fill all the required fields!");
@@ -416,7 +406,7 @@ export default function Bills() {
     };
     const handleSubmitPayBill = async (id: number) => {
         setLoading(true)
-        console.log("id pay bill: ", id)
+
         try {
             if (!id || id === 0) {
                 setFailedMessage("fill all the required fields!");

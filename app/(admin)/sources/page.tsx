@@ -85,10 +85,10 @@ export default function Sources() {
     };
 
     const handleClickEditSource = async (id: number) => {
-        console.log("id: ", id)
+
         setLoading(true)
         const found = source.find((s) => s.id === id);
-        console.log("found: ", JSON.stringify(found))
+
         if (found) {
             setSelectedSource({
                 id: found.id,
@@ -173,7 +173,7 @@ export default function Sources() {
     const handleSubmitEdit = async (e?: React.FormEvent) => {
         setLoading(true);
         e?.preventDefault();
-        console.log("selectedSource: " + JSON.stringify(selectedSource))
+
         try {
             if (!selectedSource || selectedSource?.id < 1 || !selectedSource.name) {
                 setFailedMessage("fill all the required fields!");
@@ -181,10 +181,6 @@ export default function Sources() {
                 setLoading(false);
                 return;
             }
-            console.log(JSON.stringify({
-                id: selectedSource.id,
-                name: selectedSource.name,
-            }))
             const res = await fetch("/api/source", {
                 method: "PUT",
                 body: JSON.stringify({

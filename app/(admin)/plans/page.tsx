@@ -111,7 +111,7 @@ export default function Plans() {
     }
 
     const handleClickDetail = async (id: number) => {
-        console.log("id: ", id)
+
         setLoading(true)
         setOpenModalDetail(true)
         setLoading(false)

@@ -123,10 +123,10 @@ export default function Incomes() {
         setOpenModalForm(true)
     }
     const handleClickEditIncome = async (id: number) => {
-        console.log("id edit: ", id)
+
         setLoading(true)
         const foundIncome = income.find((e) => e.id === id);
-        console.log("foundIncome: ", JSON.stringify(foundIncome))
+
         if (foundIncome) {
             setSelectedIncome({
                 id: id,
@@ -164,7 +164,7 @@ export default function Incomes() {
             });
             const res = await getIncome.json();
             if (res.data) {
-                console.log("res.data: ", JSON.stringify(res.data))
+
                 setIncome(res.data)
                 setPage(res.currentPage);
                 setTotalPages(res.totalPages);
@@ -251,7 +251,7 @@ export default function Incomes() {
 
     // HANDLE SUBMIT FUNCTIONS
     const handleSubmitCreateIncome = async () => {
-        console.log("submit!")
+
         setLoading(true);
         try {
             if (!selectedIncome?.description
@@ -304,7 +304,7 @@ export default function Incomes() {
     const handleSubmitEditIncome = async (e?: React.FormEvent) => {
         setLoading(true);
         e?.preventDefault();
-        console.log("selectedIncome: " + JSON.stringify(selectedIncome))
+
         try {
             if (!selectedIncome
                 || selectedIncome?.id < 1
@@ -351,7 +351,7 @@ export default function Incomes() {
     };
     const handleDeleteIncome = async (id: number) => {
         setLoading(true);
-        console.log("selectedIncome: " + JSON.stringify(selectedIncome))
+
         try {
             if (!id || id === 0) {
                 setFailedMessage("fill all the required fields!");

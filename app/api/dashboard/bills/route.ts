@@ -22,7 +22,7 @@ export async function GET(request: Request) {
             .eq("user_id", userId)
             .order("due_date", { ascending: true });
 
-        console.log("bills: " + JSON.stringify(bills))
+
 
         if (bills && bills.length > 0) {
             bills.sort((a, b) => {

@@ -19,7 +19,7 @@ export async function GET(request: Request) {
         const { data: dataChart } = await supabase
             .rpc("spending_by_source", { p_plan_id: Number(planId) })
 
-        console.log("dataChart: " + JSON.stringify(dataChart))
+
 
         if (!dataChart) {
             code = 0

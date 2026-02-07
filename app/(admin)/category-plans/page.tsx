@@ -72,10 +72,10 @@ export default function PlanCategories() {
     const [isCreateMode, setIsCreateMode] = useState(false);
 
     const handleClickEditCP = async (idCP: number) => {
-        console.log("id: ", idCP)
+
         setLoading(true)
         const foundCP = categoryPlans.find((bc) => bc.id === idCP);
-        console.log("foundCP: ", JSON.stringify(foundCP))
+
         if (foundCP) {
             setSelectedCP({
                 id: foundCP.id,
@@ -208,7 +208,7 @@ export default function PlanCategories() {
     const handleSubmitEditCP = async (e?: React.FormEvent) => {
         setLoading(true);
         e?.preventDefault();
-        console.log("selectedCP: " + JSON.stringify(selectedCP))
+
         try {
             if (!selectedCP || selectedCP?.id < 1 || selectedCP.plan_id < 1 || selectedCP.category_id < 1 || selectedCP.amount < 0) {
                 setFailedMessage("fill all the required fields!");
@@ -216,12 +216,6 @@ export default function PlanCategories() {
                 setLoading(false);
                 return;
             }
-            console.log(JSON.stringify({
-                id: selectedCP.id,
-                plan_id: selectedCP.plan_id,
-                category_id: selectedCP.category_id,
-                amount: selectedCP.amount
-            }))
             const res = await fetch("/api/plan-category", {
                 method: "PUT",
                 body: JSON.stringify({
@@ -251,7 +245,7 @@ export default function PlanCategories() {
 
     const handleDeleteCP = async (id: number) => {
         setLoading(true);
-        console.log("selectedCP: " + JSON.stringify(selectedCP))
+
         try {
             if (!id || id === 0) {
                 setFailedMessage("fill all the required fields!");

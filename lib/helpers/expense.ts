@@ -6,7 +6,7 @@ const supabase = createClient(
 );
 
 export async function checkExpense(userId: number, planId: number, amount: number, categoryId?: number) {
-    console.log("amount", amount)
+
 
     const response = {
         isExceeding: false,
@@ -28,7 +28,7 @@ export async function checkExpense(userId: number, planId: number, amount: numbe
         0
     ) ?? 0;
 
-    console.log("totalExpense", totalExpense)
+
 
     if (categoryId) {
         const { data: checkCategoryPlans } = await supabase
@@ -40,16 +40,16 @@ export async function checkExpense(userId: number, planId: number, amount: numbe
 
         const categoryLimit = checkCategoryPlans?.amount || 0;
 
-        console.log("categoryLimit", categoryLimit)
+
 
         if (categoryLimit > 0 && totalExpense + amount >= categoryLimit) {
             response.isExceeding = true;
             response.message = "Budget for this category has exceed!"
-            console.log("CATEGORY LIMIT")
+
             return response;
         }
         else {
-            console.log("BELUM MELEBIHI CATEGORY LIMIT")
+
         }
     }
 
@@ -61,16 +61,16 @@ export async function checkExpense(userId: number, planId: number, amount: numbe
 
     const maxExpense = checkBudget?.max_expense || 0;
 
-    console.log("maxExpense", maxExpense)
+
 
     if (totalExpense + amount >= maxExpense) {
         response.isExceeding = true;
         response.message = "Budget has exceed!"
-        console.log("expense exceed")
+
         return response;
     }
     else {
-        console.log("belum exceed budget")
+
     }
 
     return response;
@@ -96,7 +96,7 @@ export async function checkCurrentPeriod(userId: number) {
         .rpc("get_current_period", { p_user_id: userId })
         .single() as { data: CurrentPeriod | null, error: any }
 
-    console.log("checkPeriod", JSON.stringify(checkPeriod))
+
 
     if (checkPeriod) {
         response.isExist = true;

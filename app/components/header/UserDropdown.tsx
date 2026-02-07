@@ -42,7 +42,7 @@ export default function UserDropdown() {
         setLogoutLoading(true);
         const { error } = await signOut()
         if (error) {
-            console.log(error)
+
             return;
         }
         goToLogin()

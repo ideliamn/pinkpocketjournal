@@ -19,7 +19,7 @@ export async function GET(request: Request) {
         const { data: dataChart } = await supabase
             .rpc("summary_expense_dashboard", { p_plan_id: Number(planId) })
 
-        console.log("dataChart: " + JSON.stringify(dataChart))
+
 
         if (!dataChart && dataChart.length < 1) {
             code = 0

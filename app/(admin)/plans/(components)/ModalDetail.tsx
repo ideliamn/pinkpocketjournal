@@ -74,7 +74,7 @@ export default function ModalDetail({
 
     const fetchCategory = useCallback(async () => {
         const getCategory = await fetch(`/api/category?userId=${id}`);
-        console.log("getCategory: ", JSON.stringify(getCategory))
+
         const res = await getCategory.json();
         if (res.data) {
             const dataCategory: Categories[] = res.data
@@ -134,7 +134,7 @@ export default function ModalDetail({
 
 
     const handleClickEditCP = async (idCP: number) => {
-        console.log("id: ", idCP)
+
         setLoading(true)
         const foundCP = plan?.category_plans.find((cp) => cp.id === idCP);
         if (foundCP) {
@@ -190,7 +190,7 @@ export default function ModalDetail({
     const handleSubmitEditCP = async (e?: React.FormEvent) => {
         setLoading(true);
         e?.preventDefault();
-        console.log("selectedCP: " + JSON.stringify(selectedCP))
+
         try {
             if (!selectedCP?.id || !selectedCP.categories.id || !selectedCP.amount) {
                 setFailedMessage("fill all the required fields!");
@@ -226,7 +226,7 @@ export default function ModalDetail({
 
     const handleDeleteCP = async (id: number) => {
         setLoading(true);
-        console.log("selectedCP: " + JSON.stringify(selectedCP))
+
         try {
             if (!id || id === 0) {
                 setFailedMessage("fill all the required fields!");
