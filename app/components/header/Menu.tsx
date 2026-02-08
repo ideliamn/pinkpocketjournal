@@ -43,7 +43,7 @@ export default function Menu() {
     };
 
     return (
-        <div className={`${pixelify.className} flex gap-4`}>
+        <div className={`${pixelify.className} flex flex-col md:flex-row justify-start gap-4`}>
             {loading && <Loading />}
             {menu.map((m) => (
                 <Link

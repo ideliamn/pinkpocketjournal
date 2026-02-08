@@ -495,9 +495,9 @@ export default function Expenses() {
                         onClose={closeModalForm}
                         title={`${isCreateMode ? "create new" : "update"} expense`}
                     >
-                        <form>
-                            <div className="flex gap-4 items-center space-y-4">
-                                <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
+                        <form className="space-y-2">
+                            <div className="flex gap-1 md:gap-4 flex-col md:flex-row md:items-center">
+                                <div className={`flex items-center ${geistMono.className} w-[200px] text-start justify-start`}>
                                     description
                                 </div>
                                 <div className="flex-1">
@@ -511,7 +511,7 @@ export default function Expenses() {
                                     </Input>
                                 </div>
                             </div>
-                            <div className="flex gap-4 items-center space-y-4">
+                            <div className="flex gap-1 md:gap-4 flex-col md:flex-row md:items-center">
                                 <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
                                     amount
                                 </div>
@@ -527,7 +527,7 @@ export default function Expenses() {
                                     ></Input>
                                 </div>
                             </div>
-                            <div className="flex gap-4 items-center space-y-4">
+                            <div className="flex gap-1 md:gap-4 flex-col md:flex-row md:items-center">
                                 <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
                                     date
                                 </div>
@@ -542,7 +542,7 @@ export default function Expenses() {
                                     </Input>
                                 </div>
                             </div>
-                            <div className="flex gap-4 items-center space-y-4">
+                            <div className="flex gap-1 md:gap-4 flex-col md:flex-row md:items-center">
                                 <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
                                     plan
                                 </div>
@@ -559,7 +559,7 @@ export default function Expenses() {
                                     />
                                 </div>
                             </div>
-                            <div className="flex gap-4 items-center space-y-4">
+                            <div className="flex gap-1 md:gap-4 flex-col md:flex-row md:items-center">
                                 <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
                                     category
                                 </div>
@@ -576,7 +576,7 @@ export default function Expenses() {
                                     />
                                 </div>
                             </div>
-                            <div className="flex gap-4 items-center space-y-4">
+                            <div className="flex gap-1 md:gap-4 flex-col md:flex-row md:items-center">
                                 <div className={`flex items-center ${geistMono.className} text-s w-[200px] text-start justify-start`}>
                                     source
                                 </div>
