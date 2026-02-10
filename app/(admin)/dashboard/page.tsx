@@ -287,25 +287,25 @@ export default function Dashboard() {
                     <Clock className="w-5 h-5 text-pink-500" /> recent expenses
                 </h2>
                 <div className="overflow-x-auto">
-                    <Table className="min-w-full text-left">
-                        <TableHeader>
+                    <Table className="min-w-full text-left border-collapse">
+                        <TableHeader className={`items-center text-center ${geistMono.style} bg-pink-200`}>
                             <TableRow>
-                                <TableCell className="py-2 px-4 rounded-tl-lg">date</TableCell>
-                                <TableCell className="py-2 px-4">category</TableCell>
-                                <TableCell className="py-2 px-4">description</TableCell>
-                                <TableCell className="py-2 px-4 rounded-tr-lg">amount</TableCell>
+                                <TableCell className="border border-pink-300 py-2 px-4 rounded-tl-lg">date</TableCell>
+                                <TableCell className="border border-pink-300 py-2 px-4">category</TableCell>
+                                <TableCell className="border border-pink-300 py-2 px-4">description</TableCell>
+                                <TableCell className="border border-pink-300 py-2 px-4 rounded-tr-lg">amount</TableCell>
                             </TableRow>
                         </TableHeader>
-                        <TableBody>
+                        <TableBody className="divide-y divide-pink-300">
                             {recentExpense.map((item, index) => (
                                 <TableRow
                                     key={index}
                                     className={`border-spacing-2.5 text-sm ${index % 2 === 0 ? "bg-white" : "bg-pink-50"}`}
                                 >
-                                    <TableCell className="py-2 px-4">{item.expense_date}</TableCell>
-                                    <TableCell className="py-2 px-4">{item.categories?.name}</TableCell>
-                                    <TableCell className="py-2 px-4">{item.description}</TableCell>
-                                    <TableCell className="py-2 px-4 text-pink-600 font-medium">
+                                    <TableCell className="border border-pink-300 py-2 px-4">{item.expense_date}</TableCell>
+                                    <TableCell className="border border-pink-300 py-2 px-4">{item.categories?.name}</TableCell>
+                                    <TableCell className="border border-pink-300 py-2 px-4">{item.description}</TableCell>
+                                    <TableCell className="border border-pink-300 py-2 px-4 text-pink-600 font-medium">
                                         {formatRupiah(item.amount)}
                                     </TableCell>
                                 </TableRow>

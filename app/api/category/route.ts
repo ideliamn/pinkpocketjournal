@@ -103,7 +103,8 @@ export async function POST(req: Request) {
 
         const insertCategory = {
             user_id: body.user_id,
-            name: body.name
+            name: body.name,
+            type: body.type
         }
 
         const { data: insertedData, error } = await supabase
@@ -149,8 +150,9 @@ export async function PUT(req: Request) {
         const { data: searchExisting } = await supabase
             .from("categories")
             .select("*")
-            .match({ user_id: body.user_id })
+            .eq("user_id", body.user_id)
             .ilike("name", body.name)
+            .neq("id", body.id)
             .single();
 
         if (searchExisting) {
@@ -163,6 +165,7 @@ export async function PUT(req: Request) {
         const updateCategory = {
             user_id: body.user_id,
             name: body.name,
+            type: body.type,
             updated_at: dateTimeNow()
         }
 

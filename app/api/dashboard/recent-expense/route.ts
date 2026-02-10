@@ -21,6 +21,7 @@ export async function GET(request: Request) {
             .select("description, expense_date, amount, categories(name)")
             .eq("plan_id", planId)
             .order("expense_date", { ascending: false })
+            .order("created_at", { ascending: false })
             .limit(5)
 
 
