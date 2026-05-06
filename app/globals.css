@@ -3,6 +3,12 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary: #ff6b9d;
+  --soft-pink: #fff0f5;
+}
+
+body {
+  background: #fafafa;
 }
 
 @theme inline {
