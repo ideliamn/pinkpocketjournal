@@ -1,8 +1,12 @@
-export function SummaryCard({ title, value }: any) {
+import { Card } from "@/components/ui/card";
+
+export default function SummaryCard({ title, value }: any) {
   return (
-    <div className="bg-white p-4 rounded-xl shadow-sm">
-      <p className="text-sm text-gray-400">{title}</p>
-      <h2 className="text-lg font-semibold">{value}</h2>
-    </div>
+    <Card>
+      <p className="text-sm text-gray-500">{title}</p>
+      <h2 className="text-lg font-semibold">
+        Rp {value?.toLocaleString("id-ID") || 0}
+      </h2>
+    </Card>
   );
 }

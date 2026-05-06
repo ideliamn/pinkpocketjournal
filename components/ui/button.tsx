@@ -1,23 +1,26 @@
-"use client";
+import { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "outline";
+}
+
 export function Button({
-  children,
   className,
   variant = "primary",
   ...props
-}: any) {
-  const base = "rounded-xl px-4 py-3 text-sm font-medium transition w-full";
-
-  const variants = {
-    primary: "bg-pink-500 text-white hover:bg-pink-600",
-    secondary: "bg-gray-100 text-gray-700",
-    ghost: "bg-transparent text-gray-500",
-  };
-
+}: ButtonProps) {
   return (
-    <button className={cn(base, variants[variant], className)} {...props}>
-      {children}
-    </button>
+    <button
+      className={cn(
+        "w-full px-4 py-2 rounded-xl font-medium transition cursor-pointer",
+        variant === "primary" &&
+          "bg-pink-500 text-white hover:bg-pink-600 active:scale-95",
+        variant === "outline" &&
+          "border border-pink-500 text-pink-500 hover:bg-pink-50",
+        className
+      )}
+      {...props}
+    />
   );
 }
