@@ -1,60 +1,137 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-export default function Sidebar() {
-  const [menus, setMenus] = useState<any[]>([]);
-  const [collapsed, setCollapsed] = useState(false);
+import {
+  LayoutDashboard,
+  Wallet,
+  Receipt,
+  Target,
+  Tags,
+  Landmark,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
+const menus = [
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Expenses",
+    href: "/expenses",
+    icon: Wallet,
+  },
+  {
+    label: "Bills",
+    href: "/bills",
+    icon: Receipt,
+  },
+  {
+    label: "Plans",
+    href: "/plans",
+    icon: Target,
+  },
+  {
+    label: "Categories",
+    href: "/categories",
+    icon: Tags,
+  },
+  {
+    label: "Sources",
+    href: "/sources",
+    icon: Landmark,
+  },
+  {
+    label: "Settings",
+    href: "/settings",
+    icon: Settings,
+  },
+];
+
+export default function Sidebar({
+  open,
+  setOpen,
+}: any) {
   const pathname = usePathname();
-  const router = useRouter();
-
-  useEffect(() => {
-    fetch("/api/menu")
-      .then((res) => res.json())
-      .then((res) => setMenus(res.data || []));
-  }, []);
 
   return (
     <aside
-      className={`bg-white border-r transition-all duration-300 hidden md:flex flex-col ${
-        collapsed ? "w-16" : "w-64"
-      }`}
+      className={`
+        hidden lg:flex
+        fixed left-0 top-0 z-40
+        h-screen
+        bg-white
+        border-r border-pink-100
+        flex-col
+        transition-all duration-300
+        ${open ? "w-64" : "w-20"}
+      `}
     >
       {/* LOGO */}
-      <div className="p-4 font-bold text-pink-500 flex justify-between items-center">
-        {!collapsed && "pinkpocket"}
+      <div className="h-20 flex items-center justify-between px-4 border-b border-pink-100">
+        {open && (
+          <div>
+            <h1 className="font-bold text-pink-500 text-xl">
+              pinkpocket
+            </h1>
+            <p className="text-xs text-pink-300">
+              journal ✨
+            </p>
+          </div>
+        )}
+
         <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="text-xs cursor-pointer"
+          onClick={() => setOpen(!open)}
+          className="w-10 h-10 rounded-xl hover:bg-pink-50 flex items-center justify-center cursor-pointer"
         >
-          {collapsed ? "➡️" : "⬅️"}
+          {open ? (
+            <ChevronLeft size={18} />
+          ) : (
+            <ChevronRight size={18} />
+          )}
         </button>
       </div>
 
       {/* MENU */}
-      <div className="flex-1 px-2 space-y-1">
+      <nav className="flex-1 p-3 space-y-2">
         {menus.map((menu) => {
-          const active = pathname === menu.path;
+          const Icon = menu.icon;
+
+          const active = pathname === menu.href;
 
           return (
-            <button
-              key={menu.id}
-              onClick={() => router.push(menu.path)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm cursor-pointer
+            <Link
+              key={menu.href}
+              href={menu.href}
+              className={`
+                flex items-center gap-3
+                px-4 py-3
+                rounded-2xl
+                transition-all
+                cursor-pointer
                 ${
                   active
-                    ? "bg-pink-100 text-pink-600"
-                    : "text-gray-600 hover:bg-pink-50"
-                }`}
+                    ? "bg-pink-500 text-white"
+                    : "hover:bg-pink-50 text-gray-700"
+                }
+              `}
             >
-              <span>📌</span>
-              {!collapsed && <span>{menu.name}</span>}
-            </button>
+              <Icon size={20} />
+
+              {open && (
+                <span className="font-medium">
+                  {menu.label}
+                </span>
+              )}
+            </Link>
           );
         })}
-      </div>
+      </nav>
     </aside>
   );
 }

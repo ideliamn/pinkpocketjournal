@@ -1,25 +1,112 @@
 "use client";
 
-import { Modal } from "@/components/ui/modal";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Chip } from "@/components/ui/chip";
+import { motion, AnimatePresence } from "framer-motion";
 
-export function AddExpenseModal({ open, onClose }: any) {
+interface Props {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function AddExpenseModal({
+  open,
+  onClose,
+}: Props) {
   return (
-    <Modal open={open} onClose={onClose}>
-      <h2 className="text-lg font-semibold mb-4">
-        Tambah Pengeluaran 💸
-      </h2>
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={onClose}
+            className="
+              fixed inset-0
+              bg-black/30
+              backdrop-blur-sm
+              z-50
+            "
+          />
 
-      <Input placeholder="Rp 0" />
+          {/* Modal */}
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 40,
+              scale: 0.96,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+            }}
+            exit={{
+              opacity: 0,
+              y: 20,
+              scale: 0.96,
+            }}
+            transition={{
+              type: "spring",
+              damping: 24,
+              stiffness: 260,
+            }}
+            className="
+              fixed
+              left-1/2
+              top-1/2
+              -translate-x-1/2
+              -translate-y-1/2
+              z-[60]
 
-      <div className="flex gap-2 mt-4 flex-wrap">
-        <Chip label="🍜 Makan" />
-        <Chip label="🚗 Transport" />
-      </div>
+              w-[92%]
+              max-w-lg
 
-      <Button className="mt-6">Simpan 💖</Button>
-    </Modal>
+              rounded-3xl
+              bg-white
+              shadow-2xl
+              p-6
+            "
+          >
+            <div className="mb-5">
+              <h2 className="text-2xl font-bold text-zinc-800">
+                Add Expense ✨
+              </h2>
+
+              <p className="text-sm text-zinc-500 mt-1">
+                Catat pengeluaranmu sekarang
+              </p>
+            </div>
+
+            {/* Placeholder form */}
+            <div className="space-y-4">
+              <div className="h-12 rounded-2xl bg-zinc-100 animate-pulse" />
+              <div className="h-12 rounded-2xl bg-zinc-100 animate-pulse" />
+              <div className="h-12 rounded-2xl bg-zinc-100 animate-pulse" />
+              <div className="h-28 rounded-2xl bg-zinc-100 animate-pulse" />
+            </div>
+
+            <button
+              onClick={onClose}
+              className="
+                mt-6
+                w-full
+                h-12
+                rounded-2xl
+                bg-pink-500
+                hover:bg-pink-600
+                text-white
+                font-semibold
+                transition
+                cursor-pointer
+              "
+            >
+              Tutup
+            </button>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }

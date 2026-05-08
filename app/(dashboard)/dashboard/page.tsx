@@ -1,102 +1,125 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { Container } from "@/components/ui/container";
-import CategoryChart from "@/components/dashboard/category-chart";
-import ExpenseChart from "@/components/dashboard/expense-chart";
-import RecentExpense from "@/components/dashboard/recent-expense";
 import SummaryCard from "@/components/dashboard/summary-card";
+import DailyExpenseChart from "@/components/dashboard/daily-expense-chart";
+import CategoryPieChart from "@/components/dashboard/category-pie-chart";
 import UpcomingBills from "@/components/dashboard/upcoming-bills";
+import InsightCard from "@/components/dashboard/insight-card";
+import RecentTransactions from "@/components/dashboard/recent-transactions";
+import MobileQuickAdd from "@/components/dashboard/mobile-quick-add";
+import DesktopQuickAdd from "@/components/dashboard/desktop-quick-add";
+
+import AddExpenseModal from "@/components/expense/add-expense-modal";
+
+const chartData = [
+  { date: "Mon", amount: 20000 },
+  { date: "Tue", amount: 50000 },
+  { date: "Wed", amount: 30000 },
+  { date: "Thu", amount: 80000 },
+  { date: "Fri", amount: 45000 },
+];
+
+const categoryData = [
+  { category: "Food", total: 400000 },
+  { category: "Transport", total: 200000 },
+  { category: "Shopping", total: 150000 },
+  { category: "Bills", total: 100000 },
+  { category: "Other", total: 50000 },
+];
+
+const recentTransactions = [
+  {
+    description: "Chatime",
+    amount: 35000,
+    categories: {
+      name: "Food",
+    },
+  },
+  {
+    description: "Gojek",
+    amount: 22000,
+    categories: {
+      name: "Transport",
+    },
+  },
+];
+
+const bills = [
+  {
+    id: 1,
+    description: "Netflix",
+    amount: 54000,
+    due_date: "Tomorrow",
+  },
+];
 
 export default function DashboardPage() {
-  const [loading, setLoading] = useState(true);
-
-  const [summary, setSummary] = useState<any>(null);
-  const [dailyChart, setDailyChart] = useState<any[]>([]);
-  const [categoryChart, setCategoryChart] = useState<any[]>([]);
-  const [recent, setRecent] = useState<any[]>([]);
-  const [bills, setBills] = useState<any[]>([]);
-
-  const planId = 1; // nanti dynamic ya
-  const userId = 1;
-
-  const fetchData = async () => {
-    setLoading(true);
-
-    try {
-      const [
-        summaryRes,
-        dailyRes,
-        categoryRes,
-        recentRes,
-        billsRes,
-      ] = await Promise.all([
-        fetch(`/api/dashboard/summary-expense?planId=${planId}`),
-        fetch(`/api/dashboard/daily-expense-chart?planId=${planId}`),
-        fetch(`/api/dashboard/spending-by-category-chart?planId=${planId}`),
-        fetch(`/api/dashboard/recent-expense?planId=${planId}`),
-        fetch(`/api/dashboard/bills?userId=${userId}`),
-      ]);
-
-      const summaryData = await summaryRes.json();
-      const dailyData = await dailyRes.json();
-      const categoryData = await categoryRes.json();
-      const recentData = await recentRes.json();
-      const billsData = await billsRes.json();
-
-      setSummary(summaryData.data?.[0] || {});
-      setDailyChart(dailyData.data || []);
-      setCategoryChart(categoryData.data || []);
-      setRecent(recentData.data || []);
-      setBills(billsData.data || []);
-    } catch (err) {
-      console.error(err);
-    }
-
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  if (loading) return <div className="p-6">Loading...</div>;
+  const [openExpenseModal, setOpenExpenseModal] = useState(false);
 
   return (
-    <Container>
-      <div className="space-y-6">
+    <div className="space-y-5 lg:space-y-6">
+      {/* MOBILE WELCOME */}
+      <div className="lg:hidden">
+        <h1 className="text-2xl font-bold text-gray-800">
+          Hi, Idel ✨
+        </h1>
 
-        {/* 👋 Header */}
-        <div>
-          <h1 className="text-xl font-semibold">
-            Hi, Idelia 👋
-          </h1>
-          <p className="text-sm text-gray-500">
-            Yuk, kelola keuanganmu hari ini
-          </p>
-        </div>
-
-        {/* 💰 Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <SummaryCard title="Total Expense" value={summary.total_expense} />
-          <SummaryCard title="Total Income" value={summary.total_income} />
-          <SummaryCard title="Remaining" value={summary.remaining} />
-          <SummaryCard title="Budget" value={summary.budget} />
-        </div>
-
-        {/* 📊 Charts */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <ExpenseChart data={dailyChart} />
-          <CategoryChart data={categoryChart} />
-        </div>
-
-        {/* 📋 Bottom */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <RecentExpense data={recent} />
-          <UpcomingBills data={bills} />
-        </div>
+        <p className="text-sm text-gray-500 mt-1">
+          Let’s track your money today 💖
+        </p>
       </div>
-    </Container>
+
+      {/* SUMMARY */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <SummaryCard
+          title="Total Plan"
+          amount="Rp 5.000.000"
+        />
+
+        <SummaryCard
+          title="Expense"
+          amount="Rp 2.500.000"
+        />
+
+        <SummaryCard
+          title="Remaining"
+          amount="Rp 2.500.000"
+        />
+
+        <SummaryCard
+          title="Days Left"
+          amount="12 Hari"
+        />
+      </div>
+
+      {/* DAILY CHART */}
+      <DailyExpenseChart data={chartData} />
+
+      {/* CATEGORY + BILLS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <CategoryPieChart data={categoryData} />
+
+        <UpcomingBills bills={bills} />
+      </div>
+
+      {/* INSIGHT */}
+      <InsightCard />
+
+      {/* RECENT TRANSACTION */}
+      <RecentTransactions
+        data={recentTransactions}
+      />
+
+      {/* QUICK ADD */}
+      <MobileQuickAdd
+        onClick={() => setOpenExpenseModal(true)}
+      />
+
+      <DesktopQuickAdd
+        onClick={() => setOpenExpenseModal(true)}
+      />
+    </div>
   );
 }
