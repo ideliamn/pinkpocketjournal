@@ -16,11 +16,11 @@ export function middleware(req: NextRequest) {
   }
 
   // SUDAH LOGIN TAPI MASIH KE LOGIN PAGE
-  if (token && isAuthPage) {
-    return NextResponse.redirect(
-      new URL("/dashboard", req.url)
-    );
-  }
+  // if (token && isAuthPage) {
+  //   return NextResponse.redirect(
+  //     new URL("/dashboard", req.url)
+  //   );
+  // }
 
   return NextResponse.next();
 }

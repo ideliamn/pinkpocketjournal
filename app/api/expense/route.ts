@@ -18,6 +18,7 @@ export async function GET(request: Request) {
 
     try {
         const { searchParams } = new URL(request.url);
+
         const id = searchParams.get("id");
         const userId = searchParams.get("userId");
         const planId = searchParams.get("planId");
@@ -26,6 +27,11 @@ export async function GET(request: Request) {
         const search = searchParams.get("search");
         const page = Number(searchParams.get("page"));
         const limit = Number(searchParams.get("limit"));
+        const startDate = searchParams.get("startDate");
+        const endDate = searchParams.get("endDate");
+        const minAmount = searchParams.get("minAmount");
+        const maxAmount = searchParams.get("maxAmount");
+
         const offset = (page - 1) * limit;
 
         let query = supabase
@@ -39,7 +45,11 @@ export async function GET(request: Request) {
         if (userId) query = query.eq("user_id", userId);
         if (sourceId) query = query.eq("source_id", sourceId);
         if (search) query = query.ilike("description", `%${search}%`);
-
+        if (startDate) query = query.gte("expense_date", startDate);
+        if (endDate) query = query.lte("expense_date", endDate);
+        if (minAmount) query = query.gte("amount", Number(minAmount));
+        if (maxAmount) query = query.lte("amount", Number(maxAmount));
+        
         const { data: result, error, count } = await query
             .range(offset, offset + limit - 1)
             .order("expense_date", { ascending: false })

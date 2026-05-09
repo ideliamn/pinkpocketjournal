@@ -42,7 +42,7 @@ export default function DashboardPage() {
       setUser(currentUser);
       setCurrentPlan(activePlan);
 
-      const dashboardRes = await fetch(`/api/dashboard/overview?userId=${currentUser.id}&planId=${activePlan.plan_id}`);
+      const dashboardRes = await fetch(`/api/dashboard/overview?userId=${currentUser.id}&planId=${activePlan?.plan_id}`);
       const dashboardResult = await dashboardRes.json();
 
       if (!dashboardRes.ok || dashboardResult.code === 0) {
@@ -79,6 +79,32 @@ export default function DashboardPage() {
         ))}
       </div>
         <div className="h-72rounded-3xlbg-pink-100animate-pulse " />
+      </div>
+    );
+  }
+
+  if (!currentPlan) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="w-full max-w-md rounded-[32px] border border-pink-100 bg-white/80 backdrop-blur p-8 text-center shadow-[0_10px_40px_rgba(236,72,153,0.08)]">
+          <div className="w-20 h-20 mx-auto rounded-full bg-pink-100 flex items-center justify-center text-4xl">
+            💸
+          </div>
+          <h2 className=" mt-6 text-2xl font-bold text-gray-800">
+            No Active Plan
+          </h2>
+
+          <p className=" mt-3 text-sm leading-relaxed text-gray-500">
+            Kamu belum punya plan yang sedang aktif.
+            Yuk bikin plan baru sekarang ✨
+          </p>
+
+          <button
+            onClick={ () => window.location.href = "/plans" }
+            className=" mt-6 h-12 px-6 rounded-2xl bg-pink-500 text-white font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer">
+            Create New Plan
+          </button>
+        </div>
       </div>
     );
   }

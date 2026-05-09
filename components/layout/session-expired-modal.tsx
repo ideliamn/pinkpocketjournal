@@ -10,33 +10,8 @@ export default function SessionExpiredModal({
   if (!open) return null;
 
   return (
-    <div
-      className="
-        fixed
-        inset-0
-        z-[999]
-        bg-black/40
-        backdrop-blur-sm
-        flex
-        items-center
-        justify-center
-        px-5
-      "
-    >
-      <div
-        className="
-          w-full
-          max-w-sm
-          rounded-3xl
-          bg-white
-          p-6
-          shadow-2xl
-          animate-in
-          fade-in
-          zoom-in-95
-          duration-300
-        "
-      >
+    <div className=" fixed inset-0 z-[999] bg-black/40 backdrop-blur-sm flex items-center justify-center px-5">
+      <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-300">
         <h2 className="text-xl font-bold text-gray-800">
           Session Expired
         </h2>
@@ -46,21 +21,10 @@ export default function SessionExpiredModal({
           Please login again to continue.
         </p>
 
-        <div className="mt-5">
-          <div
-            className="
-              w-full
-              h-11
-              rounded-2xl
-              bg-pink-500
-              text-white
-              flex
-              items-center
-              justify-center
-              font-semibold
-            "
-          >
-            Redirecting to login...
+        <div className="mt-5 cursor-pointer"
+          onClick={() => { window.location.href = "/login" }}>
+          <div className="w-full h-11 rounded-2xl bg-pink-500 text-white flex items-center justify-center font-semibold cursor-pointer">
+            Login
           </div>
         </div>
       </div>

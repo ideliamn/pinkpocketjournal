@@ -1,16 +1,7 @@
 "use client";
 
-import {
-  Bell,
-  UserCircle2,
-  LogOut,
-} from "lucide-react";
-
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { Bell, UserCircle2, LogOut } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   user?: {
@@ -21,57 +12,33 @@ interface Props {
 export default function Header({
   user,
 }: Props) {
-  const [openProfile, setOpenProfile] =
-    useState(false);
-
-  const desktopProfileRef =
-    useRef<HTMLDivElement>(null);
-
-  const mobileProfileRef =
-    useRef<HTMLDivElement>(null);
+  const [openProfile, setOpenProfile] = useState(false);
+  const desktopProfileRef = useRef<HTMLDivElement>(null);
+  const mobileProfileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(
       event: MouseEvent
     ) {
       const target = event.target as Node;
+      const clickedDesktop = desktopProfileRef.current?.contains(target);
+      const clickedMobile = mobileProfileRef.current?.contains(target);
 
-      const clickedDesktop =
-        desktopProfileRef.current?.contains(
-          target
-        );
-
-      const clickedMobile =
-        mobileProfileRef.current?.contains(
-          target
-        );
-
-      if (
-        !clickedDesktop &&
-        !clickedMobile
-      ) {
+      if (!clickedDesktop && !clickedMobile) {
         setOpenProfile(false);
       }
     }
 
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside
-    );
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside
-      );
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-      });
+      await fetch("/api/auth/logout", { method: "POST" });
 
       window.location.href = "/login";
     } catch (err) {
@@ -82,34 +49,8 @@ export default function Header({
   return (
     <>
       {/* MOBILE HEADER */}
-      <header
-        className="
-          lg:hidden
-          fixed
-          top-0
-          left-0
-          right-0
-          z-[60]
-
-          h-16
-
-          bg-[#fff7fb]/85
-          backdrop-blur-xl
-
-          border-b
-          border-pink-100
-        "
-      >
-        <div
-          className="
-            h-full
-            px-4
-
-            flex
-            items-center
-            justify-between
-          "
-        >
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-[60] h-16 bg-[#fff7fb]/85 backdrop-blur-xl border-b border-pink-100">
+        <div className="h-full px-4 flex items-center justify-between">
           {/* LOGO */}
           <h1
             className="
@@ -214,14 +155,13 @@ export default function Header({
                   transition-all
                   duration-300
 
-                  ${
-                    openProfile
-                      ? `
+                  ${openProfile
+                    ? `
                         opacity-100
                         translate-y-0
                         pointer-events-auto
                       `
-                      : `
+                    : `
                         opacity-0
                         -translate-y-2
                         pointer-events-none
@@ -308,11 +248,11 @@ export default function Header({
           {/* TEXT */}
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
-              Hi, {user?.name || "Idel"} ✨
+              {user?.name ? `Hi, ${user?.name} ✨` : ""}
             </h1>
 
             <p className="text-sm text-gray-500 mt-1">
-              Let’s track your money today 💖
+              Let's track your money today 💖
             </p>
           </div>
 
@@ -408,14 +348,13 @@ export default function Header({
                   transition-all
                   duration-300
 
-                  ${
-                    openProfile
-                      ? `
+                  ${openProfile
+                    ? `
                         opacity-100
                         translate-y-0
                         pointer-events-auto
                       `
-                      : `
+                    : `
                         opacity-0
                         -translate-y-2
                         pointer-events-none
