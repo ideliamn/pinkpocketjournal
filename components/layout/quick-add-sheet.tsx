@@ -34,31 +34,10 @@ export default function QuickAddSheet({
   return (
     <>
       {/* BACKDROP */}
-      <div
-        onClick={onClose}
-        className="
-          fixed inset-0 z-[90]
-          bg-black/30
-          backdrop-blur-sm
-          animate-in fade-in
-        "
-      />
+      <div onClick={onClose} className="fixed inset-0 z-[90] bg-black/30 backdrop-blur-sm animate-in fade-in" />
 
       {/* SHEET */}
-      <div
-        className="
-          fixed left-1/2 bottom-28 lg:bottom-8
-          -translate-x-1/2
-          z-[100]
-          w-[90%] max-w-sm
-          bg-white
-          rounded-3xl
-          border border-pink-100
-          shadow-2xl
-          p-5
-          animate-in zoom-in-95 slide-in-from-bottom-5
-        "
-      >
+      <div className="fixed left-1/2 bottom-28 lg:bottom-8 -translate-x-1/2 z-[100] w-[90%] max-w-sm bg-white rounded-3xl border border-pink-100 shadow-2xl p-5 animate-in zoom-in-95 slide-in-from-bottom-5">
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="font-bold text-lg">
@@ -72,13 +51,7 @@ export default function QuickAddSheet({
 
           <button
             onClick={onClose}
-            className="
-              w-10 h-10
-              rounded-2xl
-              hover:bg-pink-50
-              flex items-center justify-center
-              cursor-pointer
-            "
+            className="w-10 h-10 rounded-2xl hover:bg-pink-50 flex items-center justify-center cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -89,28 +62,8 @@ export default function QuickAddSheet({
             const Icon = menu.icon;
 
             return (
-              <button
-                key={menu.label}
-                className="
-                  w-full
-                  flex items-center gap-4
-                  p-4
-                  rounded-2xl
-                  bg-pink-50
-                  hover:bg-pink-100
-                  transition
-                  cursor-pointer
-                "
-              >
-                <div
-                  className="
-                    w-12 h-12
-                    rounded-2xl
-                    bg-white
-                    flex items-center justify-center
-                    text-pink-500
-                  "
-                >
+              <button key={menu.label} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-pink-50 hover:bg-pink-100 transition cursor-pointer">
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-pink-500">
                   <Icon size={22} />
                 </div>
 
@@ -125,7 +78,7 @@ export default function QuickAddSheet({
                 </div>
               </button>
             );
-          })}
+          })} 
         </div>
       </div>
     </>

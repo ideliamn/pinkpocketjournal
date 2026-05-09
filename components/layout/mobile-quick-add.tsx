@@ -12,36 +12,7 @@ export default function MobileQuickAdd({
   return (
     <button
       onClick={onClick}
-      className="
-        fixed
-        md:hidden
-
-        bottom-20
-        left-1/2
-        -translate-x-1/2
-
-        z-[999]
-
-        h-16
-        w-16
-
-        flex
-        items-center
-        justify-center
-
-        rounded-full
-        bg-pink-500
-
-        shadow-[0_12px_30px_rgba(236,72,153,0.35)]
-
-        transition-all
-        duration-300
-
-        hover:scale-105
-        active:scale-95
-
-        cursor-pointer
-      "
+      className="fixed md:hidden bottom-20 left-1/2 -translate-x-1/2 z-[999] h-16 w-16 flex items-center justify-center rounded-full bg-pink-500 shadow-[0_12px_30px_rgba(236,72,153,0.35)] transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
     >
       <Plus className="w-7 h-7 text-white" />
     </button>

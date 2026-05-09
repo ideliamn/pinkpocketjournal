@@ -31,15 +31,7 @@ export default function DailyExpenseChart({
   }));
 
   return (
-    <div
-      className="
-        rounded-3xl
-        bg-white
-        p-5
-        shadow-sm
-        border border-pink-100
-      "
-    >
+    <div className="rounded-3xl bg-white p-5 shadow-sm border border-pink-100">
       <div className="mb-5">
         <h2 className="text-lg font-bold text-gray-800">
           Pengeluaran Harian 📈
@@ -51,10 +43,7 @@ export default function DailyExpenseChart({
       </div>
 
       <div className="h-[280px]">
-        <ResponsiveContainer
-          width="100%"
-          height="100%"
-        >
+        <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
             <defs>
               <linearGradient

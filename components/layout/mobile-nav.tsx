@@ -23,9 +23,7 @@ export default function MobileNav() {
           <button
             key={menu.path}
             onClick={() => router.push(menu.path)}
-            className={`flex flex-col items-center text-xs ${
-              active ? "text-pink-500" : "text-gray-400"
-            }`}
+            className={`flex flex-col items-center text-xs ${active ? "text-pink-500" : "text-gray-400"}`}
           >
             <span>{menu.icon}</span>
             {menu.name}

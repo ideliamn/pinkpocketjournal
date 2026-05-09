@@ -5,12 +5,7 @@ export default function ExpensePagination({
 }: any) {
   return (
     <div className="flex justify-center gap-2">
-      <button
-        disabled={page <= 1}
-        onClick={() =>
-          setPage(page - 1)
-        }
-      >
+      <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
         Prev
       </button>
 
@@ -18,12 +13,7 @@ export default function ExpensePagination({
         {page} / {totalPages}
       </div>
 
-      <button
-        disabled={page >= totalPages}
-        onClick={() =>
-          setPage(page + 1)
-        }
-      >
+      <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
         Next
       </button>
     </div>
