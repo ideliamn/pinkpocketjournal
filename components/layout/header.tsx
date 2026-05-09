@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import {
   Bell,
   UserCircle2,
   LogOut,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 interface Props {
   user?: {
@@ -17,23 +21,34 @@ interface Props {
 export default function Header({
   user,
 }: Props) {
-  const router = useRouter();
-
   const [openProfile, setOpenProfile] =
     useState(false);
 
-  const profileRef =
+  const desktopProfileRef =
+    useRef<HTMLDivElement>(null);
+
+  const mobileProfileRef =
     useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(
       event: MouseEvent
     ) {
+      const target = event.target as Node;
+
+      const clickedDesktop =
+        desktopProfileRef.current?.contains(
+          target
+        );
+
+      const clickedMobile =
+        mobileProfileRef.current?.contains(
+          target
+        );
+
       if (
-        profileRef.current &&
-        !profileRef.current.contains(
-          event.target as Node
-        )
+        !clickedDesktop &&
+        !clickedMobile
       ) {
         setOpenProfile(false);
       }
@@ -70,12 +85,10 @@ export default function Header({
       <header
         className="
           lg:hidden
-
           fixed
           top-0
           left-0
           right-0
-
           z-[60]
 
           h-16
@@ -118,6 +131,7 @@ export default function Header({
                 h-10
 
                 rounded-2xl
+
                 bg-white
 
                 border
@@ -142,7 +156,7 @@ export default function Header({
             {/* PROFILE */}
             <div
               className="relative"
-              ref={profileRef}
+              ref={mobileProfileRef}
             >
               <button
                 onClick={() =>
@@ -155,6 +169,7 @@ export default function Header({
                   h-10
 
                   rounded-2xl
+
                   bg-white
 
                   border
@@ -182,29 +197,31 @@ export default function Header({
                   absolute
                   right-0
                   top-12
+                  z-[9999]
 
                   w-48
 
                   rounded-3xl
+
                   border
                   border-pink-100
 
                   bg-white
 
                   shadow-xl
-
                   overflow-hidden
 
                   transition-all
                   duration-300
 
-                  ${openProfile
-                    ? `
+                  ${
+                    openProfile
+                      ? `
                         opacity-100
                         translate-y-0
                         pointer-events-auto
                       `
-                    : `
+                      : `
                         opacity-0
                         -translate-y-2
                         pointer-events-none
@@ -246,10 +263,9 @@ export default function Header({
                     text-sm
                     text-red-500
 
-                    hover:bg-pink-50
+                    hover:bg-red-50
 
                     transition
-
                     cursor-pointer
                   "
                 >
@@ -270,7 +286,6 @@ export default function Header({
 
           sticky
           top-0
-
           z-30
 
           bg-[#fff7fb]/80
@@ -290,6 +305,7 @@ export default function Header({
             justify-between
           "
         >
+          {/* TEXT */}
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Hi, {user?.name || "Idel"} ✨
@@ -300,6 +316,7 @@ export default function Header({
             </p>
           </div>
 
+          {/* ACTION */}
           <div className="flex items-center gap-3">
             {/* NOTIF */}
             <button
@@ -308,6 +325,7 @@ export default function Header({
                 h-11
 
                 rounded-2xl
+
                 bg-white
 
                 border
@@ -332,7 +350,7 @@ export default function Header({
             {/* PROFILE */}
             <div
               className="relative"
-              ref={profileRef}
+              ref={desktopProfileRef}
             >
               <button
                 onClick={() =>
@@ -345,6 +363,7 @@ export default function Header({
                   h-11
 
                   rounded-2xl
+
                   bg-white
 
                   border
@@ -372,29 +391,31 @@ export default function Header({
                   absolute
                   right-0
                   top-14
+                  z-[9999]
 
                   w-52
 
                   rounded-3xl
+
                   border
                   border-pink-100
 
                   bg-white
 
                   shadow-xl
-
                   overflow-hidden
 
                   transition-all
                   duration-300
 
-                  ${openProfile
-                    ? `
+                  ${
+                    openProfile
+                      ? `
                         opacity-100
                         translate-y-0
                         pointer-events-auto
                       `
-                    : `
+                      : `
                         opacity-0
                         -translate-y-2
                         pointer-events-none
@@ -421,46 +442,30 @@ export default function Header({
                   </p>
                 </div>
 
-                {openProfile && (
-                  <div
-                    className="
-                      absolute
-                      right-0
-                      top-14
+                <button
+                  onClick={handleLogout}
+                  className="
+                    w-full
 
-                      w-52
+                    px-4
+                    py-3
 
-                      rounded-2xl
-                      border
-                      border-pink-100
+                    flex
+                    items-center
+                    gap-3
 
-                      bg-white
+                    text-sm
+                    text-red-500
 
-                      shadow-xl
+                    hover:bg-red-50
 
-                      overflow-hidden
-                    "
-                  >
-                    <button
-                      onClick={handleLogout}
-                      className="
-                        w-full
-                        px-4
-                        py-3
-
-                        text-left
-                        text-sm
-
-                        hover:bg-pink-50
-
-                        transition
-                        cursor-pointer
-                      "
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
+                    transition
+                    cursor-pointer
+                  "
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
               </div>
             </div>
           </div>

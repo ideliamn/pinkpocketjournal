@@ -35,9 +35,9 @@ export async function POST(req: Request) {
       res.cookies.set("sb-access-token", session.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 60 * 60 * 24 * 7,
+        sameSite: "lax",
         path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 hari
       });
       res.cookies.set("sb-refresh-token", session.refresh_token, {
         httpOnly: true,

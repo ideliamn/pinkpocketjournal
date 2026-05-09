@@ -1,5 +1,7 @@
 "use client";
 
+import { formatRupiah } from "@/lib/helpers/format";
+
 export default function UpcomingBills({
   bills,
 }: any) {
@@ -13,22 +15,18 @@ export default function UpcomingBills({
 
       <div className="space-y-3">
         {bills.map((bill: any) => (
-          <div
-            key={bill.id}
-            className="flex items-center justify-between p-4 rounded-2xl bg-pink-50"
-          >
+          <div key={bill.id} className="flex items-center justify-between p-4 rounded-2xl bg-pink-50">
             <div>
               <p className="font-medium">
                 {bill.description}
               </p>
-
               <p className="text-sm text-gray-500">
                 {bill.due_date}
               </p>
             </div>
 
             <p className="font-bold text-pink-500">
-              Rp {bill.amount}
+              {formatRupiah(bill.amount)}
             </p>
           </div>
         ))}

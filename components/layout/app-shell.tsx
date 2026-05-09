@@ -8,6 +8,7 @@ import MobileBottomNav from "@/components/layout/mobile-bottom-nav";
 import DesktopQuickAdd from "@/components/layout/desktop-quick-add";
 
 import AddExpenseModal from "@/components/expense/add-expense-modal";
+import SessionChecker from "./session-checker";
 
 interface Props {
   children: React.ReactNode;
@@ -48,6 +49,8 @@ export default function AppShell({
 
   return (
     <div className="min-h-screen bg-[#fff7fb]">
+      <SessionChecker />
+      
       {/* SIDEBAR */}
       <Sidebar
         collapsed={collapsed}

@@ -1,5 +1,7 @@
 "use client";
 
+import { formatRupiah } from "@/lib/helpers/format";
+
 export default function RecentTransactions({
   data,
 }: any) {
@@ -13,10 +15,7 @@ export default function RecentTransactions({
 
       <div className="space-y-3">
         {data.map((item: any, index: number) => (
-          <div
-            key={index}
-            className="flex items-center justify-between p-4 rounded-2xl hover:bg-pink-50"
-          >
+          <div key={index} className="flex items-center justify-between p-4 rounded-2xl hover:bg-pink-50">
             <div>
               <p className="font-medium">
                 {item.description}
@@ -28,7 +27,7 @@ export default function RecentTransactions({
             </div>
 
             <p className="font-bold text-pink-500">
-              Rp {item.amount}
+              {formatRupiah(item.amount)}
             </p>
           </div>
         ))}
