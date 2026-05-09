@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import SummaryCard from "@/components/dashboard/summary-card";
 import DailyExpenseChart from "@/components/dashboard/daily-expense-chart";
@@ -8,62 +8,140 @@ import CategoryPieChart from "@/components/dashboard/category-pie-chart";
 import UpcomingBills from "@/components/dashboard/upcoming-bills";
 import InsightCard from "@/components/dashboard/insight-card";
 import RecentTransactions from "@/components/dashboard/recent-transactions";
-import MobileQuickAdd from "@/components/dashboard/mobile-quick-add";
-import DesktopQuickAdd from "@/components/dashboard/desktop-quick-add";
 
 import AddExpenseModal from "@/components/expense/add-expense-modal";
 
-const chartData = [
-  { date: "Mon", amount: 20000 },
-  { date: "Tue", amount: 50000 },
-  { date: "Wed", amount: 30000 },
-  { date: "Thu", amount: 80000 },
-  { date: "Fri", amount: 45000 },
-];
+import { formatRupiah } from "@/lib/helpers/format";
 
-const categoryData = [
-  { category: "Food", total: 400000 },
-  { category: "Transport", total: 200000 },
-  { category: "Shopping", total: 150000 },
-  { category: "Bills", total: 100000 },
-  { category: "Other", total: 50000 },
-];
-
-const recentTransactions = [
-  {
-    description: "Chatime",
-    amount: 35000,
-    categories: {
-      name: "Food",
-    },
-  },
-  {
-    description: "Gojek",
-    amount: 22000,
-    categories: {
-      name: "Transport",
-    },
-  },
-];
-
-const bills = [
-  {
-    id: 1,
-    description: "Netflix",
-    amount: 54000,
-    due_date: "Tomorrow",
-  },
-];
+import DesktopQuickAdd from "@/components/layout/desktop-quick-add";
 
 export default function DashboardPage() {
+  const [loading, setLoading] = useState(true);
+
+  const [user, setUser] = useState<any>(null);
+  const [currentPlan, setCurrentPlan] = useState<any>(null);
+
+  const [summary, setSummary] = useState<any>(null);
+
+  const [dailyChart, setDailyChart] = useState<any[]>([]);
+  const [categoryChart, setCategoryChart] = useState<any[]>([]);
+  const [bills, setBills] = useState<any[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+
+  const [insight, setInsight] = useState({
+    topCategory: "-",
+    percentage: 0,
+  });
+
   const [openExpenseModal, setOpenExpenseModal] = useState(false);
+
+  const fetchDashboard = async () => {
+    try {
+      setLoading(true);
+
+      const meRes = await fetch("/api/user/me");
+      const meResult = await meRes.json();
+
+      if (!meRes.ok || meResult.code === 0) {
+        return;
+      }
+
+      const currentUser = meResult.data.user;
+      const activePlan = meResult.data.currentPlan;
+
+      setUser(currentUser);
+      setCurrentPlan(activePlan);
+
+      const dashboardRes = await fetch(
+        `/api/dashboard/overview?userId=${currentUser.id}&planId=${activePlan.plan_id}`
+      );
+
+      const dashboardResult =
+        await dashboardRes.json();
+
+      if (
+        !dashboardRes.ok ||
+        dashboardResult.code === 0
+      ) {
+        return;
+      }
+
+      const dashboardData =
+        dashboardResult.data;
+
+      setSummary(dashboardData.summary);
+
+      setDailyChart(
+        dashboardData.dailyExpenseChart || []
+      );
+
+      setCategoryChart(
+        dashboardData.categoryChart || []
+      );
+
+      setBills(
+        dashboardData.bills || []
+      );
+
+      setRecentTransactions(
+        dashboardData.recentExpense || []
+      );
+
+      setInsight({
+        topCategory:
+          dashboardData.insight
+            ?.topCategory || "-",
+
+        percentage:
+          dashboardData.insight
+            ?.topCategoryPercentage || 0,
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="
+                h-28
+                rounded-3xl
+                bg-pink-100
+                animate-pulse
+              "
+            />
+          ))}
+        </div>
+
+        <div
+          className="
+            h-72
+            rounded-3xl
+            bg-pink-100
+            animate-pulse
+          "
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 lg:space-y-6">
       {/* MOBILE WELCOME */}
       <div className="lg:hidden">
         <h1 className="text-2xl font-bold text-gray-800">
-          Hi, Idel ✨
+          Hi, {user?.name} ✨
         </h1>
 
         <p className="text-sm text-gray-500 mt-1">
@@ -72,53 +150,90 @@ export default function DashboardPage() {
       </div>
 
       {/* SUMMARY */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard
           title="Total Plan"
-          amount="Rp 5.000.000"
+          amount={formatRupiah(
+            summary?.max_expense || 0
+          )}
         />
 
         <SummaryCard
           title="Expense"
-          amount="Rp 2.500.000"
+          amount={formatRupiah(
+            summary?.total_expense || 0
+          )}
         />
 
         <SummaryCard
           title="Remaining"
-          amount="Rp 2.500.000"
+          amount={formatRupiah(
+            summary?.remaining || 0
+          )}
         />
 
         <SummaryCard
           title="Days Left"
-          amount="12 Hari"
+          amount={
+            currentPlan
+              ? `${Math.ceil(
+                  (
+                    new Date(
+                      currentPlan.end_date
+                    ).getTime() -
+                    new Date().getTime()
+                  ) /
+                    (1000 * 60 * 60 * 24)
+                )} Hari`
+              : "-"
+          }
         />
       </div>
 
       {/* DAILY CHART */}
-      <DailyExpenseChart data={chartData} />
+      <DailyExpenseChart
+        data={dailyChart}
+      />
 
       {/* CATEGORY + BILLS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <CategoryPieChart data={categoryData} />
+        <CategoryPieChart
+          data={categoryChart}
+        />
 
-        <UpcomingBills bills={bills} />
+        <UpcomingBills
+          bills={bills}
+        />
       </div>
 
       {/* INSIGHT */}
-      <InsightCard />
+      <InsightCard
+        topCategory={
+          insight.topCategory
+        }
+        percentage={
+          insight.percentage
+        }
+      />
 
-      {/* RECENT TRANSACTION */}
+      {/* RECENT */}
       <RecentTransactions
         data={recentTransactions}
       />
 
       {/* QUICK ADD */}
-      <MobileQuickAdd
-        onClick={() => setOpenExpenseModal(true)}
+      <DesktopQuickAdd
+        onClick={() =>
+          setOpenExpenseModal(true)
+        }
       />
 
-      <DesktopQuickAdd
-        onClick={() => setOpenExpenseModal(true)}
+      {/* MODAL */}
+      <AddExpenseModal
+        open={openExpenseModal}
+        onClose={() =>
+          setOpenExpenseModal(false)
+        }
       />
     </div>
   );

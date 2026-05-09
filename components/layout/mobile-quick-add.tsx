@@ -13,12 +13,14 @@ export default function MobileQuickAdd({
     <button
       onClick={onClick}
       className="
+        fixed
         md:hidden
 
-        fixed
-        bottom-24
-        right-5
-        z-40
+        bottom-20
+        left-1/2
+        -translate-x-1/2
+
+        z-[999]
 
         h-16
         w-16
@@ -39,7 +41,7 @@ export default function MobileQuickAdd({
         active:scale-95
 
         cursor-pointer
-        "
+      "
     >
       <Plus className="w-7 h-7 text-white" />
     </button>

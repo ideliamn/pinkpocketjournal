@@ -6,7 +6,7 @@ import Sidebar from "./sidebar";
 import Header from "./header";
 import MobileBottomNav from "./mobile-bottom-nav";
 import MobileMoreSheet from "./mobile-more-sheet";
-import FloatingAddButton from "./floating-add-button";
+import AddExpenseModal from "../expense/add-expense-modal";
 
 export default function AppShell({
   children,
@@ -15,6 +15,7 @@ export default function AppShell({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [openExpenseModal, setOpenExpenseModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#fff7fb]">
@@ -40,13 +41,19 @@ export default function AppShell({
 
       {/* MOBILE */}
       <div className="lg:hidden">
-        <MobileBottomNav onMore={() => setMoreOpen(true)} />
+        <MobileBottomNav
+          onQuickAdd={() => setOpenExpenseModal(true)}
+        />
+
+        <AddExpenseModal
+          open={openExpenseModal}
+          onClose={() => setOpenExpenseModal(false)}
+        />
         <MobileMoreSheet
           open={moreOpen}
           onClose={() => setMoreOpen(false)}
         />
       </div>
-      <FloatingAddButton />
     </div>
   );
 }
