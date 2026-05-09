@@ -1,33 +1,19 @@
 import { NextResponse } from "next/server";
-import { supabase } from "../../../../lib/supabaseClient";
 
 export async function POST() {
-  let code = 1
-  let message = "OK"
-  let httpStatus = 200
-  const data: unknown = null
-  try {
-    await supabase.auth.signOut();
+  const response = NextResponse.json({
+    code: 1,
+    message: "Logout success",
+  });
 
-    message = "Success log out"
-    const res = NextResponse.json({ code, message, data }, { status: httpStatus });
-
-    res.cookies.set("sb-access-token", "", { maxAge: 0, path: "/" });
-    res.cookies.set("sb-refresh-token", "", { maxAge: 0, path: "/" });
-
-    return res;
-  } catch (err: unknown) {
-    code = 0;
-    if (err instanceof Error) {
-      if (err instanceof Error) {
-        message = err.message;
-      } else {
-        message = "Something went wrong";
-      };
-    } else {
-      message = "Something went wrong";
+  response.cookies.set(
+    "sb-access-token",
+    "",
+    {
+      expires: new Date(0),
+      path: "/",
     }
-    httpStatus = 500;
-    return NextResponse.json({ code, message, data }, { status: httpStatus });
-  }
+  );
+
+  return response;
 }

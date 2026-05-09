@@ -1,28 +1,36 @@
 "use client";
 
+import Link from "next/link";
+
 import {
-  X,
   Wallet,
   Receipt,
+  Target,
   Tags,
   Landmark,
-  BarChart3,
   Settings,
-  LogOut,
 } from "lucide-react";
 
-import { useRouter } from "next/navigation";
+interface Props {
+  open: boolean;
+  onClose: () => void;
+}
 
 const menus = [
   {
-    label: "Income",
-    href: "/income",
+    label: "Expenses",
+    href: "/expenses",
     icon: Wallet,
   },
   {
     label: "Bills",
     href: "/bills",
     icon: Receipt,
+  },
+  {
+    label: "Plans",
+    href: "/plans",
+    icon: Target,
   },
   {
     label: "Categories",
@@ -35,11 +43,6 @@ const menus = [
     icon: Landmark,
   },
   {
-    label: "Insights",
-    href: "/insights",
-    icon: BarChart3,
-  },
-  {
     label: "Settings",
     href: "/settings",
     icon: Settings,
@@ -49,58 +52,79 @@ const menus = [
 export default function MobileMoreSheet({
   open,
   onClose,
-}: any) {
-  const router = useRouter();
-
-  if (!open) return null;
-
+}: Props) {
   return (
     <>
+      {/* BACKDROP */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-black/30 z-[70]"
+        className={`
+          fixed inset-0 z-[999]
+          bg-black/20
+          transition-all duration-300 ease-out
+          ${
+            open
+              ? "opacity-100"
+              : "opacity-0 pointer-events-none"
+          }
+        `}
       />
 
-      <div className="fixed bottom-0 left-0 right-0 z-[80] bg-white rounded-t-3xl p-6 animate-in slide-in-from-bottom">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-bold text-lg">
-            More Menu ✨
-          </h2>
-
-          <button
-            onClick={onClose}
-            className="cursor-pointer"
-          >
-            <X />
-          </button>
-        </div>
-
-        <div className="space-y-3">
+      {/* SHEET */}
+      <div
+        className={`
+          fixed
+          bottom-24
+          right-4
+          z-[1000]
+          w-[220px]
+          rounded-3xl
+          border border-pink-100
+          bg-white/90
+          backdrop-blur-xl
+          shadow-[0_20px_60px_rgba(0,0,0,0.12)]
+          p-2
+          transition-all duration-300 ease-out
+          ${open
+                  ? `
+                opacity-100
+                translate-y-0
+                scale-100
+              `
+                  : `
+                opacity-0
+                translate-y-5
+                scale-95
+                pointer-events-none
+              `
+                }
+        `}
+      >
+        <div className="space-y-1">
           {menus.map((menu) => {
             const Icon = menu.icon;
-
             return (
-              <button
+              <Link
                 key={menu.href}
-                onClick={() => {
-                  router.push(menu.href);
-                  onClose();
-                }}
-                className="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-pink-50 cursor-pointer"
+                href={menu.href}
+                onClick={onClose}
+                className="
+                  flex items-center gap-3
+                  px-3 py-3
+                  rounded-2xl
+                  text-sm font-medium
+                  text-gray-700
+                  hover:bg-pink-50
+                  hover:text-pink-500
+                  active:scale-[0.98]
+                  transition-all duration-200
+                "
               >
-                <Icon size={20} />
-
-                {menu.label}
-              </button>
+                <Icon size={18} />
+                      <span>{menu.label}</span>
+              </Link>
             );
           })}
-
-          <button
-            className="w-full flex items-center gap-3 p-4 rounded-2xl text-red-500 hover:bg-red-50 cursor-pointer"
-          >
-            <LogOut size={20} />
-            Logout
-          </button>
         </div>
       </div>
     </>

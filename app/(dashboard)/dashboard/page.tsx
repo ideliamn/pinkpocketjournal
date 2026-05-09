@@ -8,21 +8,13 @@ import CategoryPieChart from "@/components/dashboard/category-pie-chart";
 import UpcomingBills from "@/components/dashboard/upcoming-bills";
 import InsightCard from "@/components/dashboard/insight-card";
 import RecentTransactions from "@/components/dashboard/recent-transactions";
-
-import AddExpenseModal from "@/components/expense/add-expense-modal";
-
 import { formatRupiah } from "@/lib/helpers/format";
-
-import DesktopQuickAdd from "@/components/layout/desktop-quick-add";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
-
   const [user, setUser] = useState<any>(null);
   const [currentPlan, setCurrentPlan] = useState<any>(null);
-
   const [summary, setSummary] = useState<any>(null);
-
   const [dailyChart, setDailyChart] = useState<any[]>([]);
   const [categoryChart, setCategoryChart] = useState<any[]>([]);
   const [bills, setBills] = useState<any[]>([]);
@@ -32,8 +24,6 @@ export default function DashboardPage() {
     topCategory: "-",
     percentage: 0,
   });
-
-  const [openExpenseModal, setOpenExpenseModal] = useState(false);
 
   const fetchDashboard = async () => {
     try {
@@ -219,21 +209,6 @@ export default function DashboardPage() {
       {/* RECENT */}
       <RecentTransactions
         data={recentTransactions}
-      />
-
-      {/* QUICK ADD */}
-      <DesktopQuickAdd
-        onClick={() =>
-          setOpenExpenseModal(true)
-        }
-      />
-
-      {/* MODAL */}
-      <AddExpenseModal
-        open={openExpenseModal}
-        onClose={() =>
-          setOpenExpenseModal(false)
-        }
       />
     </div>
   );

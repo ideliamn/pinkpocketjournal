@@ -1,31 +1,67 @@
-"use client";
+interface Props {
+  topCategory: string;
+  percentage: number;
+}
 
-export default function InsightCard() {
+export default function InsightCard({
+  topCategory,
+  percentage,
+}: Props) {
   return (
-    <div className="bg-gradient-to-br from-rose-300 via-pink-300 to-orange-200 text-white rounded-3xl p-6 shadow-lg">
-      <h2 className="font-bold text-xl mb-4">
-        Insight Hari Ini ✨
-      </h2>
+    <div
+      className="
+        relative
+        overflow-hidden
+        rounded-3xl
+        bg-gradient-to-br
+        from-pink-500
+        to-pink-400
+        p-6
+        text-white
+      "
+    >
+      <div
+        className="
+          absolute
+          -top-10
+          -right-10
+          h-40
+          w-40
+          rounded-full
+          bg-white/10
+        "
+      />
 
-      <div className="space-y-3 text-sm">
-        <p>
-          💸 Kategori paling boros:
-          <span className="font-bold">
-            {" "}Food & Drink
+      <div className="relative z-10">
+        <h2 className="text-xl font-bold">
+          Insight Hari Ini ✨
+        </h2>
+
+        <p className="mt-4 text-pink-100 leading-relaxed">
+          Kamu paling banyak spending di
+          kategori{" "}
+          <span className="font-bold text-white">
+            {topCategory}
           </span>
         </p>
 
-        <p>
-          📈 Pengeluaran naik
-          <span className="font-bold">
-            {" "}12%
+        <div
+          className="
+            mt-5
+            inline-flex
+            items-center
+            rounded-full
+            bg-white/20
+            px-4
+            py-2
+            backdrop-blur-sm
+          "
+        >
+          <span className="font-semibold">
+            {percentage}% dari total
+            pengeluaran 💸
           </span>
-          dibanding minggu lalu
-        </p>
-
-        <p>
-          🥤 Kamu beli kopi 8x minggu ini ☕
-        </p>
+        </div>
       </div>
     </div>
   );

@@ -1,32 +1,93 @@
 "use client";
 
 import {
-  AreaChart,
   Area,
+  AreaChart,
+  CartesianGrid,
   ResponsiveContainer,
-  XAxis,
   Tooltip,
+  XAxis,
 } from "recharts";
+
+interface Props {
+  data: {
+    expense_date: string;
+    total_amount: number;
+  }[];
+}
 
 export default function DailyExpenseChart({
   data,
-}: any) {
+}: Props) {
+  const chartData = data.map((item) => ({
+    date: new Date(
+      item.expense_date
+    ).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+    }),
+
+    amount: Number(item.total_amount),
+  }));
+
   return (
-    <div className="bg-white rounded-3xl p-5 border border-pink-100 shadow-sm">
+    <div
+      className="
+        rounded-3xl
+        bg-white
+        p-5
+        shadow-sm
+        border border-pink-100
+      "
+    >
       <div className="mb-5">
-        <h2 className="font-bold text-lg">
-          Pengeluaran Hari Ini 📈
+        <h2 className="text-lg font-bold text-gray-800">
+          Pengeluaran Harian 📈
         </h2>
 
-        <p className="text-sm text-gray-500">
-          Pengeluaran harian kamu
+        <p className="text-sm text-gray-500 mt-1">
+          Expense harian selama periode
         </p>
       </div>
 
-      <div className="h-[220px] lg:h-[280px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
-            <XAxis dataKey="date" />
+      <div className="h-[280px]">
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
+          <AreaChart data={chartData}>
+            <defs>
+              <linearGradient
+                id="pinkGradient"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor="#ec4899"
+                  stopOpacity={0.35}
+                />
+
+                <stop
+                  offset="95%"
+                  stopColor="#ec4899"
+                  stopOpacity={0}
+                />
+              </linearGradient>
+            </defs>
+
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+            />
+
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              axisLine={false}
+            />
 
             <Tooltip />
 
@@ -34,7 +95,8 @@ export default function DailyExpenseChart({
               type="monotone"
               dataKey="amount"
               stroke="#ec4899"
-              fill="#fbcfe8"
+              strokeWidth={3}
+              fill="url(#pinkGradient)"
             />
           </AreaChart>
         </ResponsiveContainer>

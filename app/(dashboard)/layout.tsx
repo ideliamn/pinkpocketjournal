@@ -1,10 +1,20 @@
-import AppShell from "@/components/layout/app-shell";
+import { redirect } from "next/navigation";
 
-export default function DashboardLayout({
+import AppShell from "@/components/layout/app-shell";
+import { getAuth } from "@/lib/auth";
+
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const auth = await getAuth();
+
+  // BELUM LOGIN
+  if (!auth.accessToken) {
+    redirect("/login");
+  }
+
   return (
     <AppShell>
       {children}
